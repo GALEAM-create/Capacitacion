@@ -2,240 +2,277 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Capacitación</title>
+  <title>Capacitación Gesvera</title>
   <style>
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #111827, #1f2937);
-      color: white;
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 0;
     }
 
     .contenedor {
-      width: 90%;
-      max-width: 700px;
-      background: rgba(0, 0, 0, 0.75);
+      max-width: 900px;
+      margin: 30px auto;
+      background: white;
       padding: 30px;
-      border-radius: 20px;
-      box-shadow: 0 0 25px rgba(255,255,255,0.15);
-      text-align: center;
-    }
-
-    input {
-      width: 90%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 10px;
-      border: none;
-      font-size: 16px;
-    }
-
-    button {
-      padding: 12px 25px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 10px;
-      background: #22c55e;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background: #16a34a;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 15px;
-      margin-top: 20px;
-      background: black;
-    }
-
-    .oculto {
-      display: none;
-    }
-
-    .pregunta {
-      text-align: left;
-      margin: 20px 0;
-      background: rgba(255,255,255,0.08);
-      padding: 15px;
       border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    }
+
+    h1 {
+      margin-top: 0;
+      color: #222;
+    }
+
+    .campo {
+      margin-bottom: 18px;
     }
 
     label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      font-size: 15px;
+      box-sizing: border-box;
+    }
+
+    .pregunta {
+      background: #f8f8f8;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+    }
+
+    .pregunta p {
+      font-weight: bold;
+      margin-top: 0;
+    }
+
+    .opcion {
       display: block;
       margin: 8px 0;
+      font-weight: normal;
     }
 
-    .resultado {
-      background: rgba(34, 197, 94, 0.15);
-      border: 2px solid #22c55e;
-      padding: 25px;
-      border-radius: 20px;
+    button {
+      background: #222;
+      color: white;
+      border: none;
+      padding: 12px 18px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #444;
+    }
+
+    #resultado {
       margin-top: 20px;
-    }
-
-    .dato {
-      font-size: 18px;
-      margin: 8px 0;
-    }
-
-    .calificacion {
-      font-size: 40px;
+      padding: 15px;
+      border-radius: 8px;
       font-weight: bold;
-      color: #22c55e;
-      margin-top: 20px;
+      display: none;
     }
 
-    .nota {
-      font-size: 14px;
-      opacity: 0.85;
-      margin-top: 10px;
+    .aprobado {
+      background: #e6f7e6;
+      color: green;
+      border: 1px solid green;
+    }
+
+    .no-aprobado {
+      background: #fde8e8;
+      color: red;
+      border: 1px solid red;
     }
   </style>
 </head>
 <body>
 
   <div class="contenedor">
+    <h1>Capacitación Gesvera</h1>
 
-    <!-- FORMULARIO INICIAL -->
-    <section id="formulario">
-      <h1>Registro de capacitación</h1>
-      <p>Ingresa tus datos para comenzar.</p>
-
-      <input type="text" id="nombre" placeholder="Nombre completo">
-      <input type="text" id="servicio" placeholder="Servicio">
-      <input type="text" id="empleado" placeholder="Número de empleado">
-
-      <br>
-      <button onclick="iniciarCapacitacion()">Comenzar</button>
-    </section>
-
-    <!-- VIDEO -->
-    <section id="seccionVideo" class="oculto">
-      <h2>Video de capacitación</h2>
-      <p>Debes terminar el video para poder responder la evaluación.</p>
-
-      <video id="videoCapacitacion" controls playsinline>
-        <source src="video.mp4.mp4" type="video/mp4">
-        Tu navegador no soporta video.
-      </video>
-
-      <p class="nota">Al finalizar el video se desbloqueará la evaluación.</p>
-    </section>
-
-    <!-- EVALUACIÓN -->
-    <section id="evaluacion" class="oculto">
-      <h2>Evaluación</h2>
-
-      <div class="pregunta">
-        <p>1. ¿Cuál es el objetivo principal de la capacitación?</p>
-        <label><input type="radio" name="p1" value="correcta"> Conocer el procedimiento correcto</label>
-        <label><input type="radio" name="p1" value="incorrecta"> Terminar rápido el video</label>
-        <label><input type="radio" name="p1" value="incorrecta"> Saltarse las indicaciones</label>
+    <form id="formCapacitacion">
+      <div class="campo">
+        <label>Nombre completo:</label>
+        <input type="text" id="nombre" required>
       </div>
 
-      <div class="pregunta">
-        <p>2. ¿Qué debe hacer el personal antes de iniciar actividades?</p>
-        <label><input type="radio" name="p2" value="incorrecta"> Ignorar las instrucciones</label>
-        <label><input type="radio" name="p2" value="correcta"> Revisar y seguir el procedimiento indicado</label>
-        <label><input type="radio" name="p2" value="incorrecta"> Preguntar solo al final</label>
+      <div class="campo">
+        <label>Número de empleado:</label>
+        <input type="text" id="numero_empleado" required>
       </div>
 
-      <div class="pregunta">
-        <p>3. ¿Qué pasa si no se cumple el procedimiento?</p>
-        <label><input type="radio" name="p3" value="correcta"> Puede generar errores o incidencias</label>
-        <label><input type="radio" name="p3" value="incorrecta"> No pasa nada</label>
-        <label><input type="radio" name="p3" value="incorrecta"> Se omite el reporte</label>
+      <div class="campo">
+        <label>Servicio:</label>
+        <select id="servicio" required>
+          <option value="">Selecciona un servicio</option>
+          <option value="Walmart">Walmart</option>
+          <option value="Helman">Helman</option>
+          <option value="Otro">Otro</option>
+        </select>
       </div>
 
-      <button onclick="calificar()">Finalizar evaluación</button>
-    </section>
-
-    <!-- RESULTADO -->
-    <section id="resultado" class="oculto">
-      <h2>Resultado de evaluación</h2>
-
-      <div class="resultado">
-        <div class="dato"><strong>Nombre:</strong> <span id="resNombre"></span></div>
-        <div class="dato"><strong>Servicio:</strong> <span id="resServicio"></span></div>
-        <div class="dato"><strong>Número de empleado:</strong> <span id="resEmpleado"></span></div>
-
-        <div class="calificacion">
-          Calificación: <span id="resCalificacion"></span>/100
-        </div>
+      <div class="campo">
+        <label>Curso:</label>
+        <input type="text" id="curso" value="Capacitación inicial" readonly>
       </div>
-    </section>
 
+      <h2>Cuestionario</h2>
+
+      <div id="contenedorPreguntas"></div>
+
+      <button type="submit">Finalizar capacitación</button>
+    </form>
+
+    <div id="resultado"></div>
   </div>
 
   <script>
-    let datosUsuario = {};
+    const API_URL = "https://capacitacion-production-3120.up.railway.app/api/resultados";
 
-    function iniciarCapacitacion() {
-      const nombre = document.getElementById("nombre").value.trim();
-      const servicio = document.getElementById("servicio").value.trim();
-      const empleado = document.getElementById("empleado").value.trim();
-
-      if (nombre === "" || servicio === "" || empleado === "") {
-        alert("Por favor llena todos los campos.");
-        return;
+    const preguntas = [
+      {
+        texto: "1. ¿Cuál es la finalidad principal de una capacitación?",
+        opciones: [
+          "Cumplir un requisito sin prestar atención",
+          "Conocer instrucciones, responsabilidades y procedimientos",
+          "Evitar registrar asistencia",
+          "Terminar lo más rápido posible"
+        ],
+        correcta: 1
+      },
+      {
+        texto: "2. ¿Qué debe hacer el personal si tiene una duda sobre el procedimiento?",
+        opciones: [
+          "Ignorarla",
+          "Preguntar al responsable o supervisor",
+          "Inventar una respuesta",
+          "No reportarla"
+        ],
+        correcta: 1
+      },
+      {
+        texto: "3. ¿Por qué es importante registrar correctamente los datos del empleado?",
+        opciones: [
+          "Para identificar quién tomó la capacitación",
+          "No tiene importancia",
+          "Para duplicar registros",
+          "Para evitar seguimiento"
+        ],
+        correcta: 0
+      },
+      {
+        texto: "4. ¿Qué indica una calificación aprobatoria?",
+        opciones: [
+          "Que el colaborador no terminó",
+          "Que el colaborador comprendió el contenido mínimo requerido",
+          "Que el colaborador no asistió",
+          "Que el registro debe eliminarse"
+        ],
+        correcta: 1
+      },
+      {
+        texto: "5. ¿Qué debe hacer el personal después de finalizar la capacitación?",
+        opciones: [
+          "Cerrar la página sin enviar",
+          "Enviar su resultado correctamente",
+          "Cambiar sus datos",
+          "Responder al azar"
+        ],
+        correcta: 1
       }
+    ];
 
-      datosUsuario = {
-        nombre: nombre,
-        servicio: servicio,
-        empleado: empleado
-      };
+    const contenedorPreguntas = document.getElementById("contenedorPreguntas");
 
-      document.getElementById("formulario").classList.add("oculto");
-      document.getElementById("seccionVideo").classList.remove("oculto");
-    }
+    preguntas.forEach((pregunta, index) => {
+      const div = document.createElement("div");
+      div.className = "pregunta";
 
-    const video = document.getElementById("videoCapacitacion");
+      let html = `<p>${pregunta.texto}</p>`;
 
-    video.addEventListener("ended", function() {
-      alert("Video finalizado. Ya puedes responder la evaluación.");
-      document.getElementById("seccionVideo").classList.add("oculto");
-      document.getElementById("evaluacion").classList.remove("oculto");
+      pregunta.opciones.forEach((opcion, opcionIndex) => {
+        html += `
+          <label class="opcion">
+            <input type="radio" name="pregunta_${index}" value="${opcionIndex}" required>
+            ${opcion}
+          </label>
+        `;
+      });
+
+      div.innerHTML = html;
+      contenedorPreguntas.appendChild(div);
     });
 
-    function calificar() {
-      let puntos = 0;
-      const totalPreguntas = 3;
+    document.getElementById("formCapacitacion").addEventListener("submit", async function(e) {
+      e.preventDefault();
 
-      const respuestas = ["p1", "p2", "p3"];
+      let correctas = 0;
 
-      for (let pregunta of respuestas) {
-        const seleccionada = document.querySelector(`input[name="${pregunta}"]:checked`);
+      preguntas.forEach((pregunta, index) => {
+        const respuesta = document.querySelector(`input[name="pregunta_${index}"]:checked`);
+        if (respuesta && Number(respuesta.value) === pregunta.correcta) {
+          correctas++;
+        }
+      });
 
-        if (!seleccionada) {
-          alert("Por favor responde todas las preguntas.");
-          return;
+      const calificacion = Math.round((correctas / preguntas.length) * 100);
+      const aprobado = calificacion >= 80;
+
+      const datos = {
+        nombre: document.getElementById("nombre").value.trim(),
+        numero_empleado: document.getElementById("numero_empleado").value.trim(),
+        servicio: document.getElementById("servicio").value,
+        curso: document.getElementById("curso").value,
+        calificacion: calificacion,
+        aprobado: aprobado
+      };
+
+      const resultadoDiv = document.getElementById("resultado");
+
+      try {
+        const respuesta = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(datos)
+        });
+
+        const resultado = await respuesta.json();
+
+        if (!respuesta.ok) {
+          throw new Error(resultado.error || "Error al guardar resultado");
         }
 
-        if (seleccionada.value === "correcta") {
-          puntos++;
-        }
+        resultadoDiv.style.display = "block";
+        resultadoDiv.className = aprobado ? "aprobado" : "no-aprobado";
+        resultadoDiv.innerHTML = `
+          Resultado enviado correctamente.<br>
+          Calificación: ${calificacion}<br>
+          Estado: ${aprobado ? "Aprobado" : "No aprobado"}
+        `;
+
+        document.getElementById("formCapacitacion").reset();
+        document.getElementById("curso").value = "Capacitación inicial";
+
+      } catch (error) {
+        resultadoDiv.style.display = "block";
+        resultadoDiv.className = "no-aprobado";
+        resultadoDiv.innerHTML = "Error al enviar el resultado. Intenta nuevamente.";
+        console.error(error);
       }
-
-      const calificacion = Math.round((puntos / totalPreguntas) * 100);
-
-      document.getElementById("evaluacion").classList.add("oculto");
-      document.getElementById("resultado").classList.remove("oculto");
-
-      document.getElementById("resNombre").textContent = datosUsuario.nombre;
-      document.getElementById("resServicio").textContent = datosUsuario.servicio;
-      document.getElementById("resEmpleado").textContent = datosUsuario.empleado;
-      document.getElementById("resCalificacion").textContent = calificacion;
-    }
+    });
   </script>
 
 </body>
