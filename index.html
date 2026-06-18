@@ -2,27 +2,139 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Capacitación Gesvera</title>
+
   <style>
+    :root {
+      --negro: #111827;
+      --gris: #6b7280;
+      --gris-claro: #f3f4f6;
+      --blanco: #ffffff;
+      --borde: #e5e7eb;
+      --verde: #16a34a;
+      --verde-suave: #dcfce7;
+      --rojo: #dc2626;
+      --rojo-suave: #fee2e2;
+      --morado: #6d28d9;
+      --azul: #2563eb;
+      --sombra: 0 18px 40px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
       margin: 0;
-      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(109, 40, 217, 0.18), transparent 30%),
+        linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #f5f3ff 100%);
+      color: var(--negro);
+      min-height: 100vh;
+    }
+
+    .barra-superior {
+      background: rgba(17, 24, 39, 0.96);
+      color: white;
+      padding: 18px 26px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: bold;
+      font-size: 22px;
+      letter-spacing: 0.5px;
+    }
+
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #7c3aed, #2563eb);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+    }
+
+    .estado {
+      font-size: 14px;
+      color: #d1d5db;
     }
 
     .contenedor {
-      max-width: 900px;
-      margin: 30px auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+      max-width: 980px;
+      margin: 34px auto;
+      padding: 0 18px;
     }
 
-    h1 {
-      margin-top: 0;
-      color: #222;
+    .tarjeta {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(255,255,255,0.6);
+      border-radius: 24px;
+      box-shadow: var(--sombra);
+      overflow: hidden;
+    }
+
+    .encabezado {
+      padding: 34px;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(109, 40, 217, 0.12));
+      border-bottom: 1px solid var(--borde);
+    }
+
+    .encabezado h1 {
+      margin: 0 0 10px;
+      font-size: 36px;
+      color: var(--negro);
+    }
+
+    .encabezado p {
+      margin: 0;
+      color: var(--gris);
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    .contenido {
+      padding: 34px;
+    }
+
+    .seccion-titulo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 22px 0 16px;
+      font-size: 22px;
+    }
+
+    .badge {
+      background: #ede9fe;
+      color: var(--morado);
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin-bottom: 18px;
     }
 
     .campo {
@@ -32,110 +144,271 @@
     label {
       font-weight: bold;
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 7px;
+      color: #1f2937;
     }
 
     input, select {
       width: 100%;
-      padding: 10px;
+      padding: 13px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 12px;
       font-size: 15px;
-      box-sizing: border-box;
+      background: white;
+      transition: 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--morado);
+      box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12);
+    }
+
+    input[readonly] {
+      background: #f9fafb;
+      color: #374151;
+    }
+
+    .progreso {
+      background: #e5e7eb;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0 24px;
+    }
+
+    .barra-progreso {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--azul), var(--morado));
+      transition: width 0.3s ease;
+    }
+
+    .texto-progreso {
+      color: var(--gris);
+      font-size: 14px;
+      margin-bottom: 8px;
     }
 
     .pregunta {
-      background: #f8f8f8;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 15px;
-      border: 1px solid #ddd;
+      background: white;
+      border: 1px solid var(--borde);
+      border-radius: 18px;
+      padding: 22px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
     }
 
     .pregunta p {
       font-weight: bold;
-      margin-top: 0;
+      margin: 0 0 15px;
+      font-size: 17px;
+      line-height: 1.4;
+    }
+
+    .opciones {
+      display: grid;
+      gap: 10px;
     }
 
     .opcion {
-      display: block;
-      margin: 8px 0;
-      font-weight: normal;
-    }
-
-    button {
-      background: #222;
-      color: white;
-      border: none;
-      padding: 12px 18px;
-      font-size: 16px;
-      border-radius: 6px;
+      margin: 0;
       cursor: pointer;
     }
 
+    .opcion input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .opcion span {
+      display: block;
+      padding: 13px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 14px;
+      background: #f9fafb;
+      font-weight: normal;
+      transition: 0.2s ease;
+    }
+
+    .opcion span:hover {
+      border-color: var(--morado);
+      background: #f5f3ff;
+      transform: translateY(-1px);
+    }
+
+    .opcion input:checked + span {
+      border-color: var(--morado);
+      background: #ede9fe;
+      color: #4c1d95;
+      font-weight: bold;
+      box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+    }
+
+    .acciones {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background: linear-gradient(135deg, #111827, #374151);
+      color: white;
+      border: none;
+      padding: 14px 22px;
+      font-size: 16px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 10px 22px rgba(17, 24, 39, 0.22);
+      transition: 0.2s ease;
+    }
+
     button:hover {
-      background: #444;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(17, 24, 39, 0.28);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
     }
 
     #resultado {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 8px;
+      margin-top: 24px;
+      padding: 18px;
+      border-radius: 16px;
       font-weight: bold;
       display: none;
+      line-height: 1.5;
     }
 
     .aprobado {
-      background: #e6f7e6;
-      color: green;
-      border: 1px solid green;
+      background: var(--verde-suave);
+      color: #166534;
+      border: 1px solid #86efac;
     }
 
     .no-aprobado {
-      background: #fde8e8;
-      color: red;
-      border: 1px solid red;
+      background: var(--rojo-suave);
+      color: #991b1b;
+      border: 1px solid #fca5a5;
+    }
+
+    .nota {
+      color: var(--gris);
+      font-size: 14px;
+      line-height: 1.5;
+      margin-top: 12px;
+    }
+
+    @media (max-width: 720px) {
+      .barra-superior {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 6px;
+      }
+
+      .encabezado h1 {
+        font-size: 28px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .contenido, .encabezado {
+        padding: 24px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="contenedor">
-    <h1>Capacitación Gesvera</h1>
+  <header class="barra-superior">
+    <div class="marca">
+      <div class="logo">G</div>
+      <div>GESVERA Capacitación</div>
+    </div>
+    <div class="estado">Sistema de evaluación en línea</div>
+  </header>
 
-    <form id="formCapacitacion">
-      <div class="campo">
-        <label>Nombre completo:</label>
-        <input type="text" id="nombre" required>
+  <main class="contenedor">
+    <section class="tarjeta">
+      <div class="encabezado">
+        <h1>Capacitación inicial</h1>
+        <p>
+          Completa tus datos, responde el cuestionario y envía tu resultado.
+          Tu calificación se registrará automáticamente en el sistema.
+        </p>
       </div>
 
-      <div class="campo">
-        <label>Número de empleado:</label>
-        <input type="text" id="numero_empleado" required>
+      <div class="contenido">
+        <form id="formCapacitacion">
+          <div class="seccion-titulo">
+            Datos del colaborador
+            <span class="badge">Obligatorio</span>
+          </div>
+
+          <div class="grid">
+            <div class="campo">
+              <label>Nombre completo:</label>
+              <input type="text" id="nombre" placeholder="Ej. Fernando Cortes Malagón" required>
+            </div>
+
+            <div class="campo">
+              <label>Número de empleado:</label>
+              <input type="text" id="numero_empleado" placeholder="Ej. 9000" required>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="campo">
+              <label>Servicio:</label>
+              <select id="servicio" required>
+                <option value="">Selecciona un servicio</option>
+                <option value="Walmart">Walmart</option>
+                <option value="Helman">Helman</option>
+                <option value="Otro">Otro</option>
+              </select>
+            </div>
+
+            <div class="campo">
+              <label>Curso:</label>
+              <input type="text" id="curso" value="Capacitación inicial" readonly>
+            </div>
+          </div>
+
+          <div class="seccion-titulo">
+            Cuestionario
+            <span class="badge">Mínimo 80 para aprobar</span>
+          </div>
+
+          <div class="texto-progreso" id="textoProgreso">Preguntas respondidas: 0 de 5</div>
+          <div class="progreso">
+            <div class="barra-progreso" id="barraProgreso"></div>
+          </div>
+
+          <div id="contenedorPreguntas"></div>
+
+          <div class="acciones">
+            <button type="submit" id="btnEnviar">Finalizar capacitación</button>
+          </div>
+
+          <p class="nota">
+            Revisa tus respuestas antes de enviar. Una vez enviado, el resultado quedará registrado.
+          </p>
+        </form>
+
+        <div id="resultado"></div>
       </div>
-
-      <div class="campo">
-        <label>Servicio:</label>
-        <select id="servicio" required>
-          <option value="">Selecciona un servicio</option>
-          <option value="Walmart">Walmart</option>
-          <option value="Helman">Helman</option>
-          <option value="Otro">Otro</option>
-        </select>
-      </div>
-
-      <div class="campo">
-        <label>Curso:</label>
-        <input type="text" id="curso" value="Capacitación inicial" readonly>
-      </div>
-
-      <h2>Cuestionario</h2>
-
-      <div id="contenedorPreguntas"></div>
-
-      <button type="submit">Finalizar capacitación</button>
-    </form>
-
-    <div id="resultado"></div>
-  </div>
+    </section>
+  </main>
 
   <script>
     const API_URL = "https://capacitacion-production-3120.up.railway.app/api/resultados";
@@ -194,24 +467,45 @@
     ];
 
     const contenedorPreguntas = document.getElementById("contenedorPreguntas");
+    const textoProgreso = document.getElementById("textoProgreso");
+    const barraProgreso = document.getElementById("barraProgreso");
+    const btnEnviar = document.getElementById("btnEnviar");
 
     preguntas.forEach((pregunta, index) => {
       const div = document.createElement("div");
       div.className = "pregunta";
 
-      let html = `<p>${pregunta.texto}</p>`;
+      let html = `<p>${pregunta.texto}</p><div class="opciones">`;
 
       pregunta.opciones.forEach((opcion, opcionIndex) => {
         html += `
           <label class="opcion">
             <input type="radio" name="pregunta_${index}" value="${opcionIndex}" required>
-            ${opcion}
+            <span>${opcion}</span>
           </label>
         `;
       });
 
+      html += `</div>`;
       div.innerHTML = html;
       contenedorPreguntas.appendChild(div);
+    });
+
+    function actualizarProgreso() {
+      let respondidas = 0;
+
+      preguntas.forEach((_, index) => {
+        const respuesta = document.querySelector(`input[name="pregunta_${index}"]:checked`);
+        if (respuesta) respondidas++;
+      });
+
+      const porcentaje = (respondidas / preguntas.length) * 100;
+      textoProgreso.textContent = `Preguntas respondidas: ${respondidas} de ${preguntas.length}`;
+      barraProgreso.style.width = `${porcentaje}%`;
+    }
+
+    document.querySelectorAll("input[type='radio']").forEach(input => {
+      input.addEventListener("change", actualizarProgreso);
     });
 
     document.getElementById("formCapacitacion").addEventListener("submit", async function(e) {
@@ -230,7 +524,7 @@
       const aprobado = calificacion >= 80;
 
       const datos = {
-        nombre: document.getElementById("nombre").value.trim(),
+        nombre: document.getElementById("nombre").value.trim().toUpperCase(),
         numero_empleado: document.getElementById("numero_empleado").value.trim(),
         servicio: document.getElementById("servicio").value,
         curso: document.getElementById("curso").value,
@@ -241,6 +535,9 @@
       const resultadoDiv = document.getElementById("resultado");
 
       try {
+        btnEnviar.disabled = true;
+        btnEnviar.textContent = "Enviando resultado...";
+
         const respuesta = await fetch(API_URL, {
           method: "POST",
           headers: {
@@ -265,14 +562,20 @@
 
         document.getElementById("formCapacitacion").reset();
         document.getElementById("curso").value = "Capacitación inicial";
+        actualizarProgreso();
 
       } catch (error) {
         resultadoDiv.style.display = "block";
         resultadoDiv.className = "no-aprobado";
         resultadoDiv.innerHTML = "Error al enviar el resultado. Intenta nuevamente.";
         console.error(error);
+      } finally {
+        btnEnviar.disabled = false;
+        btnEnviar.textContent = "Finalizar capacitación";
       }
     });
+
+    actualizarProgreso();
   </script>
 
 </body>
