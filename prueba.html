@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba Resultados Gesvera</title>
+</head>
+<body>
+  <h1>Enviar resultado de capacitación</h1>
+
+  <form id="formResultado">
+    <label>Nombre:</label><br>
+    <input type="text" id="nombre" value="Maria Lopez"><br><br>
+
+    <label>Número de empleado:</label><br>
+    <input type="text" id="numero_empleado" value="5678"><br><br>
+
+    <label>Servicio:</label><br>
+    <input type="text" id="servicio" value="Helman"><br><br>
+
+    <label>Curso:</label><br>
+    <input type="text" id="curso" value="Capacitacion inicial"><br><br>
+
+    <label>Calificación:</label><br>
+    <input type="number" id="calificacion" value="85"><br><br>
+
+    <button type="submit">Enviar resultado</button>
+  </form>
+
+  <p id="respuesta"></p>
+
+  <script>
+    const form = document.getElementById("formResultado");
+    const respuesta = document.getElementById("respuesta");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const datos = {
+        nombre: document.getElementById("nombre").value,
+        numero_empleado: document.getElementById("numero_empleado").value,
+        servicio: document.getElementById("servicio").value,
+        curso: document.getElementById("curso").value,
+        calificacion: Number(document.getElementById("calificacion").value),
+        aprobado: Number(document.getElementById("calificacion").value) >= 80
+      };
+
+      const envio = await fetch("http://localhost:3000/api/resultados", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(datos)
+      });
+
+      const resultado = await envio.json();
+
+      respuesta.innerText = resultado.mensaje;
+      console.log(resultado);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Admin - Gesvera Capacitación</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #222;
+    }
+
+    .contenedor {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    button {
+      padding: 10px 15px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      border: none;
+      background: #222;
+      color: white;
+      border-radius: 5px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background: #222;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background: #f2f2f2;
+    }
+
+    .aprobado {
+      color: green;
+      font-weight: bold;
+    }
+
+    .no-aprobado {
+      color: red;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="contenedor">
+    <h1>Panel de resultados - Gesvera Capacitación</h1>
+
+    <button onclick="cargarResultados()">Actualizar resultados</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Nombre</th>
+          <th>Número empleado</th>
+          <th>Servicio</th>
+          <th>Curso</th>
+          <th>Calificación</th>
+          <th>Aprobado</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody id="tablaResultados">
+        <tr>
+          <td colspan="8">Cargando resultados...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    async function cargarResultados() {
+      const tabla = document.getElementById("tablaResultados");
+
+      try {
+        const respuesta = await fetch("http://localhost:3000/api/resultados");
+        const resultados = await respuesta.json();
+
+        tabla.innerHTML = "";
+
+        if (resultados.length === 0) {
+          tabla.innerHTML = `
+            <tr>
+              <td colspan="8">No hay resultados registrados.</td>
+            </tr>
+          `;
+          return;
+        }
+
+        resultados.forEach(resultado => {
+          const aprobadoTexto = resultado.aprobado == 1 ? "Sí" : "No";
+          const claseAprobado = resultado.aprobado == 1 ? "aprobado" : "no-aprobado";
+
+          const fecha = new Date(resultado.fecha).toLocaleString("es-MX");
+
+          const fila = `
+            <tr>
+              <td>${resultado.id}</td>
+              <td>${resultado.nombre}</td>
+              <td>${resultado.numero_empleado}</td>
+              <td>${resultado.servicio}</td>
+              <td>${resultado.curso}</td>
+              <td>${resultado.calificacion}</td>
+              <td class="${claseAprobado}">${aprobadoTexto}</td>
+              <td>${fecha}</td>
+            </tr>
+          `;
+
+          tabla.innerHTML += fila;
+        });
+
+      } catch (error) {
+        tabla.innerHTML = `
+          <tr>
+            <td colspan="8">Error al cargar resultados.</td>
+          </tr>
+        `;
+        console.error(error);
+      }
+    }
+
+    cargarResultados();
+  </script>
+
+</body>
+</html>
