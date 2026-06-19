@@ -6,19 +6,23 @@
   <title>Capacitación Galeam</title>
 
   <style>
+
     :root {
-      --negro: #111827;
-      --gris: #6b7280;
-      --gris-claro: #f3f4f6;
+      --negro: #050505;
+      --negro-suave: #111111;
+      --carbon: #181818;
+      --dorado: #C89838;
+      --amarillo: #FCCC38;
+      --rojo: #DB1F26;
+      --rojo-oscuro: #9A2223;
+      --gris: #b7b7b7;
+      --gris-claro: #f5f5f5;
       --blanco: #ffffff;
-      --borde: #e5e7eb;
+      --borde: rgba(252, 204, 56, 0.28);
       --verde: #16a34a;
-      --verde-suave: #dcfce7;
-      --rojo: #dc2626;
-      --rojo-suave: #fee2e2;
-      --morado: #6d28d9;
-      --azul: #2563eb;
-      --sombra: 0 18px 40px rgba(15, 23, 42, 0.12);
+      --verde-suave: rgba(22, 163, 74, 0.18);
+      --rojo-suave: rgba(219, 31, 38, 0.16);
+      --sombra: 0 22px 50px rgba(0, 0, 0, 0.55);
     }
 
     * {
@@ -29,20 +33,22 @@
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
       background:
-        radial-gradient(circle at top left, rgba(109, 40, 217, 0.18), transparent 30%),
-        linear-gradient(135deg, #eef2ff 0%, #f8fafc 45%, #f5f3ff 100%);
-      color: var(--negro);
+        radial-gradient(circle at top left, rgba(252, 204, 56, 0.20), transparent 30%),
+        radial-gradient(circle at top right, rgba(219, 31, 38, 0.18), transparent 28%),
+        linear-gradient(135deg, #000000 0%, #080808 45%, #171717 100%);
+      color: var(--blanco);
       min-height: 100vh;
     }
 
     .barra-superior {
-      background: rgba(17, 24, 39, 0.96);
-      color: white;
-      padding: 18px 26px;
+      background: rgba(5, 5, 5, 0.97);
+      color: var(--blanco);
+      padding: 16px 26px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+      border-bottom: 3px solid var(--dorado);
       position: sticky;
       top: 0;
       z-index: 10;
@@ -51,28 +57,27 @@
     .marca {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
       font-weight: bold;
       font-size: 22px;
       letter-spacing: 0.5px;
+      color: var(--amarillo);
     }
 
     .logo {
-      width: 42px;
-      height: 42px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #7c3aed, #2563eb);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: bold;
-      color: white;
-      box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+      width: 54px;
+      height: 54px;
+      object-fit: contain;
+      border-radius: 14px;
+      background: #000;
+      padding: 4px;
+      border: 1px solid rgba(252, 204, 56, 0.45);
+      box-shadow: 0 0 18px rgba(252, 204, 56, 0.28);
     }
 
     .estado {
       font-size: 14px;
-      color: #d1d5db;
+      color: var(--gris);
     }
 
     .contenedor {
@@ -82,8 +87,8 @@
     }
 
     .tarjeta {
-      background: rgba(255, 255, 255, 0.96);
-      border: 1px solid rgba(255,255,255,0.6);
+      background: linear-gradient(145deg, rgba(10, 10, 10, 0.98), rgba(24, 24, 24, 0.96));
+      border: 1px solid var(--borde);
       border-radius: 24px;
       box-shadow: var(--sombra);
       overflow: hidden;
@@ -92,19 +97,21 @@
     .encabezado {
       padding: 34px;
       background:
-        linear-gradient(135deg, rgba(37, 99, 235, 0.08), rgba(109, 40, 217, 0.12));
+        linear-gradient(135deg, rgba(252, 204, 56, 0.13), rgba(219, 31, 38, 0.10)),
+        linear-gradient(90deg, rgba(5, 5, 5, 0.20), rgba(200, 152, 56, 0.10));
       border-bottom: 1px solid var(--borde);
     }
 
     .encabezado h1 {
       margin: 0 0 10px;
       font-size: 36px;
-      color: var(--negro);
+      color: var(--amarillo);
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
     }
 
     .encabezado p {
       margin: 0;
-      color: var(--gris);
+      color: #e5e5e5;
       font-size: 16px;
       line-height: 1.5;
     }
@@ -119,11 +126,13 @@
       gap: 10px;
       margin: 22px 0 16px;
       font-size: 22px;
+      color: var(--amarillo);
     }
 
     .badge {
-      background: #ede9fe;
-      color: var(--morado);
+      background: rgba(252, 204, 56, 0.15);
+      color: var(--amarillo);
+      border: 1px solid rgba(252, 204, 56, 0.40);
       padding: 6px 10px;
       border-radius: 999px;
       font-size: 13px;
@@ -145,42 +154,48 @@
       font-weight: bold;
       display: block;
       margin-bottom: 7px;
-      color: #1f2937;
+      color: #f4f4f4;
     }
 
     input, select {
       width: 100%;
       padding: 13px 14px;
-      border: 1px solid #d1d5db;
+      border: 1px solid rgba(200, 152, 56, 0.55);
       border-radius: 12px;
       font-size: 15px;
-      background: white;
+      background: #0b0b0b;
+      color: var(--blanco);
       transition: 0.2s ease;
+    }
+
+    input::placeholder {
+      color: #777;
     }
 
     input:focus, select:focus {
       outline: none;
-      border-color: var(--morado);
-      box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.12);
+      border-color: var(--amarillo);
+      box-shadow: 0 0 0 4px rgba(252, 204, 56, 0.13);
     }
 
     input[readonly] {
-      background: #f9fafb;
-      color: #374151;
+      background: #141414;
+      color: #d9d9d9;
     }
 
     .progreso {
-      background: #e5e7eb;
+      background: #262626;
       height: 10px;
       border-radius: 999px;
       overflow: hidden;
       margin: 12px 0 24px;
+      border: 1px solid rgba(252, 204, 56, 0.18);
     }
 
     .barra-progreso {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, var(--azul), var(--morado));
+      background: linear-gradient(90deg, var(--rojo), var(--amarillo), var(--dorado));
       transition: width 0.3s ease;
     }
 
@@ -191,12 +206,12 @@
     }
 
     .pregunta {
-      background: white;
-      border: 1px solid var(--borde);
+      background: rgba(12, 12, 12, 0.98);
+      border: 1px solid rgba(252, 204, 56, 0.22);
       border-radius: 18px;
       padding: 22px;
       margin-bottom: 18px;
-      box-shadow: 0 8px 20px rgba(15, 23, 42, 0.05);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
     }
 
     .pregunta p {
@@ -204,6 +219,7 @@
       margin: 0 0 15px;
       font-size: 17px;
       line-height: 1.4;
+      color: var(--blanco);
     }
 
     .opciones {
@@ -225,25 +241,26 @@
     .opcion span {
       display: block;
       padding: 13px 14px;
-      border: 1px solid #d1d5db;
+      border: 1px solid #333;
       border-radius: 14px;
-      background: #f9fafb;
+      background: #161616;
+      color: #efefef;
       font-weight: normal;
       transition: 0.2s ease;
     }
 
     .opcion span:hover {
-      border-color: var(--morado);
-      background: #f5f3ff;
+      border-color: var(--amarillo);
+      background: rgba(252, 204, 56, 0.09);
       transform: translateY(-1px);
     }
 
     .opcion input:checked + span {
-      border-color: var(--morado);
-      background: #ede9fe;
-      color: #4c1d95;
+      border-color: var(--amarillo);
+      background: linear-gradient(135deg, rgba(252, 204, 56, 0.92), rgba(200, 152, 56, 0.92));
+      color: var(--negro);
       font-weight: bold;
-      box-shadow: 0 0 0 4px rgba(109, 40, 217, 0.10);
+      box-shadow: 0 0 0 4px rgba(252, 204, 56, 0.12);
     }
 
     .acciones {
@@ -255,21 +272,23 @@
     }
 
     button {
-      background: linear-gradient(135deg, #111827, #374151);
-      color: white;
+      background: linear-gradient(135deg, var(--amarillo), var(--dorado));
+      color: var(--negro);
       border: none;
       padding: 14px 22px;
       font-size: 16px;
       border-radius: 14px;
       cursor: pointer;
       font-weight: bold;
-      box-shadow: 0 10px 22px rgba(17, 24, 39, 0.22);
+      box-shadow: 0 10px 24px rgba(252, 204, 56, 0.22);
       transition: 0.2s ease;
     }
 
     button:hover {
       transform: translateY(-2px);
-      box-shadow: 0 14px 28px rgba(17, 24, 39, 0.28);
+      background: linear-gradient(135deg, var(--rojo), var(--rojo-oscuro));
+      color: var(--blanco);
+      box-shadow: 0 14px 30px rgba(219, 31, 38, 0.35);
     }
 
     button:disabled {
@@ -289,14 +308,14 @@
 
     .aprobado {
       background: var(--verde-suave);
-      color: #166534;
-      border: 1px solid #86efac;
+      color: #bbf7d0;
+      border: 1px solid rgba(134, 239, 172, 0.55);
     }
 
     .no-aprobado {
       background: var(--rojo-suave);
-      color: #991b1b;
-      border: 1px solid #fca5a5;
+      color: #fecaca;
+      border: 1px solid rgba(252, 165, 165, 0.50);
     }
 
     .nota {
@@ -325,6 +344,7 @@
         padding: 24px;
       }
     }
+
   </style>
 </head>
 
@@ -332,7 +352,7 @@
 
   <header class="barra-superior">
     <div class="marca">
-      <div class="logo">G</div>
+      <img src="logo.png" class="logo" alt="Logo de la empresa">
       <div>Galeam Capacitación</div>
     </div>
     <div class="estado">Sistema de evaluación en línea</div>
