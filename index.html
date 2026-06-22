@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Capacitación Galeam</title>
+  <title>Ingeniería Social (llamada de extorsión)</title>
 
   <style>
 
@@ -362,10 +362,11 @@
   <main class="contenedor">
     <section class="tarjeta">
       <div class="encabezado">
-        <h1>Capacitación inicial</h1>
+        <h1>Ingeniería Social (llamada de extorsión)</h1>
         <p>
-          Completa tus datos, responde el cuestionario y envía tu resultado.
-          Tu calificación se registrará automáticamente en el sistema.
+          <strong>Instrucciones para el participante:</strong> Lee atentamente y contesta el
+          siguiente cuestionario, subrayando solo la respuesta correcta.<br>
+          <strong>Tiempo de evaluación:</strong> 10 minutos
         </p>
       </div>
 
@@ -401,7 +402,7 @@
 
             <div class="campo">
               <label>Curso:</label>
-              <input type="text" id="curso" value="Capacitación inicial" readonly>
+              <input type="text" id="curso" value="Ingeniería Social (llamada de extorsión)" readonly>
             </div>
           </div>
 
@@ -410,7 +411,7 @@
             <span class="badge">Mínimo 80 para aprobar</span>
           </div>
 
-          <div class="texto-progreso" id="textoProgreso">Preguntas respondidas: 0 de 5</div>
+          <div class="texto-progreso" id="textoProgreso">Preguntas respondidas: 0 de 10</div>
           <div class="progreso">
             <div class="barra-progreso" id="barraProgreso"></div>
           </div>
@@ -436,54 +437,104 @@
 
     const preguntas = [
       {
-        texto: "1. ¿Cuál es la finalidad principal de una capacitación?",
+        texto: "1. ¿Qué es la Ingeniería Social?",
         opciones: [
-          "Cumplir un requisito sin prestar atención",
-          "Conocer instrucciones, responsabilidades y procedimientos",
-          "Evitar registrar asistencia",
-          "Terminar lo más rápido posible"
+          "A) Un sistema de vigilancia electrónica.",
+          "B) Una manipulación psicológica para obtener información confidencial.",
+          "C) Un procedimiento operativo de seguridad.",
+          "D) Un programa de capacitación."
         ],
         correcta: 1
       },
       {
-        texto: "2. ¿Qué debe hacer el personal si tiene una duda sobre el procedimiento?",
+        texto: "2. ¿Cuál de los siguientes elementos utiliza comúnmente un delincuente en Ingeniería Social?",
         opciones: [
-          "Ignorarla",
-          "Preguntar al responsable o supervisor",
-          "Inventar una respuesta",
-          "No reportarla"
+          "A) Capacitación.",
+          "B) Tecnología avanzada exclusivamente.",
+          "C) Confianza, miedo y urgencia.",
+          "D) Uniformes de seguridad."
+        ],
+        correcta: 2
+      },
+      {
+        texto: "3. ¿Qué es la extorsión?",
+        opciones: [
+          "A) Un método de investigación.",
+          "B) Un delito que utiliza amenazas, engaños o intimidación para obtener beneficios.",
+          "C) Un procedimiento legal.",
+          "D) Una auditoría de seguridad."
         ],
         correcta: 1
       },
       {
-        texto: "3. ¿Por qué es importante registrar correctamente los datos del empleado?",
+        texto: "4. ¿Por qué las empresas de seguridad son objetivos frecuentes de extorsión?",
         opciones: [
-          "Para identificar quién tomó la capacitación",
-          "No tiene importancia",
-          "Para duplicar registros",
-          "Para evitar seguimiento"
+          "A) Porque tienen más personal.",
+          "B) Porque manejan información confidencial y procedimientos de seguridad.",
+          "C) Porque utilizan vehículos.",
+          "D) Porque cuentan con oficinas administrativas."
+        ],
+        correcta: 1
+      },
+      {
+        texto: "5. ¿Cuál es un ejemplo de extorsión digital?",
+        opciones: [
+          "A) Una inspección física.",
+          "B) Un correo electrónico fraudulento solicitando información.",
+          "C) Un recorrido de supervisión.",
+          "D) Una reunión presencial."
+        ],
+        correcta: 1
+      },
+      {
+        texto: "6. ¿Qué es un secuestro virtual?",
+        opciones: [
+          "A) Un secuestro real.",
+          "B) Una simulación de secuestro para generar miedo y exigir dinero.",
+          "C) Una videollamada de emergencia.",
+          "D) Un procedimiento policial."
+        ],
+        correcta: 1
+      },
+      {
+        texto: "7. ¿Cuál es una señal de alerta de posible extorsión?",
+        opciones: [
+          "A) Solicitar información urgente sin permitir verificación.",
+          "B) Presentar una identificación oficial.",
+          "C) Enviar un comunicado corporativo.",
+          "D) Realizar una capacitación."
         ],
         correcta: 0
       },
       {
-        texto: "4. ¿Qué indica una calificación aprobatoria?",
+        texto: "8. ¿Qué información nunca debe compartirse?",
         opciones: [
-          "Que el colaborador no terminó",
-          "Que el colaborador comprendió el contenido mínimo requerido",
-          "Que el colaborador no asistió",
-          "Que el registro debe eliminarse"
+          "A) Horarios de capacitación.",
+          "B) Ubicación de personal, rutas de traslado y contraseñas.",
+          "C) Nombre de la empresa.",
+          "D) Número de extensión telefónica general."
         ],
         correcta: 1
       },
       {
-        texto: "5. ¿Qué debe hacer el personal después de finalizar la capacitación?",
+        texto: "9. Si una persona llama diciendo ser Director de Operaciones y solicita información sensible, ¿qué debe hacerse?",
         opciones: [
-          "Cerrar la página sin enviar",
-          "Enviar su resultado correctamente",
-          "Cambiar sus datos",
-          "Responder al azar"
+          "A) Proporcionar la información solicitada.",
+          "B) Verificar su identidad y seguir los protocolos establecidos.",
+          "C) Transferir la llamada a cualquier compañero.",
+          "D) Ignorar el procedimiento."
         ],
         correcta: 1
+      },
+      {
+        texto: "10. ¿Cuál es la mejor herramienta de protección contra la extorsión?",
+        opciones: [
+          "A) Compartir información rápidamente.",
+          "B) Confiar en cualquier llamada.",
+          "C) Verificar, cuestionar y reportar.",
+          "D) Mantener silencio ante incidentes."
+        ],
+        correcta: 2
       }
     ];
 
@@ -582,7 +633,7 @@
         `;
 
         document.getElementById("formCapacitacion").reset();
-        document.getElementById("curso").value = "Capacitación inicial";
+        document.getElementById("curso").value = "Ingeniería Social (llamada de extorsión)";
         actualizarProgreso();
 
       } catch (error) {
