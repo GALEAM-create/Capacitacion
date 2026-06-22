@@ -326,6 +326,57 @@
       margin-top: 12px;
     }
 
+
+    [hidden] {
+      display: none !important;
+    }
+
+    .bloque-video {
+      margin-top: 28px;
+      padding: 24px;
+      background: rgba(12, 12, 12, 0.98);
+      border: 1px solid rgba(252, 204, 56, 0.30);
+      border-radius: 18px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .bloque-video h2 {
+      margin: 0 0 10px;
+      font-size: 22px;
+      color: var(--amarillo);
+    }
+
+    .bloque-video p {
+      margin: 0 0 16px;
+      color: #e5e5e5;
+      line-height: 1.5;
+    }
+
+    .video-obligatorio {
+      width: 100%;
+      display: block;
+      border-radius: 14px;
+      border: 1px solid rgba(252, 204, 56, 0.55);
+      background: #000;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+    }
+
+    .mensaje-video {
+      min-height: 22px;
+      margin: 14px 0 0;
+      color: var(--gris);
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .bloque-cuestionario {
+      margin-top: 28px;
+    }
+
+    .datos-bloqueados {
+      opacity: 0.78;
+    }
+
     @media (max-width: 720px) {
       .barra-superior {
         align-items: flex-start;
@@ -371,61 +422,94 @@
       </div>
 
       <div class="contenido">
-        <form id="formCapacitacion">
-          <div class="seccion-titulo">
-            Datos del colaborador
-            <span class="badge">Obligatorio</span>
-          </div>
-
-          <div class="grid">
-            <div class="campo">
-              <label>Nombre completo:</label>
-              <input type="text" id="nombre" placeholder="Ej. Fernando Cortes Malagón" required>
+        <form id="formDatos">
+          <div id="datosColaborador">
+            <div class="seccion-titulo">
+              Datos del colaborador
+              <span class="badge">Obligatorio</span>
             </div>
 
-            <div class="campo">
-              <label>Número de empleado:</label>
-              <input type="text" id="numero_empleado" placeholder="Ej. 9000" required>
-            </div>
-          </div>
+            <div class="grid">
+              <div class="campo">
+                <label for="nombre">Nombre completo:</label>
+                <input type="text" id="nombre" placeholder="Ej. Fernando Cortes Malagón" required>
+              </div>
 
-          <div class="grid">
-            <div class="campo">
-              <label>Servicio:</label>
-              <select id="servicio" required>
-                <option value="">Selecciona un servicio</option>
-                <option value="Walmart">Walmart</option>
-                <option value="Helman">Helman</option>
-                <option value="Otro">Otro</option>
-              </select>
+              <div class="campo">
+                <label for="numero_empleado">Número de empleado:</label>
+                <input type="text" id="numero_empleado" placeholder="Ej. 9000" required>
+              </div>
             </div>
 
-            <div class="campo">
-              <label>Curso:</label>
-              <input type="text" id="curso" value="Ingeniería Social (llamada de extorsión)" readonly>
+            <div class="grid">
+              <div class="campo">
+                <label for="servicio">Servicio:</label>
+                <select id="servicio" required>
+                  <option value="">Selecciona un servicio</option>
+                  <option value="Walmart">Walmart</option>
+                  <option value="Helman">Helman</option>
+                  <option value="Otro">Otro</option>
+                </select>
+              </div>
+
+              <div class="campo">
+                <label for="curso">Curso:</label>
+                <input type="text" id="curso" value="Ingeniería Social (llamada de extorsión)" readonly>
+              </div>
             </div>
-          </div>
 
-          <div class="seccion-titulo">
-            Cuestionario
-            <span class="badge">Mínimo 80 para aprobar</span>
-          </div>
+            <div class="acciones">
+              <button type="submit" id="btnContinuarVideo">Continuar al video obligatorio</button>
+            </div>
 
-          <div class="texto-progreso" id="textoProgreso">Preguntas respondidas: 0 de 10</div>
-          <div class="progreso">
-            <div class="barra-progreso" id="barraProgreso"></div>
+            <p class="nota">
+              Completa tus datos para iniciar el video. El cuestionario se habilitará únicamente cuando el video termine.
+            </p>
           </div>
+        </form>
 
-          <div id="contenedorPreguntas"></div>
+        <section id="bloqueVideo" class="bloque-video" hidden>
+          <h2>Video obligatorio</h2>
+          <p>Reproduce el video completo. No es posible adelantarlo; al finalizar se habilitará el cuestionario.</p>
+
+          <video id="videoCapacitacion" class="video-obligatorio" preload="metadata" playsinline tabindex="-1"
+                 disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback">
+            <source src="video.mp4" type="video/mp4">
+            Tu navegador no puede reproducir este video.
+          </video>
 
           <div class="acciones">
-            <button type="submit" id="btnEnviar">Finalizar capacitación</button>
+            <button type="button" id="btnReproducirVideo">Reproducir video</button>
           </div>
 
-          <p class="nota">
-            Revisa tus respuestas antes de enviar. Una vez enviado, el resultado quedará registrado.
+          <p id="mensajeVideo" class="mensaje-video" aria-live="polite">
+            El video debe terminar para continuar.
           </p>
-        </form>
+        </section>
+
+        <section id="bloqueCuestionario" class="bloque-cuestionario" hidden>
+          <form id="formCapacitacion">
+            <div class="seccion-titulo">
+              Cuestionario
+              <span class="badge">Mínimo 80 para aprobar</span>
+            </div>
+
+            <div class="texto-progreso" id="textoProgreso">Preguntas respondidas: 0 de 10</div>
+            <div class="progreso">
+              <div class="barra-progreso" id="barraProgreso"></div>
+            </div>
+
+            <div id="contenedorPreguntas"></div>
+
+            <div class="acciones">
+              <button type="submit" id="btnEnviar">Finalizar capacitación</button>
+            </div>
+
+            <p class="nota">
+              Revisa tus respuestas antes de enviar. Una vez enviado, el resultado quedará registrado.
+            </p>
+          </form>
+        </section>
 
         <div id="resultado"></div>
       </div>
@@ -538,10 +622,22 @@
       }
     ];
 
+    const formDatos = document.getElementById("formDatos");
+    const formCapacitacion = document.getElementById("formCapacitacion");
+    const datosColaborador = document.getElementById("datosColaborador");
+    const bloqueVideo = document.getElementById("bloqueVideo");
+    const bloqueCuestionario = document.getElementById("bloqueCuestionario");
+    const video = document.getElementById("videoCapacitacion");
+    const btnReproducirVideo = document.getElementById("btnReproducirVideo");
+    const mensajeVideo = document.getElementById("mensajeVideo");
     const contenedorPreguntas = document.getElementById("contenedorPreguntas");
     const textoProgreso = document.getElementById("textoProgreso");
     const barraProgreso = document.getElementById("barraProgreso");
     const btnEnviar = document.getElementById("btnEnviar");
+    const camposDatos = document.querySelectorAll("#datosColaborador input, #datosColaborador select");
+
+    let ultimoSegundoVisto = 0;
+    let videoCompletado = false;
 
     preguntas.forEach((pregunta, index) => {
       const div = document.createElement("div");
@@ -576,12 +672,106 @@
       barraProgreso.style.width = `${porcentaje}%`;
     }
 
+    function bloquearDatos() {
+      camposDatos.forEach(campo => campo.disabled = true);
+      datosColaborador.classList.add("datos-bloqueados");
+    }
+
+    function desbloquearDatos() {
+      camposDatos.forEach(campo => campo.disabled = false);
+      document.getElementById("curso").readOnly = true;
+      datosColaborador.classList.remove("datos-bloqueados");
+    }
+
+    async function reproducirVideo() {
+      try {
+        await video.play();
+        btnReproducirVideo.textContent = "Video en reproducción";
+        btnReproducirVideo.disabled = true;
+        mensajeVideo.textContent = "Mira el video completo. El cuestionario se desbloqueará automáticamente al terminar.";
+      } catch (error) {
+        btnReproducirVideo.disabled = false;
+        btnReproducirVideo.textContent = "Reproducir video";
+        mensajeVideo.textContent = "Presiona “Reproducir video” para iniciar.";
+        console.error(error);
+      }
+    }
+
+    formDatos.addEventListener("submit", function(event) {
+      event.preventDefault();
+
+      if (!formDatos.checkValidity()) {
+        formDatos.reportValidity();
+        return;
+      }
+
+      bloquearDatos();
+      bloqueVideo.hidden = false;
+      bloqueCuestionario.hidden = true;
+      videoCompletado = false;
+      ultimoSegundoVisto = 0;
+      video.currentTime = 0;
+      btnReproducirVideo.disabled = false;
+      btnReproducirVideo.textContent = "Reproducir video";
+      mensajeVideo.textContent = "El video debe terminar para continuar.";
+
+      bloqueVideo.scrollIntoView({ behavior: "smooth", block: "start" });
+      reproducirVideo();
+    });
+
+    btnReproducirVideo.addEventListener("click", reproducirVideo);
+
+    // No se muestra la barra nativa del video. Además, si se intenta adelantar
+    // mediante teclado o algún control del navegador, se regresa al último segundo visto.
+    video.addEventListener("timeupdate", function() {
+      if (!video.seeking && video.currentTime > ultimoSegundoVisto) {
+        ultimoSegundoVisto = video.currentTime;
+      }
+    });
+
+    video.addEventListener("seeking", function() {
+      const tolerancia = 0.75;
+      if (!videoCompletado && video.currentTime > ultimoSegundoVisto + tolerancia) {
+        video.currentTime = Math.max(0, ultimoSegundoVisto);
+      }
+    });
+
+    video.addEventListener("ratechange", function() {
+      if (video.playbackRate !== 1) {
+        video.playbackRate = 1;
+      }
+    });
+
+    video.addEventListener("contextmenu", function(event) {
+      event.preventDefault();
+    });
+
+    video.addEventListener("ended", function() {
+      videoCompletado = true;
+      ultimoSegundoVisto = video.duration || ultimoSegundoVisto;
+      btnReproducirVideo.hidden = true;
+      mensajeVideo.textContent = "Video completado correctamente. Ya puedes responder el cuestionario.";
+      bloqueCuestionario.hidden = false;
+      bloqueCuestionario.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+
+    video.addEventListener("error", function() {
+      mensajeVideo.textContent = "No fue posible cargar video.mp4. Verifica que el archivo esté en la misma carpeta que este HTML.";
+      btnReproducirVideo.disabled = true;
+    });
+
     document.querySelectorAll("input[type='radio']").forEach(input => {
       input.addEventListener("change", actualizarProgreso);
     });
 
-    document.getElementById("formCapacitacion").addEventListener("submit", async function(e) {
-      e.preventDefault();
+    formCapacitacion.addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      if (!videoCompletado) {
+        mensajeVideo.textContent = "Debes completar el video antes de enviar el cuestionario.";
+        bloqueVideo.scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
 
       let correctas = 0;
 
@@ -601,7 +791,8 @@
         servicio: document.getElementById("servicio").value,
         curso: document.getElementById("curso").value,
         calificacion: calificacion,
-        aprobado: aprobado
+        aprobado: aprobado,
+        video_completado: true
       };
 
       const resultadoDiv = document.getElementById("resultado");
@@ -632,8 +823,20 @@
           Estado: ${aprobado ? "Aprobado" : "No aprobado"}
         `;
 
-        document.getElementById("formCapacitacion").reset();
+        formCapacitacion.reset();
+        formDatos.reset();
         document.getElementById("curso").value = "Ingeniería Social (llamada de extorsión)";
+        desbloquearDatos();
+        video.pause();
+        video.currentTime = 0;
+        ultimoSegundoVisto = 0;
+        videoCompletado = false;
+        bloqueVideo.hidden = true;
+        bloqueCuestionario.hidden = true;
+        btnReproducirVideo.hidden = false;
+        btnReproducirVideo.disabled = false;
+        btnReproducirVideo.textContent = "Reproducir video";
+        mensajeVideo.textContent = "El video debe terminar para continuar.";
         actualizarProgreso();
 
       } catch (error) {
