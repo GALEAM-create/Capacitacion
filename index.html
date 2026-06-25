@@ -947,8 +947,8 @@
     let informacionAdicionalRevisada = false;
     let diapositivaActual = 0;
 
-    precargarDiapositivas();
-    reiniciarPresentacion();
+    // La presentación se inicializa más abajo y protegida con try/catch para que
+    // nunca pueda bloquear el acceso al video si una imagen tarda en cargar.
 
     preguntas.forEach((pregunta, index) => {
       const div = document.createElement("div");
@@ -1116,7 +1116,7 @@
       btnReproducirVideo.textContent = video.paused ? "Reproducir video" : "Pausar video";
     }
 
-    btnContinuarVideo.addEventListener("click", function() {
+    function abrirVideoCapacitacion() {
       if (!validarDatosParticipante()) return;
 
       resultadoDiv.style.display = "none";
@@ -1124,10 +1124,23 @@
       btnContinuarVideo.disabled = true;
       btnContinuarVideo.textContent = "Video habilitado";
 
+      // Fuerza la carga del archivo al abrir la sección, sin reproducirlo todavía.
+      // Así el botón "Reproducir video" queda listo incluso si el navegador
+      // había pausado la carga mientras la sección estaba oculta.
+      try {
+        if (video.networkState === HTMLMediaElement.NETWORK_EMPTY) {
+          video.load();
+        }
+      } catch (error) {
+        console.warn("No se pudo preparar el video todavía.", error);
+      }
+
       setTimeout(() => {
         seccionVideo.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 100);
-    });
+    }
+
+    btnContinuarVideo.addEventListener("click", abrirVideoCapacitacion);
 
     btnReproducirVideo.addEventListener("click", async function() {
       try {
@@ -1182,8 +1195,17 @@
     btnContinuarEvaluacion.addEventListener("click", mostrarEvaluacion);
 
     video.addEventListener("error", function() {
-      mensajeVideo.textContent = "No se pudo cargar el video. Confirma que el archivo se llame exactamente video.mp4 y esté en la misma carpeta que índice.html.";
+      mensajeVideo.textContent = "No se pudo cargar el video. Confirma que el archivo se llame exactamente video.mp4 y esté en la misma carpeta que index.html.";
     });
+
+    // La presentación es independiente del flujo de datos y video. Si alguna
+    // diapositiva fallara al cargar, el video seguirá siendo accesible.
+    try {
+      precargarDiapositivas();
+      reiniciarPresentacion();
+    } catch (error) {
+      console.error("No se pudo iniciar la presentación adicional.", error);
+    }
 
     document.querySelectorAll("input[type='radio']").forEach(input => {
       input.addEventListener("change", actualizarProgreso);
@@ -1297,6 +1319,33 @@
     });
 
     actualizarProgreso();
+  </script>
+
+
+  <script>
+    // Respaldo independiente: garantiza que el botón del registro muestre el video
+    // aun si una futura modificación de las diapositivas genera un error de JavaScript.
+    (function () {
+      const boton = document.getElementById("btnContinuarVideo");
+      const seccion = document.getElementById("seccionVideo");
+      const nombre = document.getElementById("nombre");
+      const empleado = document.getElementById("numero_empleado");
+      const servicio = document.getElementById("servicio");
+      const videoLocal = document.getElementById("videoCapacitacion");
+
+      if (!boton || !seccion || !nombre || !empleado || !servicio || !videoLocal) return;
+
+      boton.addEventListener("click", function () {
+        if (!nombre.value.trim()) { nombre.focus(); return; }
+        if (!empleado.value.trim()) { empleado.focus(); return; }
+        if (!servicio.value) { servicio.focus(); return; }
+
+        seccion.classList.remove("oculto");
+        try {
+          if (videoLocal.networkState === HTMLMediaElement.NETWORK_EMPTY) videoLocal.load();
+        } catch (error) {}
+      }, true);
+    })();
   </script>
 
 </body>
