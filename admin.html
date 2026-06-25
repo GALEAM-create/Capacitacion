@@ -1,150 +1,1196 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Panel Admin - Galeam Capacitación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Panel Ejecutivo | Galeam Capacitación</title>
+
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
+    :root {
+      --azul-oscuro: #081c2c;
+      --azul-medio: #123b59;
+      --azul-claro: #1e5b82;
+      --dorado: #c9a34e;
+      --dorado-suave: #f3ead5;
+      --blanco: #ffffff;
+      --fondo: #eef3f6;
+      --gris-claro: #f7f9fb;
+      --gris-borde: #dbe3e8;
+      --gris-texto: #62717b;
+      --verde: #198754;
+      --verde-suave: #e8f6ee;
+      --rojo: #c83d3d;
+      --rojo-suave: #fdecec;
+      --ambar: #b7791f;
+      --ambar-suave: #fff5df;
+      --sombra: 0 10px 28px rgba(8, 28, 44, 0.10);
+    }
+
+    * {
+      box-sizing: border-box;
       margin: 0;
-      padding: 30px;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    h1 {
-      color: #222;
+    body {
+      background: var(--fondo);
+      color: var(--azul-oscuro);
+      min-height: 100vh;
+      padding: 28px;
     }
 
-    .contenedor {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    .contenedor-principal {
+      max-width: 1550px;
+      margin: 0 auto;
     }
 
-    button {
-      padding: 10px 15px;
-      margin-bottom: 15px;
-      cursor: pointer;
+    /* ENCABEZADO */
+
+    .encabezado {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-medio));
+      color: var(--blanco);
+      border-radius: 18px;
+      padding: 32px 36px;
+      box-shadow: var(--sombra);
+      margin-bottom: 24px;
+    }
+
+    .encabezado::before {
+      content: "◆";
+      position: absolute;
+      right: 45px;
+      top: -30px;
+      font-size: 220px;
+      color: rgba(255, 255, 255, 0.045);
+      transform: rotate(20deg);
+      pointer-events: none;
+    }
+
+    .encabezado-contenido {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .marca-icono {
+      width: 54px;
+      height: 54px;
+      border: 1px solid rgba(201, 163, 78, 0.8);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--dorado);
+      font-size: 27px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .marca h1 {
+      font-size: clamp(25px, 3vw, 35px);
+      letter-spacing: 0.2px;
+      margin-bottom: 7px;
+    }
+
+    .marca p {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 14px;
+    }
+
+    .actualizacion {
+      text-align: right;
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.74);
+      line-height: 1.6;
+    }
+
+    .actualizacion strong {
+      display: block;
+      color: var(--dorado);
+      font-size: 14px;
+    }
+
+    /* TARJETAS */
+
+    .tarjetas-resumen {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(180px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .tarjeta {
+      background: var(--blanco);
+      border-radius: 15px;
+      padding: 22px;
+      box-shadow: 0 4px 16px rgba(8, 28, 44, 0.07);
+      border: 1px solid rgba(219, 227, 232, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tarjeta::after {
+      content: "";
+      position: absolute;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      right: -25px;
+      bottom: -30px;
+      background: rgba(30, 91, 130, 0.06);
+    }
+
+    .tarjeta-etiqueta {
+      color: var(--gris-texto);
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+
+    .tarjeta-valor {
+      font-size: 31px;
+      font-weight: bold;
+      color: var(--azul-oscuro);
+      margin-bottom: 6px;
+    }
+
+    .tarjeta-descripcion {
+      color: var(--gris-texto);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .tarjeta.aprobados .tarjeta-valor {
+      color: var(--verde);
+    }
+
+    .tarjeta.pendientes .tarjeta-valor {
+      color: var(--rojo);
+    }
+
+    .tarjeta.cumplimiento .tarjeta-valor {
+      color: var(--dorado);
+    }
+
+    /* BLOQUE DE INFORMACIÓN EJECUTIVA */
+
+    .seccion-ejecutiva {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .panel {
+      background: var(--blanco);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 4px 16px rgba(8, 28, 44, 0.07);
+      border: 1px solid rgba(219, 227, 232, 0.9);
+    }
+
+    .panel-encabezado {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+      gap: 15px;
+    }
+
+    .panel-encabezado h2 {
+      font-size: 18px;
+      color: var(--azul-oscuro);
+    }
+
+    .panel-encabezado span {
+      color: var(--gris-texto);
+      font-size: 12px;
+    }
+
+    .servicio-item {
+      margin-bottom: 18px;
+    }
+
+    .servicio-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .servicio-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 12px;
+      font-size: 14px;
+    }
+
+    .servicio-info strong {
+      color: var(--azul-oscuro);
+    }
+
+    .servicio-info span {
+      color: var(--gris-texto);
+      white-space: nowrap;
+    }
+
+    .barra-progreso {
+      height: 10px;
+      background: #e7edf1;
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .barra-progreso-interna {
+      height: 100%;
+      border-radius: 100px;
+      background: linear-gradient(90deg, var(--azul-medio), var(--azul-claro));
+      transition: width 0.4s ease;
+    }
+
+    .sin-datos {
+      color: var(--gris-texto);
+      text-align: center;
+      padding: 32px 10px;
+      font-size: 14px;
+    }
+
+    /* ALERTAS */
+
+    .alerta-resumen {
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 14px;
+      border-left: 4px solid transparent;
+    }
+
+    .alerta-resumen:last-child {
+      margin-bottom: 0;
+    }
+
+    .alerta-resumen.alerta-roja {
+      background: var(--rojo-suave);
+      border-left-color: var(--rojo);
+    }
+
+    .alerta-resumen.alerta-verde {
+      background: var(--verde-suave);
+      border-left-color: var(--verde);
+    }
+
+    .alerta-resumen.alerta-ambar {
+      background: var(--ambar-suave);
+      border-left-color: var(--ambar);
+    }
+
+    .alerta-titulo {
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .alerta-roja .alerta-titulo {
+      color: var(--rojo);
+    }
+
+    .alerta-verde .alerta-titulo {
+      color: var(--verde);
+    }
+
+    .alerta-ambar .alerta-titulo {
+      color: var(--ambar);
+    }
+
+    .alerta-texto {
+      font-size: 13px;
+      color: #55636d;
+      line-height: 1.45;
+    }
+
+    /* TABLA Y CONTROLES */
+
+    .panel-tabla {
+      background: var(--blanco);
+      border-radius: 15px;
+      padding: 25px;
+      box-shadow: 0 4px 16px rgba(8, 28, 44, 0.07);
+      border: 1px solid rgba(219, 227, 232, 0.9);
+      margin-bottom: 18px;
+    }
+
+    .controles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+
+    .campo-control {
+      border: 1px solid var(--gris-borde);
+      border-radius: 9px;
+      padding: 11px 13px;
+      background: var(--blanco);
+      color: var(--azul-oscuro);
+      font-size: 14px;
+      outline: none;
+      min-height: 42px;
+    }
+
+    .campo-control:focus {
+      border-color: var(--azul-claro);
+      box-shadow: 0 0 0 3px rgba(30, 91, 130, 0.10);
+    }
+
+    #buscador {
+      min-width: 260px;
+      flex: 1;
+    }
+
+    .boton {
       border: none;
-      background: #222;
-      color: white;
-      border-radius: 5px;
+      cursor: pointer;
+      min-height: 42px;
+      padding: 11px 16px;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: bold;
+      transition: transform 0.18s ease, opacity 0.18s ease, background 0.18s ease;
+    }
+
+    .boton:hover {
+      transform: translateY(-1px);
+    }
+
+    .boton-principal {
+      background: var(--azul-oscuro);
+      color: var(--blanco);
+    }
+
+    .boton-principal:hover {
+      background: var(--azul-medio);
+    }
+
+    .boton-secundario {
+      color: var(--azul-oscuro);
+      background: var(--dorado-suave);
+      border: 1px solid #e5d4a9;
+    }
+
+    .boton-secundario:hover {
+      background: #eadcb9;
+    }
+
+    .tabla-contenedor {
+      overflow-x: auto;
+      border: 1px solid var(--gris-borde);
+      border-radius: 11px;
     }
 
     table {
       width: 100%;
+      min-width: 1080px;
       border-collapse: collapse;
-      background: white;
+      background: var(--blanco);
     }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 10px;
+    th,
+    td {
+      padding: 14px 13px;
       text-align: left;
+      border-bottom: 1px solid #e7edf1;
+      font-size: 14px;
     }
 
     th {
-      background: #222;
-      color: white;
+      background: var(--azul-oscuro);
+      color: var(--blanco);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
     }
 
-    tr:nth-child(even) {
-      background: #f2f2f2;
+    tbody tr {
+      transition: background 0.15s ease;
     }
 
-    .aprobado {
-      color: green;
+    tbody tr:hover {
+      background: #f5f9fb;
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .celda-nombre {
       font-weight: bold;
+      color: var(--azul-oscuro);
+      min-width: 220px;
     }
 
-    .no-aprobado {
-      color: red;
+    .curso {
+      color: #405261;
+      min-width: 250px;
+    }
+
+    .calificacion {
       font-weight: bold;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 100px;
+      font-weight: bold;
+      font-size: 12px;
+      padding: 6px 10px;
+      white-space: nowrap;
+    }
+
+    .badge-aprobado {
+      background: var(--verde-suave);
+      color: var(--verde);
+    }
+
+    .badge-no-aprobado {
+      background: var(--rojo-suave);
+      color: var(--rojo);
+    }
+
+    .badge-pendiente {
+      background: var(--ambar-suave);
+      color: var(--ambar);
+    }
+
+    .estado-tabla {
+      text-align: center;
+      padding: 35px;
+      color: var(--gris-texto);
+    }
+
+    .pie-tabla {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      color: var(--gris-texto);
+      font-size: 13px;
+    }
+
+    .pie-tabla strong {
+      color: var(--azul-oscuro);
+    }
+
+    .nota-final {
+      color: var(--gris-texto);
+      font-size: 12px;
+      text-align: right;
+      padding: 0 4px 10px;
+    }
+
+    @media (max-width: 1180px) {
+      .tarjetas-resumen {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .seccion-ejecutiva {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 760px) {
+      body {
+        padding: 15px;
+      }
+
+      .encabezado {
+        padding: 25px 22px;
+      }
+
+      .actualizacion {
+        text-align: left;
+      }
+
+      .tarjetas-resumen {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .panel,
+      .panel-tabla {
+        padding: 18px;
+      }
+
+      .controles {
+        align-items: stretch;
+      }
+
+      .campo-control,
+      .boton {
+        width: 100%;
+      }
+
+      #buscador {
+        min-width: 100%;
+      }
+    }
+
+    @media (max-width: 460px) {
+      .tarjetas-resumen {
+        grid-template-columns: 1fr;
+      }
+
+      .marca {
+        align-items: flex-start;
+      }
+
+      .marca-icono {
+        flex-shrink: 0;
+      }
     }
   </style>
 </head>
+
 <body>
 
-  <div class="contenedor">
-    <h1>Panel de resultados - Galeam Capacitación</h1>
+  <main class="contenedor-principal">
 
-    <button onclick="cargarResultados()">Actualizar resultados</button>
+    <header class="encabezado">
+      <div class="encabezado-contenido">
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Nombre</th>
-          <th>Número empleado</th>
-          <th>Servicio</th>
-          <th>Curso</th>
-          <th>Calificación</th>
-          <th>Aprobado</th>
-          <th>Fecha</th>
-        </tr>
-      </thead>
-      <tbody id="tablaResultados">
-        <tr>
-          <td colspan="8">Cargando resultados...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+        <div class="marca">
+          <div class="marca-icono">◈</div>
+
+          <div>
+            <h1>Panel Ejecutivo de Capacitación</h1>
+            <p>Seguimiento de cumplimiento y desempeño operativo · Galeam Capacitación</p>
+          </div>
+        </div>
+
+        <div class="actualizacion">
+          <strong>Información actualizada</strong>
+          <span id="ultimaActualizacion">Cargando información...</span>
+        </div>
+
+      </div>
+    </header>
+
+    <section class="tarjetas-resumen">
+
+      <article class="tarjeta">
+        <p class="tarjeta-etiqueta">Personal registrado</p>
+        <p class="tarjeta-valor" id="totalRegistros">0</p>
+        <p class="tarjeta-descripcion">Registros de capacitación almacenados.</p>
+      </article>
+
+      <article class="tarjeta aprobados">
+        <p class="tarjeta-etiqueta">Personal aprobado</p>
+        <p class="tarjeta-valor" id="totalAprobados">0</p>
+        <p class="tarjeta-descripcion" id="descripcionAprobados">Sin información disponible.</p>
+      </article>
+
+      <article class="tarjeta pendientes">
+        <p class="tarjeta-etiqueta">Casos por atender</p>
+        <p class="tarjeta-valor" id="totalNoAprobados">0</p>
+        <p class="tarjeta-descripcion">Colaboradores que requieren seguimiento.</p>
+      </article>
+
+      <article class="tarjeta cumplimiento">
+        <p class="tarjeta-etiqueta">Cumplimiento general</p>
+        <p class="tarjeta-valor" id="porcentajeCumplimiento">0%</p>
+        <p class="tarjeta-descripcion">Porcentaje de colaboradores aprobados.</p>
+      </article>
+
+      <article class="tarjeta">
+        <p class="tarjeta-etiqueta">Promedio general</p>
+        <p class="tarjeta-valor" id="promedioGeneral">0</p>
+        <p class="tarjeta-descripcion">Promedio de calificaciones registradas.</p>
+      </article>
+
+    </section>
+
+    <section class="seccion-ejecutiva">
+
+      <article class="panel">
+        <div class="panel-encabezado">
+          <h2>Avance por servicio</h2>
+          <span>Porcentaje de aprobación</span>
+        </div>
+
+        <div id="resumenServicios">
+          <p class="sin-datos">Cargando avance por servicio...</p>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-encabezado">
+          <h2>Alertas estratégicas</h2>
+          <span>Seguimiento operativo</span>
+        </div>
+
+        <div id="alertasEstrategicas">
+          <p class="sin-datos">Analizando resultados...</p>
+        </div>
+      </article>
+
+    </section>
+
+    <section class="panel-tabla">
+
+      <div class="panel-encabezado">
+        <h2>Detalle de colaboradores</h2>
+        <span id="contadorRegistros">0 resultados visibles</span>
+      </div>
+
+      <div class="controles">
+
+        <input
+          type="text"
+          id="buscador"
+          class="campo-control"
+          placeholder="Buscar por nombre o número de empleado..."
+        >
+
+        <select id="filtroServicio" class="campo-control">
+          <option value="">Todos los servicios</option>
+        </select>
+
+        <select id="filtroCurso" class="campo-control">
+          <option value="">Todos los cursos</option>
+        </select>
+
+        <select id="filtroEstado" class="campo-control">
+          <option value="">Todos los estatus</option>
+          <option value="aprobado">Aprobados</option>
+          <option value="no-aprobado">No aprobados</option>
+        </select>
+
+        <button class="boton boton-principal" onclick="cargarResultados()">
+          ↻ Actualizar
+        </button>
+
+        <button class="boton boton-secundario" onclick="exportarExcel()">
+          ↓ Exportar a Excel
+        </button>
+
+      </div>
+
+      <div class="tabla-contenedor">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Nombre</th>
+              <th>Número empleado</th>
+              <th>Servicio</th>
+              <th>Curso</th>
+              <th>Calificación</th>
+              <th>Estatus</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
+
+          <tbody id="tablaResultados">
+            <tr>
+              <td colspan="8" class="estado-tabla">Cargando resultados...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pie-tabla">
+        <span id="mensajeFiltro">Mostrando todos los registros.</span>
+        <span>Fuente: Plataforma de Capacitación Galeam</span>
+      </div>
+
+    </section>
+
+    <p class="nota-final">
+      Panel de consulta ejecutiva · Los resultados se actualizan desde la plataforma de capacitación.
+    </p>
+
+  </main>
 
   <script>
-    async function cargarResultados() {
-      const tabla = document.getElementById("tablaResultados");
+    const URL_RESULTADOS =
+      "https://capacitacion-production-3120.up.railway.app/api/resultados";
 
-      try {
-        const respuesta = await fetch("https://capacitacion-production-3120.up.railway.app/api/resultados");
-        const resultados = await respuesta.json();
+    let resultadosOriginales = [];
+    let resultadosFiltrados = [];
 
-        tabla.innerHTML = "";
+    const tabla = document.getElementById("tablaResultados");
+    const buscador = document.getElementById("buscador");
+    const filtroServicio = document.getElementById("filtroServicio");
+    const filtroCurso = document.getElementById("filtroCurso");
+    const filtroEstado = document.getElementById("filtroEstado");
 
-        if (resultados.length === 0) {
-          tabla.innerHTML = `
-            <tr>
-              <td colspan="8">No hay resultados registrados.</td>
-            </tr>
-          `;
-          return;
+    function escaparHtml(texto) {
+      return String(texto ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function formatearFecha(fechaOriginal) {
+      if (!fechaOriginal) return "Sin fecha";
+
+      const fecha = new Date(fechaOriginal);
+
+      if (isNaN(fecha.getTime())) {
+        return escaparHtml(fechaOriginal);
+      }
+
+      return fecha.toLocaleString("es-MX", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      });
+    }
+
+    function obtenerPorcentaje(parte, total) {
+      if (!total) return 0;
+      return Math.round((parte / total) * 100);
+    }
+
+    function actualizarUltimaActualizacion() {
+      const ahora = new Date();
+
+      document.getElementById("ultimaActualizacion").textContent =
+        ahora.toLocaleString("es-MX", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        });
+    }
+
+    function llenarFiltros() {
+      const servicioSeleccionado = filtroServicio.value;
+      const cursoSeleccionado = filtroCurso.value;
+
+      const servicios = [
+        ...new Set(
+          resultadosOriginales
+            .map(resultado => resultado.servicio)
+            .filter(Boolean)
+        )
+      ].sort();
+
+      const cursos = [
+        ...new Set(
+          resultadosOriginales
+            .map(resultado => resultado.curso)
+            .filter(Boolean)
+        )
+      ].sort();
+
+      filtroServicio.innerHTML = `<option value="">Todos los servicios</option>`;
+      filtroCurso.innerHTML = `<option value="">Todos los cursos</option>`;
+
+      servicios.forEach(servicio => {
+        filtroServicio.innerHTML += `
+          <option value="${escaparHtml(servicio)}">
+            ${escaparHtml(servicio)}
+          </option>
+        `;
+      });
+
+      cursos.forEach(curso => {
+        filtroCurso.innerHTML += `
+          <option value="${escaparHtml(curso)}">
+            ${escaparHtml(curso)}
+          </option>
+        `;
+      });
+
+      filtroServicio.value = servicioSeleccionado;
+      filtroCurso.value = cursoSeleccionado;
+    }
+
+    function actualizarResumen() {
+      const total = resultadosOriginales.length;
+
+      const aprobados = resultadosOriginales.filter(
+        resultado => Number(resultado.aprobado) === 1
+      ).length;
+
+      const noAprobados = total - aprobados;
+
+      const promedio = total
+        ? resultadosOriginales.reduce(
+            (suma, resultado) => suma + Number(resultado.calificacion || 0),
+            0
+          ) / total
+        : 0;
+
+      const cumplimiento = obtenerPorcentaje(aprobados, total);
+
+      document.getElementById("totalRegistros").textContent = total;
+      document.getElementById("totalAprobados").textContent = aprobados;
+      document.getElementById("totalNoAprobados").textContent = noAprobados;
+      document.getElementById("porcentajeCumplimiento").textContent =
+        `${cumplimiento}%`;
+      document.getElementById("promedioGeneral").textContent =
+        promedio.toFixed(1);
+
+      document.getElementById("descripcionAprobados").textContent =
+        `${aprobados} de ${total} colaboradores acreditados.`;
+
+      actualizarResumenServicios();
+      actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio);
+    }
+
+    function actualizarResumenServicios() {
+      const contenedor = document.getElementById("resumenServicios");
+
+      if (!resultadosOriginales.length) {
+        contenedor.innerHTML = `
+          <p class="sin-datos">Aún no existen resultados para analizar.</p>
+        `;
+        return;
+      }
+
+      const servicios = {};
+
+      resultadosOriginales.forEach(resultado => {
+        const servicio = resultado.servicio || "Sin servicio asignado";
+
+        if (!servicios[servicio]) {
+          servicios[servicio] = {
+            total: 0,
+            aprobados: 0
+          };
         }
 
-        resultados.forEach(resultado => {
-          const aprobadoTexto = resultado.aprobado == 1 ? "Sí" : "No";
-          const claseAprobado = resultado.aprobado == 1 ? "aprobado" : "no-aprobado";
+        servicios[servicio].total++;
 
-          const fecha = new Date(resultado.fecha).toLocaleString("es-MX");
+        if (Number(resultado.aprobado) === 1) {
+          servicios[servicio].aprobados++;
+        }
+      });
+
+      const listaServicios = Object.entries(servicios)
+        .sort((a, b) => b[1].total - a[1].total);
+
+      contenedor.innerHTML = listaServicios.map(([nombre, datos]) => {
+        const porcentaje = obtenerPorcentaje(datos.aprobados, datos.total);
+
+        return `
+          <div class="servicio-item">
+            <div class="servicio-info">
+              <strong>${escaparHtml(nombre)}</strong>
+              <span>${datos.aprobados}/${datos.total} aprobados · ${porcentaje}%</span>
+            </div>
+
+            <div class="barra-progreso">
+              <div
+                class="barra-progreso-interna"
+                style="width: ${porcentaje}%"
+              ></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio) {
+      const contenedor = document.getElementById("alertasEstrategicas");
+
+      if (!resultadosOriginales.length) {
+        contenedor.innerHTML = `
+          <p class="sin-datos">No hay alertas mientras no existan registros.</p>
+        `;
+        return;
+      }
+
+      const calificacionesBajas = resultadosOriginales.filter(
+        resultado => Number(resultado.calificacion) < 70
+      );
+
+      let alertas = "";
+
+      if (noAprobados > 0) {
+        alertas += `
+          <div class="alerta-resumen alerta-roja">
+            <p class="alerta-titulo">${noAprobados} caso(s) requieren seguimiento</p>
+            <p class="alerta-texto">
+              Existen colaboradores sin acreditar la capacitación. Se recomienda
+              programar refuerzo o reinscripción.
+            </p>
+          </div>
+        `;
+      } else {
+        alertas += `
+          <div class="alerta-resumen alerta-verde">
+            <p class="alerta-titulo">Sin casos pendientes de aprobación</p>
+            <p class="alerta-texto">
+              Todos los registros actuales se encuentran acreditados.
+            </p>
+          </div>
+        `;
+      }
+
+      if (calificacionesBajas.length > 0) {
+        alertas += `
+          <div class="alerta-resumen alerta-ambar">
+            <p class="alerta-titulo">${calificacionesBajas.length} calificación(es) inferior(es) a 70</p>
+            <p class="alerta-texto">
+              Conviene revisar estos resultados para determinar si requieren
+              acompañamiento adicional.
+            </p>
+          </div>
+        `;
+      }
+
+      if (cumplimiento >= 90 && promedio >= 85) {
+        alertas += `
+          <div class="alerta-resumen alerta-verde">
+            <p class="alerta-titulo">Indicadores de desempeño favorables</p>
+            <p class="alerta-texto">
+              El cumplimiento general es de ${cumplimiento}% y el promedio
+              registrado es de ${promedio.toFixed(1)} puntos.
+            </p>
+          </div>
+        `;
+      }
+
+      contenedor.innerHTML = alertas;
+    }
+
+    function aplicarFiltros() {
+      const textoBusqueda = buscador.value.trim().toLowerCase();
+      const servicioSeleccionado = filtroServicio.value;
+      const cursoSeleccionado = filtroCurso.value;
+      const estadoSeleccionado = filtroEstado.value;
+
+      resultadosFiltrados = resultadosOriginales.filter(resultado => {
+        const nombre = String(resultado.nombre || "").toLowerCase();
+        const numeroEmpleado = String(resultado.numero_empleado || "").toLowerCase();
+
+        const coincideBusqueda =
+          !textoBusqueda ||
+          nombre.includes(textoBusqueda) ||
+          numeroEmpleado.includes(textoBusqueda);
+
+        const coincideServicio =
+          !servicioSeleccionado ||
+          resultado.servicio === servicioSeleccionado;
+
+        const coincideCurso =
+          !cursoSeleccionado ||
+          resultado.curso === cursoSeleccionado;
+
+        const aprobado = Number(resultado.aprobado) === 1;
+
+        const coincideEstado =
+          !estadoSeleccionado ||
+          (estadoSeleccionado === "aprobado" && aprobado) ||
+          (estadoSeleccionado === "no-aprobado" && !aprobado);
+
+        return (
+          coincideBusqueda &&
+          coincideServicio &&
+          coincideCurso &&
+          coincideEstado
+        );
+      });
+
+      renderizarTabla();
+    }
+
+    function renderizarTabla() {
+      tabla.innerHTML = "";
+
+      if (!resultadosFiltrados.length) {
+        tabla.innerHTML = `
+          <tr>
+            <td colspan="8" class="estado-tabla">
+              No se encontraron resultados con los filtros seleccionados.
+            </td>
+          </tr>
+        `;
+      } else {
+        resultadosFiltrados.forEach(resultado => {
+          const aprobado = Number(resultado.aprobado) === 1;
+
+          const etiquetaEstado = aprobado
+            ? `<span class="badge badge-aprobado">APROBADO</span>`
+            : `<span class="badge badge-no-aprobado">NO APROBADO</span>`;
+
+          const calificacion = Number(resultado.calificacion || 0);
 
           const fila = `
             <tr>
-              <td>${resultado.id}</td>
-              <td>${resultado.nombre}</td>
-              <td>${resultado.numero_empleado}</td>
-              <td>${resultado.servicio}</td>
-              <td>${resultado.curso}</td>
-              <td>${resultado.calificacion}</td>
-              <td class="${claseAprobado}">${aprobadoTexto}</td>
-              <td>${fecha}</td>
+              <td>${escaparHtml(resultado.id)}</td>
+              <td class="celda-nombre">${escaparHtml(resultado.nombre)}</td>
+              <td>${escaparHtml(resultado.numero_empleado)}</td>
+              <td>${escaparHtml(resultado.servicio || "Sin asignar")}</td>
+              <td class="curso">${escaparHtml(resultado.curso || "Sin curso")}</td>
+              <td class="calificacion">${calificacion}</td>
+              <td>${etiquetaEstado}</td>
+              <td>${formatearFecha(resultado.fecha)}</td>
             </tr>
           `;
 
           tabla.innerHTML += fila;
         });
+      }
+
+      const visibles = resultadosFiltrados.length;
+      const total = resultadosOriginales.length;
+
+      document.getElementById("contadorRegistros").textContent =
+        `${visibles} resultado${visibles === 1 ? "" : "s"} visible${visibles === 1 ? "" : "s"}`;
+
+      document.getElementById("mensajeFiltro").innerHTML =
+        visibles === total
+          ? `Mostrando <strong>todos los ${total}</strong> registros.`
+          : `Mostrando <strong>${visibles}</strong> de <strong>${total}</strong> registros.`;
+    }
+
+    function protegerTextoCSV(valor) {
+      const texto = String(valor ?? "").replace(/"/g, '""');
+      return `"${texto}"`;
+    }
+
+    function exportarExcel() {
+      if (!resultadosFiltrados.length) {
+        alert("No hay resultados visibles para exportar.");
+        return;
+      }
+
+      const encabezados = [
+        "ID",
+        "Nombre",
+        "Número de empleado",
+        "Servicio",
+        "Curso",
+        "Calificación",
+        "Estatus",
+        "Fecha"
+      ];
+
+      const filas = resultadosFiltrados.map(resultado => [
+        resultado.id,
+        resultado.nombre,
+        resultado.numero_empleado,
+        resultado.servicio,
+        resultado.curso,
+        resultado.calificacion,
+        Number(resultado.aprobado) === 1 ? "Aprobado" : "No aprobado",
+        formatearFecha(resultado.fecha)
+      ]);
+
+      const contenidoCSV = [
+        encabezados.map(protegerTextoCSV).join(","),
+        ...filas.map(fila => fila.map(protegerTextoCSV).join(","))
+      ].join("\n");
+
+      const archivo = new Blob(
+        ["\ufeff" + contenidoCSV],
+        { type: "text/csv;charset=utf-8;" }
+      );
+
+      const enlace = document.createElement("a");
+      const url = URL.createObjectURL(archivo);
+
+      const fechaArchivo = new Date()
+        .toISOString()
+        .slice(0, 10);
+
+      enlace.href = url;
+      enlace.download = `Reporte_Capacitacion_Galeam_${fechaArchivo}.csv`;
+
+      document.body.appendChild(enlace);
+      enlace.click();
+      document.body.removeChild(enlace);
+
+      URL.revokeObjectURL(url);
+    }
+
+    async function cargarResultados() {
+      tabla.innerHTML = `
+        <tr>
+          <td colspan="8" class="estado-tabla">
+            Actualizando resultados...
+          </td>
+        </tr>
+      `;
+
+      try {
+        const respuesta = await fetch(URL_RESULTADOS);
+
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+
+        const resultados = await respuesta.json();
+
+        resultadosOriginales = Array.isArray(resultados)
+          ? resultados.sort((a, b) => Number(b.id) - Number(a.id))
+          : [];
+
+        llenarFiltros();
+        actualizarResumen();
+        actualizarUltimaActualizacion();
+        aplicarFiltros();
 
       } catch (error) {
+        console.error("Error al cargar resultados:", error);
+
+        resultadosOriginales = [];
+        resultadosFiltrados = [];
+
+        actualizarResumen();
+        actualizarUltimaActualizacion();
+
         tabla.innerHTML = `
           <tr>
-            <td colspan="8">Error al cargar resultados.</td>
+            <td colspan="8" class="estado-tabla">
+              No fue posible cargar los resultados. Verifica la conexión con el servidor.
+            </td>
           </tr>
         `;
-        console.error(error);
+
+        document.getElementById("contadorRegistros").textContent =
+          "Sin resultados disponibles";
+
+        document.getElementById("mensajeFiltro").textContent =
+          "No se pudo establecer conexión con la plataforma.";
       }
     }
+
+    buscador.addEventListener("input", aplicarFiltros);
+    filtroServicio.addEventListener("change", aplicarFiltros);
+    filtroCurso.addEventListener("change", aplicarFiltros);
+    filtroEstado.addEventListener("change", aplicarFiltros);
 
     cargarResultados();
   </script>
 
 </body>
 </html>
+```
