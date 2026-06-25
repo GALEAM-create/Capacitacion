@@ -427,7 +427,8 @@
       margin-top: 8px;
     }
 
-    /* Material complementario mostrado después del video */
+
+    /* Presentación mostrada después del video */
     .seccion-informacion-adicional {
       margin: 28px 0;
       padding: 26px;
@@ -456,38 +457,105 @@
       line-height: 1.55;
     }
 
-    .galeria-diapositivas {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 18px;
+    .presentacion-diapositivas {
+      border: 1px solid rgba(252, 204, 56, 0.28);
+      border-radius: 18px;
+      overflow: hidden;
+      background: #000000;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
     }
 
     .diapositiva-adicional {
+      display: none;
       margin: 0;
-      overflow: hidden;
-      border: 1px solid rgba(252, 204, 56, 0.24);
-      border-radius: 16px;
-      background: #ffffff;
-      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+      background: #000000;
+    }
+
+    .diapositiva-adicional.activa {
+      display: block;
+      animation: aparecer-diapositiva 0.28s ease;
+    }
+
+    @keyframes aparecer-diapositiva {
+      from {
+        opacity: 0;
+        transform: translateX(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
     .diapositiva-adicional img {
       display: block;
       width: 100%;
-      height: auto;
+      max-height: 590px;
+      object-fit: contain;
+      background: #000000;
     }
 
     .diapositiva-adicional figcaption {
-      padding: 9px 13px;
+      padding: 11px 15px;
       background: #111111;
       color: var(--gris);
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.4;
+    }
+
+    .controles-presentacion {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    .grupo-botones-presentacion {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-presentacion {
+      padding: 12px 18px;
+      font-size: 15px;
+      border-radius: 12px;
+    }
+
+    .contador-diapositivas {
+      color: var(--gris);
+      font-weight: bold;
+      font-size: 14px;
     }
 
     .acciones-informacion {
       justify-content: center;
       margin-top: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .seccion-informacion-adicional {
+        padding: 20px;
+      }
+
+      .diapositiva-adicional img {
+        max-height: 420px;
+      }
+
+      .controles-presentacion {
+        align-items: stretch;
+      }
+
+      .grupo-botones-presentacion,
+      .grupo-botones-presentacion button {
+        width: 100%;
+      }
+
+      .contador-diapositivas {
+        text-align: center;
+      }
     }
 
     @media (max-width: 720px) {
@@ -611,75 +679,83 @@
               <p>Revisa el siguiente material antes de continuar con el cuestionario. Incluye conceptos, señales de alerta y el protocolo de actuación ante una posible extorsión.</p>
             </div>
 
-            <div class="galeria-diapositivas">
-              <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="lazy">
+            <div class="presentacion-diapositivas" aria-live="polite">
+              <figure class="diapositiva-adicional activa">
+                <img src="01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="eager">
                 <figcaption>¿Qué es la ingeniería social?</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/02-manipulacion-delincuente.webp" alt="Diapositiva: Recursos que utiliza el delincuente" loading="lazy">
+                <img src="02-manipulacion-delincuente.webp" alt="Diapositiva: Recursos que utiliza el delincuente" loading="lazy">
                 <figcaption>Recursos que utiliza el delincuente.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/03-que-es-la-extorsion.webp" alt="Diapositiva: ¿Qué es la extorsión?" loading="lazy">
+                <img src="03-que-es-la-extorsion.webp" alt="Diapositiva: ¿Qué es la extorsión?" loading="lazy">
                 <figcaption>¿Qué es la extorsión?</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/04-empresas-objetivos.webp" alt="Diapositiva: Por qué las empresas de seguridad son objetivos" loading="lazy">
+                <img src="04-empresas-objetivos.webp" alt="Diapositiva: Por qué las empresas de seguridad son objetivos" loading="lazy">
                 <figcaption>¿Por qué las empresas de seguridad son objetivos?</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/05-informacion-sensible.webp" alt="Diapositiva: Información sensible de las empresas de seguridad" loading="lazy">
+                <img src="05-informacion-sensible.webp" alt="Diapositiva: Información sensible de las empresas de seguridad" loading="lazy">
                 <figcaption>Información sensible que debe protegerse.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/06-tipos-de-extorsion.webp" alt="Diapositiva: Tipos de extorsión telefónica, digital y secuestro virtual" loading="lazy">
+                <img src="06-tipos-de-extorsion.webp" alt="Diapositiva: Tipos de extorsión telefónica, digital y secuestro virtual" loading="lazy">
                 <figcaption>Tipos de extorsión: telefónica, digital y secuestro virtual.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/07-suplantacion-y-extorsion-interna.webp" alt="Diapositiva: Suplantación de identidad y extorsión interna" loading="lazy">
+                <img src="07-suplantacion-y-extorsion-interna.webp" alt="Diapositiva: Suplantación de identidad y extorsión interna" loading="lazy">
                 <figcaption>Suplantación de identidad y extorsión interna.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/08-extorsion-directa-e-indirecta.webp" alt="Diapositiva: Comparación entre extorsión directa e indirecta" loading="lazy">
-                <figcaption>Extorsión directa e indirecta.</figcaption>
+                <img src="08-extorsion-directa-e-indirecta.webp" alt="Diapositiva: Extorsión directa e indirecta" loading="lazy">
+                <figcaption>Diferencias entre extorsión directa e indirecta.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/09-senales-de-alerta.webp" alt="Diapositiva: Señales de alerta ante una posible extorsión" loading="lazy">
+                <img src="09-senales-de-alerta.webp" alt="Diapositiva: Señales de alerta" loading="lazy">
                 <figcaption>Señales de alerta.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/10-informacion-no-compartir.webp" alt="Diapositiva: Información que nunca debe compartirse" loading="lazy">
+                <img src="10-informacion-no-compartir.webp" alt="Diapositiva: Información que nunca debe compartirse" loading="lazy">
                 <figcaption>Información que nunca debe compartirse.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/11-caso-practico.webp" alt="Diapositiva: Caso práctico de una llamada de extorsión" loading="lazy">
+                <img src="11-caso-practico.webp" alt="Diapositiva: Caso práctico" loading="lazy">
                 <figcaption>Caso práctico.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/12-protocolo-de-actuacion.webp" alt="Diapositiva: Protocolo de actuación ante una posible extorsión" loading="lazy">
+                <img src="12-protocolo-de-actuacion.webp" alt="Diapositiva: Protocolo de actuación" loading="lazy">
                 <figcaption>Protocolo de actuación.</figcaption>
               </figure>
 
               <figure class="diapositiva-adicional">
-                <img src="recursos-informacion-adicional/13-conclusiones.webp" alt="Diapositiva: Conclusiones de la capacitación" loading="lazy">
+                <img src="13-conclusiones.webp" alt="Diapositiva: Conclusiones" loading="lazy">
                 <figcaption>Conclusiones.</figcaption>
               </figure>
             </div>
 
+            <div class="controles-presentacion">
+              <div class="grupo-botones-presentacion">
+                <button type="button" id="btnAnteriorDiapositiva" class="btn-presentacion" disabled>← Anterior</button>
+                <button type="button" id="btnSiguienteDiapositiva" class="btn-presentacion">Siguiente →</button>
+              </div>
+              <div class="contador-diapositivas" id="contadorDiapositivas">Diapositiva 1 de 13</div>
+            </div>
+
             <div class="acciones acciones-informacion">
-              <button type="button" id="btnContinuarEvaluacion">Continuar al cuestionario</button>
+              <button type="button" id="btnContinuarEvaluacion" class="oculto">Continuar al cuestionario</button>
             </div>
           </section>
 
@@ -829,6 +905,10 @@
     const seccionVideo = document.getElementById("seccionVideo");
     const seccionInformacionAdicional = document.getElementById("seccionInformacionAdicional");
     const btnContinuarEvaluacion = document.getElementById("btnContinuarEvaluacion");
+    const btnAnteriorDiapositiva = document.getElementById("btnAnteriorDiapositiva");
+    const btnSiguienteDiapositiva = document.getElementById("btnSiguienteDiapositiva");
+    const contadorDiapositivas = document.getElementById("contadorDiapositivas");
+    const diapositivasAdicionales = document.querySelectorAll(".diapositiva-adicional");
     const seccionEvaluacion = document.getElementById("seccionEvaluacion");
     const video = document.getElementById("videoCapacitacion");
     const mensajeVideo = document.getElementById("mensajeVideo");
@@ -843,6 +923,9 @@
     let ultimoSegundoVisto = 0;
     let videoCompletado = false;
     let informacionAdicionalRevisada = false;
+    let diapositivaActual = 0;
+
+    reiniciarPresentacion();
 
     preguntas.forEach((pregunta, index) => {
       const div = document.createElement("div");
@@ -913,6 +996,29 @@
       return true;
     }
 
+    function mostrarDiapositiva(indice) {
+      if (!diapositivasAdicionales.length) return;
+
+      diapositivaActual = Math.max(0, Math.min(indice, diapositivasAdicionales.length - 1));
+
+      diapositivasAdicionales.forEach((diapositiva, posicion) => {
+        diapositiva.classList.toggle("activa", posicion === diapositivaActual);
+      });
+
+      contadorDiapositivas.textContent = `Diapositiva ${diapositivaActual + 1} de ${diapositivasAdicionales.length}`;
+      btnAnteriorDiapositiva.disabled = diapositivaActual === 0;
+
+      const ultimaDiapositiva = diapositivaActual === diapositivasAdicionales.length - 1;
+      btnSiguienteDiapositiva.disabled = ultimaDiapositiva;
+      btnContinuarEvaluacion.classList.toggle("oculto", !ultimaDiapositiva);
+    }
+
+    function reiniciarPresentacion() {
+      diapositivaActual = 0;
+      mostrarDiapositiva(diapositivaActual);
+      btnContinuarEvaluacion.classList.add("oculto");
+    }
+
     function mostrarInformacionAdicional() {
       videoCompletado = true;
       ultimoSegundoVisto = video.duration || ultimoSegundoVisto;
@@ -921,6 +1027,7 @@
       mensajeVideo.textContent = "Video completado. Revisa la información adicional antes de continuar al cuestionario.";
       seccionInformacionAdicional.classList.remove("oculto");
       seccionInformacionAdicional.setAttribute("aria-hidden", "false");
+      reiniciarPresentacion();
 
       setTimeout(() => {
         seccionInformacionAdicional.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -928,6 +1035,7 @@
     }
 
     function mostrarEvaluacion() {
+      if (diapositivaActual !== diapositivasAdicionales.length - 1) return;
       informacionAdicionalRevisada = true;
       seccionEvaluacion.classList.remove("oculto");
       seccionEvaluacion.setAttribute("aria-hidden", "false");
@@ -995,6 +1103,14 @@
     });
 
     video.addEventListener("ended", mostrarInformacionAdicional);
+
+    btnAnteriorDiapositiva.addEventListener("click", function() {
+      mostrarDiapositiva(diapositivaActual - 1);
+    });
+
+    btnSiguienteDiapositiva.addEventListener("click", function() {
+      mostrarDiapositiva(diapositivaActual + 1);
+    });
 
     btnContinuarEvaluacion.addEventListener("click", mostrarEvaluacion);
 
@@ -1088,9 +1204,13 @@
         video.currentTime = 0;
         ultimoSegundoVisto = 0;
         videoCompletado = false;
+        informacionAdicionalRevisada = false;
         seccionVideo.classList.add("oculto");
+        seccionInformacionAdicional.classList.add("oculto");
+        seccionInformacionAdicional.setAttribute("aria-hidden", "true");
         seccionEvaluacion.classList.add("oculto");
         seccionEvaluacion.setAttribute("aria-hidden", "true");
+        reiniciarPresentacion();
         btnContinuarVideo.disabled = false;
         btnContinuarVideo.textContent = "Continuar al video";
         btnReproducirVideo.disabled = false;
