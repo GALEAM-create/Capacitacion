@@ -457,40 +457,56 @@
       line-height: 1.55;
     }
 
+    /* Carrusel: las diapositivas se superponen para hacer una transición fluida,
+       sin que el contenedor desaparezca o la página "parpadee". */
     .presentacion-diapositivas {
+      position: relative;
+      aspect-ratio: 16 / 10;
+      min-height: 220px;
       border: 1px solid rgba(252, 204, 56, 0.28);
       border-radius: 18px;
       overflow: hidden;
+      isolation: isolate;
       background: #000000;
       box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
     }
 
     .diapositiva-adicional {
-      display: none;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      grid-template-rows: minmax(0, 1fr) auto;
       margin: 0;
       background: #000000;
+      opacity: 0;
+      transform: scale(0.985);
+      visibility: hidden;
+      pointer-events: none;
+      transition:
+        opacity 0.42s ease,
+        transform 0.42s ease,
+        visibility 0s linear 0.42s;
+      will-change: opacity, transform;
     }
 
     .diapositiva-adicional.activa {
-      display: block;
-      animation: aparecer-diapositiva 0.28s ease;
-    }
-
-    @keyframes aparecer-diapositiva {
-      from {
-        opacity: 0;
-        transform: translateX(10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
+      z-index: 2;
+      opacity: 1;
+      transform: scale(1);
+      visibility: visible;
+      pointer-events: auto;
+      transition:
+        opacity 0.42s ease,
+        transform 0.42s ease,
+        visibility 0s;
     }
 
     .diapositiva-adicional img {
       display: block;
       width: 100%;
-      max-height: 590px;
+      height: 100%;
+      min-height: 0;
       object-fit: contain;
       background: #000000;
     }
@@ -501,6 +517,13 @@
       color: var(--gris);
       font-size: 14px;
       line-height: 1.4;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .diapositiva-adicional,
+      .diapositiva-adicional.activa {
+        transition: none;
+      }
     }
 
     .controles-presentacion {
@@ -538,10 +561,6 @@
     @media (max-width: 720px) {
       .seccion-informacion-adicional {
         padding: 20px;
-      }
-
-      .diapositiva-adicional img {
-        max-height: 420px;
       }
 
       .controles-presentacion {
@@ -640,7 +659,10 @@
                 <option value="">Selecciona un servicio</option>
                 <option value="Walmart">Walmart</option>
                 <option value="Hellmann">Hellmann</option>
-                <option value="Otro">Otro</option>
+                <option value="Peterson Cuajimalpa">Peterson Cuajimalpa</option>
+                <option value="Peterson Pedregal">Peterson Pedregal</option>
+                <option value="AXXA">AXXA</option>
+                <option value="Gayosso">Gayosso</option>
               </select>
             </div>
 
@@ -925,6 +947,7 @@
     let informacionAdicionalRevisada = false;
     let diapositivaActual = 0;
 
+    precargarDiapositivas();
     reiniciarPresentacion();
 
     preguntas.forEach((pregunta, index) => {
@@ -996,26 +1019,70 @@
       return true;
     }
 
-    function mostrarDiapositiva(indice) {
-      if (!diapositivasAdicionales.length) return;
+    let transicionDiapositivaEnCurso = false;
 
-      diapositivaActual = Math.max(0, Math.min(indice, diapositivasAdicionales.length - 1));
+    function precargarDiapositivas() {
+      diapositivasAdicionales.forEach((diapositiva) => {
+        const imagen = diapositiva.querySelector("img");
+        if (!imagen) return;
 
+        // Se cargan desde el inicio para evitar un destello blanco cuando se llega a una diapositiva nueva.
+        imagen.loading = "eager";
+        const precarga = new Image();
+        precarga.src = imagen.currentSrc || imagen.src;
+
+        if (typeof precarga.decode === "function") {
+          precarga.decode().catch(() => {});
+        }
+      });
+    }
+
+    function actualizarControlesDiapositivas() {
+      contadorDiapositivas.textContent = `Diapositiva ${diapositivaActual + 1} de ${diapositivasAdicionales.length}`;
+
+      const ultimaDiapositiva = diapositivaActual === diapositivasAdicionales.length - 1;
+      btnAnteriorDiapositiva.disabled = transicionDiapositivaEnCurso || diapositivaActual === 0;
+      btnSiguienteDiapositiva.disabled = transicionDiapositivaEnCurso || ultimaDiapositiva;
+      btnContinuarEvaluacion.classList.toggle("oculto", !ultimaDiapositiva);
+    }
+
+    function mostrarDiapositiva(indice, animar = true) {
+      if (!diapositivasAdicionales.length || transicionDiapositivaEnCurso) return;
+
+      const siguienteIndice = Math.max(0, Math.min(indice, diapositivasAdicionales.length - 1));
+      const yaEstaVisible = diapositivaActual === siguienteIndice &&
+        diapositivasAdicionales[siguienteIndice].classList.contains("activa");
+
+      if (yaEstaVisible) {
+        actualizarControlesDiapositivas();
+        return;
+      }
+
+      diapositivaActual = siguienteIndice;
+
+      if (animar) {
+        transicionDiapositivaEnCurso = true;
+      }
+
+      // La anterior se desvanece mientras la nueva aparece encima: no se elimina el espacio ni hay parpadeo.
       diapositivasAdicionales.forEach((diapositiva, posicion) => {
         diapositiva.classList.toggle("activa", posicion === diapositivaActual);
       });
 
-      contadorDiapositivas.textContent = `Diapositiva ${diapositivaActual + 1} de ${diapositivasAdicionales.length}`;
-      btnAnteriorDiapositiva.disabled = diapositivaActual === 0;
+      actualizarControlesDiapositivas();
 
-      const ultimaDiapositiva = diapositivaActual === diapositivasAdicionales.length - 1;
-      btnSiguienteDiapositiva.disabled = ultimaDiapositiva;
-      btnContinuarEvaluacion.classList.toggle("oculto", !ultimaDiapositiva);
+      if (animar) {
+        window.setTimeout(() => {
+          transicionDiapositivaEnCurso = false;
+          actualizarControlesDiapositivas();
+        }, 440);
+      }
     }
 
     function reiniciarPresentacion() {
+      transicionDiapositivaEnCurso = false;
       diapositivaActual = 0;
-      mostrarDiapositiva(diapositivaActual);
+      mostrarDiapositiva(diapositivaActual, false);
       btnContinuarEvaluacion.classList.add("oculto");
     }
 
