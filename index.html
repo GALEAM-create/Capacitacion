@@ -427,6 +427,69 @@
       margin-top: 8px;
     }
 
+    /* Material complementario mostrado después del video */
+    .seccion-informacion-adicional {
+      margin: 28px 0;
+      padding: 26px;
+      border: 1px solid rgba(252, 204, 56, 0.32);
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(252, 204, 56, 0.08), rgba(219, 31, 38, 0.06)),
+        rgba(10, 10, 10, 0.94);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.30);
+    }
+
+    .informacion-adicional-encabezado {
+      margin-bottom: 20px;
+    }
+
+    .informacion-adicional-encabezado h2 {
+      margin: 10px 0 8px;
+      color: var(--amarillo);
+      font-size: 25px;
+      letter-spacing: 0.4px;
+    }
+
+    .informacion-adicional-encabezado p {
+      margin: 0;
+      color: #e5e5e5;
+      line-height: 1.55;
+    }
+
+    .galeria-diapositivas {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+    }
+
+    .diapositiva-adicional {
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid rgba(252, 204, 56, 0.24);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+    }
+
+    .diapositiva-adicional img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    .diapositiva-adicional figcaption {
+      padding: 9px 13px;
+      background: #111111;
+      color: var(--gris);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .acciones-informacion {
+      justify-content: center;
+      margin-top: 24px;
+    }
+
     @media (max-width: 720px) {
       .barra-superior {
         align-items: flex-start;
@@ -539,6 +602,85 @@
               <button type="button" id="btnReproducirVideo">Reproducir video</button>
             </div>
             <p class="mensaje-video" id="mensajeVideo">Debes ver el video completo para desbloquear el cuestionario.</p>
+          </section>
+
+          <section id="seccionInformacionAdicional" class="seccion-informacion-adicional oculto" aria-hidden="true">
+            <div class="informacion-adicional-encabezado">
+              <span class="badge">Consulta obligatoria</span>
+              <h2>INFORMACIÓN ADICIONAL</h2>
+              <p>Revisa el siguiente material antes de continuar con el cuestionario. Incluye conceptos, señales de alerta y el protocolo de actuación ante una posible extorsión.</p>
+            </div>
+
+            <div class="galeria-diapositivas">
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="lazy">
+                <figcaption>¿Qué es la ingeniería social?</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/02-manipulacion-delincuente.webp" alt="Diapositiva: Recursos que utiliza el delincuente" loading="lazy">
+                <figcaption>Recursos que utiliza el delincuente.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/03-que-es-la-extorsion.webp" alt="Diapositiva: ¿Qué es la extorsión?" loading="lazy">
+                <figcaption>¿Qué es la extorsión?</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/04-empresas-objetivos.webp" alt="Diapositiva: Por qué las empresas de seguridad son objetivos" loading="lazy">
+                <figcaption>¿Por qué las empresas de seguridad son objetivos?</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/05-informacion-sensible.webp" alt="Diapositiva: Información sensible de las empresas de seguridad" loading="lazy">
+                <figcaption>Información sensible que debe protegerse.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/06-tipos-de-extorsion.webp" alt="Diapositiva: Tipos de extorsión telefónica, digital y secuestro virtual" loading="lazy">
+                <figcaption>Tipos de extorsión: telefónica, digital y secuestro virtual.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/07-suplantacion-y-extorsion-interna.webp" alt="Diapositiva: Suplantación de identidad y extorsión interna" loading="lazy">
+                <figcaption>Suplantación de identidad y extorsión interna.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/08-extorsion-directa-e-indirecta.webp" alt="Diapositiva: Comparación entre extorsión directa e indirecta" loading="lazy">
+                <figcaption>Extorsión directa e indirecta.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/09-senales-de-alerta.webp" alt="Diapositiva: Señales de alerta ante una posible extorsión" loading="lazy">
+                <figcaption>Señales de alerta.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/10-informacion-no-compartir.webp" alt="Diapositiva: Información que nunca debe compartirse" loading="lazy">
+                <figcaption>Información que nunca debe compartirse.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/11-caso-practico.webp" alt="Diapositiva: Caso práctico de una llamada de extorsión" loading="lazy">
+                <figcaption>Caso práctico.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/12-protocolo-de-actuacion.webp" alt="Diapositiva: Protocolo de actuación ante una posible extorsión" loading="lazy">
+                <figcaption>Protocolo de actuación.</figcaption>
+              </figure>
+
+              <figure class="diapositiva-adicional">
+                <img src="recursos-informacion-adicional/13-conclusiones.webp" alt="Diapositiva: Conclusiones de la capacitación" loading="lazy">
+                <figcaption>Conclusiones.</figcaption>
+              </figure>
+            </div>
+
+            <div class="acciones acciones-informacion">
+              <button type="button" id="btnContinuarEvaluacion">Continuar al cuestionario</button>
+            </div>
           </section>
 
           <section id="seccionEvaluacion" class="oculto" aria-hidden="true">
@@ -685,6 +827,8 @@
     const btnContinuarVideo = document.getElementById("btnContinuarVideo");
     const btnReproducirVideo = document.getElementById("btnReproducirVideo");
     const seccionVideo = document.getElementById("seccionVideo");
+    const seccionInformacionAdicional = document.getElementById("seccionInformacionAdicional");
+    const btnContinuarEvaluacion = document.getElementById("btnContinuarEvaluacion");
     const seccionEvaluacion = document.getElementById("seccionEvaluacion");
     const video = document.getElementById("videoCapacitacion");
     const mensajeVideo = document.getElementById("mensajeVideo");
@@ -698,6 +842,7 @@
 
     let ultimoSegundoVisto = 0;
     let videoCompletado = false;
+    let informacionAdicionalRevisada = false;
 
     preguntas.forEach((pregunta, index) => {
       const div = document.createElement("div");
@@ -768,18 +913,28 @@
       return true;
     }
 
-    function mostrarEvaluacion() {
+    function mostrarInformacionAdicional() {
       videoCompletado = true;
       ultimoSegundoVisto = video.duration || ultimoSegundoVisto;
       btnReproducirVideo.disabled = true;
       btnReproducirVideo.textContent = "Video completado";
-      mensajeVideo.textContent = "Video completado. Ya puedes responder el cuestionario.";
+      mensajeVideo.textContent = "Video completado. Revisa la información adicional antes de continuar al cuestionario.";
+      seccionInformacionAdicional.classList.remove("oculto");
+      seccionInformacionAdicional.setAttribute("aria-hidden", "false");
+
+      setTimeout(() => {
+        seccionInformacionAdicional.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 250);
+    }
+
+    function mostrarEvaluacion() {
+      informacionAdicionalRevisada = true;
       seccionEvaluacion.classList.remove("oculto");
       seccionEvaluacion.setAttribute("aria-hidden", "false");
 
       setTimeout(() => {
         seccionEvaluacion.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 250);
+      }, 150);
     }
 
     function actualizarBotonVideo() {
@@ -839,7 +994,9 @@
       event.preventDefault();
     });
 
-    video.addEventListener("ended", mostrarEvaluacion);
+    video.addEventListener("ended", mostrarInformacionAdicional);
+
+    btnContinuarEvaluacion.addEventListener("click", mostrarEvaluacion);
 
     video.addEventListener("error", function() {
       mensajeVideo.textContent = "No se pudo cargar el video. Confirma que el archivo se llame exactamente video.mp4 y esté en la misma carpeta que índice.html.";
@@ -856,6 +1013,13 @@
         resultadoDiv.style.display = "block";
         resultadoDiv.className = "no-aprobado";
         resultadoDiv.textContent = "Primero debes ver completo el video de capacitación.";
+        return;
+      }
+
+      if (!informacionAdicionalRevisada) {
+        resultadoDiv.style.display = "block";
+        resultadoDiv.className = "no-aprobado";
+        resultadoDiv.textContent = "Revisa la información adicional antes de continuar con el cuestionario.";
         return;
       }
 
