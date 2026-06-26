@@ -457,8 +457,8 @@
       line-height: 1.55;
     }
 
-    /* Carrusel: las diapositivas se superponen para hacer una transición fluida,
-       sin que el contenedor desaparezca o la página "parpadee". */
+    /* Presentación robusta: se usa una sola imagen y se actualiza su src/texto.
+       Así evitamos que una diapositiva vieja se quede visible debajo de otra. */
     .presentacion-diapositivas {
       position: relative;
       aspect-ratio: 16 / 10;
@@ -469,93 +469,48 @@
       isolation: isolate;
       background: #000000;
       box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
-    }
-
-    .diapositiva-adicional {
-      position: absolute;
-      inset: 0;
-      z-index: 1;
       display: grid;
       grid-template-rows: minmax(0, 1fr) auto;
-      margin: 0;
+    }
+
+    .visor-diapositiva {
+      min-height: 0;
       background: #000000;
-      opacity: 0;
-      transform: scale(0.985);
-      visibility: hidden;
-      pointer-events: none;
-      transition:
-        opacity 0.42s ease,
-        transform 0.42s ease,
-        visibility 0s linear 0.42s;
-      will-change: opacity, transform;
     }
 
-    .diapositiva-adicional.activa {
-      z-index: 2;
-      opacity: 1;
-      transform: scale(1);
-      visibility: visible;
-      pointer-events: auto;
-      transition:
-        opacity 0.42s ease,
-        transform 0.42s ease,
-        visibility 0s;
-    }
-
-    .diapositiva-adicional img {
+    .imagen-diapositiva {
       display: block;
       width: 100%;
       height: 100%;
       min-height: 0;
       object-fit: contain;
       background: #000000;
+      opacity: 1;
+      transform: scale(1);
+      transition: opacity 0.26s ease, transform 0.26s ease;
+      will-change: opacity, transform;
     }
 
-    .diapositiva-adicional figcaption {
+    .imagen-diapositiva.cambiando {
+      opacity: 0.18;
+      transform: scale(0.988);
+    }
+
+    .texto-diapositiva {
       padding: 11px 15px;
       background: #111111;
       color: var(--gris);
       font-size: 14px;
       line-height: 1.4;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .diapositiva-adicional,
-      .diapositiva-adicional.activa {
+      .imagen-diapositiva {
         transition: none;
       }
-    }
-
-    .controles-presentacion {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      margin-top: 18px;
-      flex-wrap: wrap;
-    }
-
-    .grupo-botones-presentacion {
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .btn-presentacion {
-      padding: 12px 18px;
-      font-size: 15px;
-      border-radius: 12px;
-    }
-
-    .contador-diapositivas {
-      color: var(--gris);
-      font-weight: bold;
-      font-size: 14px;
-    }
-
-    .acciones-informacion {
-      justify-content: center;
-      margin-top: 24px;
     }
 
     @media (max-width: 720px) {
@@ -702,70 +657,10 @@
             </div>
 
             <div class="presentacion-diapositivas" aria-live="polite">
-              <figure class="diapositiva-adicional activa">
-                <img src="01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="eager">
-                <figcaption>¿Qué es la ingeniería social?</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="02-manipulacion-delincuente.webp" alt="Diapositiva: Recursos que utiliza el delincuente" loading="lazy">
-                <figcaption>Recursos que utiliza el delincuente.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="03-que-es-la-extorsion.webp" alt="Diapositiva: ¿Qué es la extorsión?" loading="lazy">
-                <figcaption>¿Qué es la extorsión?</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="04-empresas-objetivos.webp" alt="Diapositiva: Por qué las empresas de seguridad son objetivos" loading="lazy">
-                <figcaption>¿Por qué las empresas de seguridad son objetivos?</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="05-informacion-sensible.webp" alt="Diapositiva: Información sensible de las empresas de seguridad" loading="lazy">
-                <figcaption>Información sensible que debe protegerse.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="06-tipos-de-extorsion.webp" alt="Diapositiva: Tipos de extorsión telefónica, digital y secuestro virtual" loading="lazy">
-                <figcaption>Tipos de extorsión: telefónica, digital y secuestro virtual.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="07-suplantacion-y-extorsion-interna.webp" alt="Diapositiva: Suplantación de identidad y extorsión interna" loading="lazy">
-                <figcaption>Suplantación de identidad y extorsión interna.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="08-extorsion-directa-e-indirecta.webp" alt="Diapositiva: Extorsión directa e indirecta" loading="lazy">
-                <figcaption>Diferencias entre extorsión directa e indirecta.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="09-senales-de-alerta.webp" alt="Diapositiva: Señales de alerta" loading="lazy">
-                <figcaption>Señales de alerta.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="10-informacion-no-compartir.webp" alt="Diapositiva: Información que nunca debe compartirse" loading="lazy">
-                <figcaption>Información que nunca debe compartirse.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="11-caso-practico.webp" alt="Diapositiva: Caso práctico" loading="lazy">
-                <figcaption>Caso práctico.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="12-protocolo-de-actuacion.webp" alt="Diapositiva: Protocolo de actuación" loading="lazy">
-                <figcaption>Protocolo de actuación.</figcaption>
-              </figure>
-
-              <figure class="diapositiva-adicional">
-                <img src="13-conclusiones.webp" alt="Diapositiva: Conclusiones" loading="lazy">
-                <figcaption>Conclusiones.</figcaption>
-              </figure>
+              <div class="visor-diapositiva">
+                <img id="imagenDiapositiva" class="imagen-diapositiva" src="01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="eager">
+              </div>
+              <div class="texto-diapositiva" id="textoDiapositiva">¿Qué es la ingeniería social?</div>
             </div>
 
             <div class="controles-presentacion">
@@ -930,13 +825,30 @@
     const btnAnteriorDiapositiva = document.getElementById("btnAnteriorDiapositiva");
     const btnSiguienteDiapositiva = document.getElementById("btnSiguienteDiapositiva");
     const contadorDiapositivas = document.getElementById("contadorDiapositivas");
-    const diapositivasAdicionales = document.querySelectorAll(".diapositiva-adicional");
+    const imagenDiapositiva = document.getElementById("imagenDiapositiva");
+    const textoDiapositiva = document.getElementById("textoDiapositiva");
     const seccionEvaluacion = document.getElementById("seccionEvaluacion");
     const video = document.getElementById("videoCapacitacion");
     const mensajeVideo = document.getElementById("mensajeVideo");
     const resultadoDiv = document.getElementById("resultado");
     const marcaAgua = document.getElementById("marcaAgua");
     const logo = document.querySelector(".logo");
+
+    const diapositivasInfo = [
+      { src: "01-ingenieria-social.webp", texto: "¿Qué es la ingeniería social?" },
+      { src: "02-manipulacion-delincuente.webp", texto: "Recursos que utiliza el delincuente." },
+      { src: "03-que-es-la-extorsion.webp", texto: "¿Qué es la extorsión?" },
+      { src: "04-empresas-objetivos.webp", texto: "¿Por qué las empresas de seguridad son objetivos?" },
+      { src: "05-informacion-sensible.webp", texto: "Información sensible que debe protegerse." },
+      { src: "06-tipos-de-extorsion.webp", texto: "Tipos de extorsión: telefónica, digital y secuestro virtual." },
+      { src: "07-suplantacion-y-extorsion-interna.webp", texto: "Suplantación de identidad y extorsión interna." },
+      { src: "08-extorsion-directa-e-indirecta.webp", texto: "Diferencias entre extorsión directa e indirecta." },
+      { src: "09-senales-de-alerta.webp", texto: "Señales de alerta." },
+      { src: "10-informacion-no-compartir.webp", texto: "Información que nunca debe compartirse." },
+      { src: "11-caso-practico.webp", texto: "Caso práctico." },
+      { src: "12-protocolo-de-actuacion.webp", texto: "Protocolo de actuación." },
+      { src: "13-conclusiones.webp", texto: "Conclusiones." }
+    ];
 
     if (marcaAgua && logo) {
       marcaAgua.style.backgroundImage = `url("${logo.src}")`;
@@ -1022,15 +934,14 @@
     let transicionDiapositivaEnCurso = false;
 
     function precargarDiapositivas() {
-      diapositivasAdicionales.forEach((diapositiva) => {
-        const imagen = diapositiva.querySelector("img");
-        if (!imagen) return;
-
-        // Se cargan desde el inicio para evitar un destello blanco cuando se llega a una diapositiva nueva.
-        imagen.loading = "eager";
+      diapositivasInfo.forEach((diapositiva, indice) => {
         const precarga = new Image();
-        precarga.src = imagen.currentSrc || imagen.src;
-
+        precarga.src = diapositiva.src;
+        if (indice === 0 && imagenDiapositiva) {
+          imagenDiapositiva.src = diapositiva.src;
+          imagenDiapositiva.alt = `Diapositiva: ${diapositiva.texto}`;
+          textoDiapositiva.textContent = diapositiva.texto;
+        }
         if (typeof precarga.decode === "function") {
           precarga.decode().catch(() => {});
         }
@@ -1038,51 +949,61 @@
     }
 
     function actualizarControlesDiapositivas() {
-      contadorDiapositivas.textContent = `Diapositiva ${diapositivaActual + 1} de ${diapositivasAdicionales.length}`;
+      contadorDiapositivas.textContent = `Diapositiva ${diapositivaActual + 1} de ${diapositivasInfo.length}`;
 
-      const ultimaDiapositiva = diapositivaActual === diapositivasAdicionales.length - 1;
+      const ultimaDiapositiva = diapositivaActual === diapositivasInfo.length - 1;
       btnAnteriorDiapositiva.disabled = transicionDiapositivaEnCurso || diapositivaActual === 0;
       btnSiguienteDiapositiva.disabled = transicionDiapositivaEnCurso || ultimaDiapositiva;
       btnContinuarEvaluacion.classList.toggle("oculto", !ultimaDiapositiva);
     }
 
+    function aplicarDiapositiva(indice) {
+      const diapositiva = diapositivasInfo[indice];
+      if (!diapositiva || !imagenDiapositiva || !textoDiapositiva) return;
+      imagenDiapositiva.src = diapositiva.src;
+      imagenDiapositiva.alt = `Diapositiva: ${diapositiva.texto}`;
+      textoDiapositiva.textContent = diapositiva.texto;
+    }
+
     function mostrarDiapositiva(indice, animar = true) {
-      if (!diapositivasAdicionales.length || transicionDiapositivaEnCurso) return;
+      if (!diapositivasInfo.length || transicionDiapositivaEnCurso) return;
 
-      const siguienteIndice = Math.max(0, Math.min(indice, diapositivasAdicionales.length - 1));
-      const yaEstaVisible = diapositivaActual === siguienteIndice &&
-        diapositivasAdicionales[siguienteIndice].classList.contains("activa");
-
-      if (yaEstaVisible) {
+      const siguienteIndice = Math.max(0, Math.min(indice, diapositivasInfo.length - 1));
+      if (diapositivaActual === siguienteIndice && imagenDiapositiva?.getAttribute("src")?.includes(diapositivasInfo[siguienteIndice].src)) {
         actualizarControlesDiapositivas();
         return;
       }
 
       diapositivaActual = siguienteIndice;
-
-      if (animar) {
-        transicionDiapositivaEnCurso = true;
-      }
-
-      // La anterior se desvanece mientras la nueva aparece encima: no se elimina el espacio ni hay parpadeo.
-      diapositivasAdicionales.forEach((diapositiva, posicion) => {
-        diapositiva.classList.toggle("activa", posicion === diapositivaActual);
-      });
-
       actualizarControlesDiapositivas();
 
-      if (animar) {
-        window.setTimeout(() => {
-          transicionDiapositivaEnCurso = false;
-          actualizarControlesDiapositivas();
-        }, 440);
+      if (!animar) {
+        aplicarDiapositiva(diapositivaActual);
+        return;
       }
+
+      transicionDiapositivaEnCurso = true;
+      actualizarControlesDiapositivas();
+      imagenDiapositiva.classList.add("cambiando");
+
+      window.setTimeout(() => {
+        aplicarDiapositiva(diapositivaActual);
+        window.requestAnimationFrame(() => {
+          imagenDiapositiva.classList.remove("cambiando");
+        });
+      }, 120);
+
+      window.setTimeout(() => {
+        transicionDiapositivaEnCurso = false;
+        actualizarControlesDiapositivas();
+      }, 320);
     }
 
     function reiniciarPresentacion() {
       transicionDiapositivaEnCurso = false;
       diapositivaActual = 0;
-      mostrarDiapositiva(diapositivaActual, false);
+      aplicarDiapositiva(diapositivaActual);
+      actualizarControlesDiapositivas();
       btnContinuarEvaluacion.classList.add("oculto");
     }
 
@@ -1102,7 +1023,7 @@
     }
 
     function mostrarEvaluacion() {
-      if (diapositivaActual !== diapositivasAdicionales.length - 1) return;
+      if (diapositivaActual !== diapositivasInfo.length - 1) return;
       informacionAdicionalRevisada = true;
       seccionEvaluacion.classList.remove("oculto");
       seccionEvaluacion.setAttribute("aria-hidden", "false");
