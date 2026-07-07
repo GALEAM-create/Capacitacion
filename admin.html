@@ -480,6 +480,133 @@
       color: var(--ambar);
     }
 
+
+
+    .boton-historial {
+      border: 1px solid #d9c687;
+      background: var(--dorado-suave);
+      color: var(--azul-oscuro);
+      border-radius: 8px;
+      padding: 8px 11px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.18s ease, transform 0.18s ease;
+      white-space: nowrap;
+    }
+
+    .boton-historial:hover {
+      background: #eadcb9;
+      transform: translateY(-1px);
+    }
+
+    .fila-historial td {
+      background: #f8fbfd;
+      padding: 0;
+    }
+
+    .historial-contenedor {
+      padding: 18px;
+      border-top: 2px solid var(--dorado);
+    }
+
+    .historial-titulo {
+      color: var(--azul-oscuro);
+      font-size: 14px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .tabla-historial {
+      width: 100%;
+      min-width: 780px;
+      border: 1px solid var(--gris-borde);
+      border-radius: 9px;
+      overflow: hidden;
+      border-collapse: separate;
+      border-spacing: 0;
+    }
+
+    .tabla-historial th {
+      background: var(--azul-medio);
+      font-size: 11px;
+    }
+
+    .tabla-historial th,
+    .tabla-historial td {
+      padding: 11px 10px;
+      vertical-align: top;
+    }
+
+    .respuestas-error {
+      color: var(--rojo);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .sin-errores,
+    .sin-detalle,
+    .detalle-cargando,
+    .detalle-error {
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .sin-errores {
+      color: var(--verde);
+      font-weight: bold;
+    }
+
+    .sin-detalle,
+    .detalle-cargando {
+      color: var(--gris-texto);
+    }
+
+    .detalle-error {
+      color: var(--rojo);
+    }
+
+    .detalle-respuestas {
+      color: var(--azul-oscuro);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .detalle-respuestas summary {
+      cursor: pointer;
+      color: var(--rojo);
+      font-weight: bold;
+    }
+
+    .detalle-respuestas ol {
+      margin: 9px 0 0 19px;
+      padding: 0;
+    }
+
+    .detalle-respuestas li {
+      margin-bottom: 9px;
+    }
+
+    .detalle-pregunta {
+      display: block;
+      margin: 3px 0;
+      color: #405261;
+    }
+
+    .dato-intento {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 30px;
+      min-height: 28px;
+      padding: 4px 8px;
+      border-radius: 99px;
+      background: #e7edf1;
+      color: var(--azul-oscuro);
+      font-size: 12px;
+      font-weight: bold;
+    }
+
     .estado-tabla {
       text-align: center;
       padding: 35px;
@@ -581,7 +708,7 @@
 
           <div>
             <h1>Panel  Capacitación</h1>
-            <p>Seguimiento de cumplimiento y desempeño operativo · Galeam Capacitación</p>
+            <p>Seguimiento de cumplimiento, desempeño e historial de intentos · Galeam Capacitación</p>
           </div>
         </div>
 
@@ -598,7 +725,7 @@
       <article class="tarjeta">
         <p class="tarjeta-etiqueta">Personal registrado</p>
         <p class="tarjeta-valor" id="totalRegistros">0</p>
-        <p class="tarjeta-descripcion">Registros de capacitación almacenados.</p>
+        <p class="tarjeta-descripcion" id="descripcionRegistros">Registros de capacitación almacenados.</p>
       </article>
 
       <article class="tarjeta aprobados">
@@ -656,7 +783,7 @@
     <section class="panel-tabla">
 
       <div class="panel-encabezado">
-        <h2>Detalle de colaboradores</h2>
+        <h2>Detalle de colaboradores e historial de intentos</h2>
         <span id="contadorRegistros">0 resultados visibles</span>
       </div>
 
@@ -697,20 +824,21 @@
         <table>
           <thead>
             <tr>
-              <th>ID</th>
               <th>Nombre</th>
               <th>Número empleado</th>
               <th>Servicio</th>
               <th>Curso</th>
-              <th>Calificación</th>
-              <th>Estatus</th>
-              <th>Fecha</th>
+              <th>Intentos</th>
+              <th>Última calificación</th>
+              <th>Estatus actual</th>
+              <th>Última fecha</th>
+              <th>Historial</th>
             </tr>
           </thead>
 
           <tbody id="tablaResultados">
             <tr>
-              <td colspan="8" class="estado-tabla">Cargando resultados...</td>
+              <td colspan="9" class="estado-tabla">Cargando resultados...</td>
             </tr>
           </tbody>
         </table>
@@ -734,7 +862,10 @@
       "https://capacitacion-production-3120.up.railway.app/api/resultados";
 
     let resultadosOriginales = [];
-    let resultadosFiltrados = [];
+    let gruposOriginales = [];
+    let gruposFiltrados = [];
+    let grupoHistorialAbierto = null;
+    const detallesPorResultado = new Map();
 
     const tabla = document.getElementById("tablaResultados");
     const buscador = document.getElementById("buscador");
@@ -769,9 +900,108 @@
       });
     }
 
+    function obtenerFechaOrden(resultado) {
+      const fecha = new Date(resultado.fecha);
+
+      if (!isNaN(fecha.getTime())) {
+        return fecha.getTime();
+      }
+
+      return Number(resultado.id || 0);
+    }
+
     function obtenerPorcentaje(parte, total) {
       if (!total) return 0;
       return Math.round((parte / total) * 100);
+    }
+
+    function obtenerEscala(resultado) {
+      const escalaGuardada = Number(resultado.calificacion_maxima);
+
+      if (Number.isFinite(escalaGuardada) && escalaGuardada > 0) {
+        return escalaGuardada;
+      }
+
+      return String(resultado.curso || "").toLowerCase().includes("arma")
+        ? 100
+        : 10;
+    }
+
+    function formatearNumero(numero) {
+      const valor = Number(numero || 0);
+      return Number.isInteger(valor) ? String(valor) : valor.toFixed(1);
+    }
+
+    function formatearCalificacion(resultado) {
+      const calificacion = Number(resultado.calificacion || 0);
+      return `${formatearNumero(calificacion)} / ${obtenerEscala(resultado)}`;
+    }
+
+    function obtenerPorcentajeCalificacion(resultado) {
+      const calificacion = Number(resultado.calificacion || 0);
+      const escala = obtenerEscala(resultado);
+
+      if (!escala) return 0;
+
+      return (calificacion / escala) * 100;
+    }
+
+    function crearClaveGrupo(resultado) {
+      const numeroEmpleado = String(resultado.numero_empleado || "")
+        .trim()
+        .toLowerCase();
+      const curso = String(resultado.curso || "")
+        .trim()
+        .toLowerCase();
+
+      return `${numeroEmpleado}__${curso}`;
+    }
+
+    function crearGrupos(resultados) {
+      const mapa = new Map();
+
+      resultados.forEach(resultado => {
+        const clave = crearClaveGrupo(resultado);
+
+        if (!mapa.has(clave)) {
+          mapa.set(clave, []);
+        }
+
+        mapa.get(clave).push({ ...resultado });
+      });
+
+      return [...mapa.entries()]
+        .map(([clave, historial]) => {
+          historial.sort((a, b) => {
+            const diferencia = obtenerFechaOrden(a) - obtenerFechaOrden(b);
+            return diferencia || Number(a.id || 0) - Number(b.id || 0);
+          });
+
+          historial.forEach((resultado, indice) => {
+            const intentoGuardado = Number(resultado.intento);
+
+            resultado.intento_visible =
+              Number.isInteger(intentoGuardado) && intentoGuardado > 0
+                ? intentoGuardado
+                : indice + 1;
+          });
+
+          const ultimo = historial[historial.length - 1];
+
+          return {
+            clave,
+            nombre: ultimo.nombre,
+            numero_empleado: ultimo.numero_empleado,
+            servicio: ultimo.servicio,
+            curso: ultimo.curso,
+            historial,
+            ultimo
+          };
+        })
+        .sort((a, b) => {
+          const diferencia = obtenerFechaOrden(b.ultimo) - obtenerFechaOrden(a.ultimo);
+          return diferencia || Number(b.ultimo.id || 0) - Number(a.ultimo.id || 0);
+        });
     }
 
     function actualizarUltimaActualizacion() {
@@ -793,16 +1023,16 @@
 
       const servicios = [
         ...new Set(
-          resultadosOriginales
-            .map(resultado => resultado.servicio)
+          gruposOriginales
+            .map(grupo => grupo.servicio)
             .filter(Boolean)
         )
       ].sort();
 
       const cursos = [
         ...new Set(
-          resultadosOriginales
-            .map(resultado => resultado.curso)
+          gruposOriginales
+            .map(grupo => grupo.curso)
             .filter(Boolean)
         )
       ].sort();
@@ -831,17 +1061,18 @@
     }
 
     function actualizarResumen() {
-      const total = resultadosOriginales.length;
+      const total = gruposOriginales.length;
+      const totalIntentos = resultadosOriginales.length;
 
-      const aprobados = resultadosOriginales.filter(
-        resultado => Number(resultado.aprobado) === 1
+      const aprobados = gruposOriginales.filter(
+        grupo => Number(grupo.ultimo.aprobado) === 1
       ).length;
 
       const noAprobados = total - aprobados;
 
       const promedio = total
-        ? resultadosOriginales.reduce(
-            (suma, resultado) => suma + Number(resultado.calificacion || 0),
+        ? gruposOriginales.reduce(
+            (suma, grupo) => suma + obtenerPorcentajeCalificacion(grupo.ultimo),
             0
           ) / total
         : 0;
@@ -854,10 +1085,13 @@
       document.getElementById("porcentajeCumplimiento").textContent =
         `${cumplimiento}%`;
       document.getElementById("promedioGeneral").textContent =
-        promedio.toFixed(1);
+        `${promedio.toFixed(1)}%`;
+
+      document.getElementById("descripcionRegistros").textContent =
+        `${totalIntentos} intento${totalIntentos === 1 ? "" : "s"} almacenado${totalIntentos === 1 ? "" : "s"} para ${total} persona${total === 1 ? "" : "s"} / curso.`;
 
       document.getElementById("descripcionAprobados").textContent =
-        `${aprobados} de ${total} colaboradores acreditados.`;
+        `${aprobados} de ${total} registros persona / curso acreditados en su último intento.`;
 
       actualizarResumenServicios();
       actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio);
@@ -866,7 +1100,7 @@
     function actualizarResumenServicios() {
       const contenedor = document.getElementById("resumenServicios");
 
-      if (!resultadosOriginales.length) {
+      if (!gruposOriginales.length) {
         contenedor.innerHTML = `
           <p class="sin-datos">Aún no existen resultados para analizar.</p>
         `;
@@ -875,8 +1109,8 @@
 
       const servicios = {};
 
-      resultadosOriginales.forEach(resultado => {
-        const servicio = resultado.servicio || "Sin servicio asignado";
+      gruposOriginales.forEach(grupo => {
+        const servicio = grupo.servicio || "Sin servicio asignado";
 
         if (!servicios[servicio]) {
           servicios[servicio] = {
@@ -887,7 +1121,7 @@
 
         servicios[servicio].total++;
 
-        if (Number(resultado.aprobado) === 1) {
+        if (Number(grupo.ultimo.aprobado) === 1) {
           servicios[servicio].aprobados++;
         }
       });
@@ -919,15 +1153,19 @@
     function actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio) {
       const contenedor = document.getElementById("alertasEstrategicas");
 
-      if (!resultadosOriginales.length) {
+      if (!gruposOriginales.length) {
         contenedor.innerHTML = `
           <p class="sin-datos">No hay alertas mientras no existan registros.</p>
         `;
         return;
       }
 
-      const calificacionesBajas = resultadosOriginales.filter(
-        resultado => Number(resultado.calificacion) < 70
+      const calificacionesBajas = gruposOriginales.filter(
+        grupo => obtenerPorcentajeCalificacion(grupo.ultimo) < 70
+      );
+
+      const conReintentos = gruposOriginales.filter(
+        grupo => grupo.historial.length > 1
       );
 
       let alertas = "";
@@ -937,7 +1175,7 @@
           <div class="alerta-resumen alerta-roja">
             <p class="alerta-titulo">${noAprobados} caso(s) requieren seguimiento</p>
             <p class="alerta-texto">
-              Existen colaboradores sin acreditar la capacitación. Se recomienda
+              Corresponden al estatus de su último intento. Se recomienda
               programar refuerzo o reinscripción.
             </p>
           </div>
@@ -947,7 +1185,7 @@
           <div class="alerta-resumen alerta-verde">
             <p class="alerta-titulo">Sin casos pendientes de aprobación</p>
             <p class="alerta-texto">
-              Todos los registros actuales se encuentran acreditados.
+              Todos los registros persona / curso están acreditados en su último intento.
             </p>
           </div>
         `;
@@ -956,10 +1194,20 @@
       if (calificacionesBajas.length > 0) {
         alertas += `
           <div class="alerta-resumen alerta-ambar">
-            <p class="alerta-titulo">${calificacionesBajas.length} calificación(es) inferior(es) a 70</p>
+            <p class="alerta-titulo">${calificacionesBajas.length} último(s) resultado(s) inferior(es) a 70%</p>
             <p class="alerta-texto">
-              Conviene revisar estos resultados para determinar si requieren
-              acompañamiento adicional.
+              Conviene revisar el historial y las respuestas incorrectas de estos colaboradores.
+            </p>
+          </div>
+        `;
+      }
+
+      if (conReintentos.length > 0) {
+        alertas += `
+          <div class="alerta-resumen alerta-ambar">
+            <p class="alerta-titulo">${conReintentos.length} persona(s) han realizado más de un intento</p>
+            <p class="alerta-texto">
+              El botón “Ver historial” permite comparar sus calificaciones y errores por intento.
             </p>
           </div>
         `;
@@ -970,8 +1218,8 @@
           <div class="alerta-resumen alerta-verde">
             <p class="alerta-titulo">Indicadores de desempeño favorables</p>
             <p class="alerta-texto">
-              El cumplimiento general es de ${cumplimiento}% y el promedio
-              registrado es de ${promedio.toFixed(1)} puntos.
+              El cumplimiento general es de ${cumplimiento}% y el promedio normalizado
+              registrado es de ${promedio.toFixed(1)}%.
             </p>
           </div>
         `;
@@ -986,9 +1234,9 @@
       const cursoSeleccionado = filtroCurso.value;
       const estadoSeleccionado = filtroEstado.value;
 
-      resultadosFiltrados = resultadosOriginales.filter(resultado => {
-        const nombre = String(resultado.nombre || "").toLowerCase();
-        const numeroEmpleado = String(resultado.numero_empleado || "").toLowerCase();
+      gruposFiltrados = gruposOriginales.filter(grupo => {
+        const nombre = String(grupo.nombre || "").toLowerCase();
+        const numeroEmpleado = String(grupo.numero_empleado || "").toLowerCase();
 
         const coincideBusqueda =
           !textoBusqueda ||
@@ -997,13 +1245,13 @@
 
         const coincideServicio =
           !servicioSeleccionado ||
-          resultado.servicio === servicioSeleccionado;
+          grupo.servicio === servicioSeleccionado;
 
         const coincideCurso =
           !cursoSeleccionado ||
-          resultado.curso === cursoSeleccionado;
+          grupo.curso === cursoSeleccionado;
 
-        const aprobado = Number(resultado.aprobado) === 1;
+        const aprobado = Number(grupo.ultimo.aprobado) === 1;
 
         const coincideEstado =
           !estadoSeleccionado ||
@@ -1021,54 +1269,230 @@
       renderizarTabla();
     }
 
+    function obtenerEtiquetaEstado(aprobado) {
+      return aprobado
+        ? `<span class="badge badge-aprobado">APROBADO</span>`
+        : `<span class="badge badge-no-aprobado">NO APROBADO</span>`;
+    }
+
+    function leerRespuestasIncorrectas(detalle) {
+      if (!detalle || detalle.respuestas_incorrectas === null || detalle.respuestas_incorrectas === undefined || detalle.respuestas_incorrectas === "") {
+        return null;
+      }
+
+      if (Array.isArray(detalle.respuestas_incorrectas)) {
+        return detalle.respuestas_incorrectas;
+      }
+
+      try {
+        const datos = JSON.parse(detalle.respuestas_incorrectas);
+        return Array.isArray(datos) ? datos : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function renderizarDetalleErrores(resultado) {
+      const detalle = detallesPorResultado.get(Number(resultado.id));
+
+      if (!detalle || detalle.estado === "cargando") {
+        return `<span class="detalle-cargando">Cargando respuestas...</span>`;
+      }
+
+      if (detalle.estado === "error") {
+        return `<span class="detalle-error">No fue posible cargar el detalle de respuestas.</span>`;
+      }
+
+      const errores = leerRespuestasIncorrectas(detalle);
+
+      if (errores === null) {
+        return `<span class="sin-detalle">Sin detalle de respuestas para este intento.</span>`;
+      }
+
+      if (!errores.length) {
+        return `<span class="sin-errores">Sin respuestas incorrectas.</span>`;
+      }
+
+      const etiquetaCantidad = `${errores.length} respuesta${errores.length === 1 ? "" : "s"} incorrecta${errores.length === 1 ? "" : "s"}`;
+
+      const lista = errores.map(error => {
+        const numero = escaparHtml(error.numero ?? "");
+        const pregunta = escaparHtml(error.pregunta ?? "Pregunta sin texto disponible");
+        const respondio = escaparHtml(error.respuesta_usuario ?? error.respondio ?? "Sin respuesta");
+        const correcta = escaparHtml(error.respuesta_correcta ?? error.correcta ?? "Sin dato");
+
+        return `
+          <li>
+            <strong>Pregunta ${numero}</strong>
+            <span class="detalle-pregunta">${pregunta}</span>
+            Respondió: <strong>${respondio}</strong><br>
+            Correcta: <strong>${correcta}</strong>
+          </li>
+        `;
+      }).join("");
+
+      return `
+        <details class="detalle-respuestas">
+          <summary>${etiquetaCantidad} — ver detalle</summary>
+          <ol>${lista}</ol>
+        </details>
+      `;
+    }
+
+    function renderizarHistorial(grupo) {
+      const filas = [...grupo.historial]
+        .reverse()
+        .map(resultado => {
+          const aprobado = Number(resultado.aprobado) === 1;
+          const totalPreguntas = Number(resultado.total_preguntas || 0);
+          const detalle = detallesPorResultado.get(Number(resultado.id));
+          const errores = leerRespuestasIncorrectas(detalle);
+          const resumenErrores =
+            errores === null
+              ? "Sin detalle"
+              : errores.length === 0
+                ? "0 errores"
+                : `${errores.length} error${errores.length === 1 ? "" : "es"}`;
+
+          return `
+            <tr>
+              <td><span class="dato-intento">${escaparHtml(resultado.intento_visible)}</span></td>
+              <td class="calificacion">${formatearCalificacion(resultado)}</td>
+              <td>${obtenerEtiquetaEstado(aprobado)}</td>
+              <td>${formatearFecha(resultado.fecha)}</td>
+              <td>
+                <span class="respuestas-error">${escaparHtml(resumenErrores)}</span>
+                ${totalPreguntas ? `<br><span class="sin-detalle">de ${totalPreguntas} pregunta${totalPreguntas === 1 ? "" : "s"}</span>` : ""}
+              </td>
+              <td>${renderizarDetalleErrores(resultado)}</td>
+            </tr>
+          `;
+        })
+        .join("");
+
+      return `
+        <div class="historial-contenedor">
+          <p class="historial-titulo">
+            Historial de ${escaparHtml(grupo.nombre)} · ${escaparHtml(grupo.curso)}
+          </p>
+          <div class="tabla-contenedor">
+            <table class="tabla-historial">
+              <thead>
+                <tr>
+                  <th>Intento</th>
+                  <th>Calificación</th>
+                  <th>Resultado</th>
+                  <th>Fecha</th>
+                  <th>Errores</th>
+                  <th>Respuestas incorrectas</th>
+                </tr>
+              </thead>
+              <tbody>${filas}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
     function renderizarTabla() {
       tabla.innerHTML = "";
 
-      if (!resultadosFiltrados.length) {
+      if (!gruposFiltrados.length) {
         tabla.innerHTML = `
           <tr>
-            <td colspan="8" class="estado-tabla">
+            <td colspan="9" class="estado-tabla">
               No se encontraron resultados con los filtros seleccionados.
             </td>
           </tr>
         `;
       } else {
-        resultadosFiltrados.forEach(resultado => {
-          const aprobado = Number(resultado.aprobado) === 1;
+        gruposFiltrados.forEach((grupo, indice) => {
+          const ultimo = grupo.ultimo;
+          const aprobado = Number(ultimo.aprobado) === 1;
+          const estaAbierto = grupo.clave === grupoHistorialAbierto;
 
-          const etiquetaEstado = aprobado
-            ? `<span class="badge badge-aprobado">APROBADO</span>`
-            : `<span class="badge badge-no-aprobado">NO APROBADO</span>`;
-
-          const calificacion = Number(resultado.calificacion || 0);
-
-          const fila = `
+          tabla.innerHTML += `
             <tr>
-              <td>${escaparHtml(resultado.id)}</td>
-              <td class="celda-nombre">${escaparHtml(resultado.nombre)}</td>
-              <td>${escaparHtml(resultado.numero_empleado)}</td>
-              <td>${escaparHtml(resultado.servicio || "Sin asignar")}</td>
-              <td class="curso">${escaparHtml(resultado.curso || "Sin curso")}</td>
-              <td class="calificacion">${calificacion}</td>
-              <td>${etiquetaEstado}</td>
-              <td>${formatearFecha(resultado.fecha)}</td>
+              <td class="celda-nombre">${escaparHtml(grupo.nombre)}</td>
+              <td>${escaparHtml(grupo.numero_empleado)}</td>
+              <td>${escaparHtml(grupo.servicio || "Sin asignar")}</td>
+              <td class="curso">${escaparHtml(grupo.curso || "Sin curso")}</td>
+              <td class="calificacion">${grupo.historial.length}</td>
+              <td class="calificacion">${formatearCalificacion(ultimo)}</td>
+              <td>${obtenerEtiquetaEstado(aprobado)}</td>
+              <td>${formatearFecha(ultimo.fecha)}</td>
+              <td>
+                <button class="boton-historial" type="button" onclick="alternarHistorial(${indice})">
+                  ${estaAbierto ? "Ocultar historial" : "Ver historial"}
+                </button>
+              </td>
             </tr>
+            ${estaAbierto ? `
+              <tr class="fila-historial">
+                <td colspan="9">${renderizarHistorial(grupo)}</td>
+              </tr>
+            ` : ""}
           `;
-
-          tabla.innerHTML += fila;
         });
       }
 
-      const visibles = resultadosFiltrados.length;
-      const total = resultadosOriginales.length;
+      const visibles = gruposFiltrados.length;
+      const total = gruposOriginales.length;
 
       document.getElementById("contadorRegistros").textContent =
-        `${visibles} resultado${visibles === 1 ? "" : "s"} visible${visibles === 1 ? "" : "s"}`;
+        `${visibles} persona${visibles === 1 ? "" : "s"} / curso visible${visibles === 1 ? "" : "s"}`;
 
       document.getElementById("mensajeFiltro").innerHTML =
         visibles === total
-          ? `Mostrando <strong>todos los ${total}</strong> registros.`
-          : `Mostrando <strong>${visibles}</strong> de <strong>${total}</strong> registros.`;
+          ? `Mostrando <strong>todos los ${total}</strong> registros persona / curso.`
+          : `Mostrando <strong>${visibles}</strong> de <strong>${total}</strong> registros persona / curso.`;
+    }
+
+    async function cargarDetalleResultado(resultado) {
+      const id = Number(resultado.id);
+
+      if (detallesPorResultado.has(id)) {
+        return;
+      }
+
+      detallesPorResultado.set(id, { estado: "cargando" });
+
+      try {
+        const respuesta = await fetch(`${URL_RESULTADOS}/${encodeURIComponent(id)}/detalle`);
+
+        if (!respuesta.ok) {
+          throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+
+        const detalle = await respuesta.json();
+        detallesPorResultado.set(id, detalle);
+      } catch (error) {
+        console.error("Error al cargar detalle de intento:", error);
+        detallesPorResultado.set(id, { estado: "error" });
+      }
+    }
+
+    async function alternarHistorial(indice) {
+      const grupo = gruposFiltrados[indice];
+
+      if (!grupo) return;
+
+      if (grupoHistorialAbierto === grupo.clave) {
+        grupoHistorialAbierto = null;
+        renderizarTabla();
+        return;
+      }
+
+      grupoHistorialAbierto = grupo.clave;
+      renderizarTabla();
+
+      await Promise.all(
+        grupo.historial.map(resultado => cargarDetalleResultado(resultado))
+      );
+
+      if (grupoHistorialAbierto === grupo.clave) {
+        renderizarTabla();
+      }
     }
 
     function protegerTextoCSV(valor) {
@@ -1076,8 +1500,23 @@
       return `"${texto}"`;
     }
 
+    function resumenErroresParaExportar(resultado) {
+      const detalle = detallesPorResultado.get(Number(resultado.id));
+      const errores = leerRespuestasIncorrectas(detalle);
+
+      if (errores === null) return "Sin detalle de respuestas";
+      if (!errores.length) return "Sin respuestas incorrectas";
+
+      return errores.map(error => {
+        const numero = error.numero ?? "";
+        const respondio = error.respuesta_usuario ?? error.respondio ?? "";
+        const correcta = error.respuesta_correcta ?? error.correcta ?? "";
+        return `Pregunta ${numero}: respondió ${respondio}; correcta ${correcta}`;
+      }).join(" | ");
+    }
+
     function exportarExcel() {
-      if (!resultadosFiltrados.length) {
+      if (!gruposFiltrados.length) {
         alert("No hay resultados visibles para exportar.");
         return;
       }
@@ -1088,21 +1527,33 @@
         "Número de empleado",
         "Servicio",
         "Curso",
+        "Intento",
         "Calificación",
+        "Escala",
         "Estatus",
-        "Fecha"
+        "Fecha",
+        "Respuestas incorrectas"
       ];
 
-      const filas = resultadosFiltrados.map(resultado => [
-        resultado.id,
-        resultado.nombre,
-        resultado.numero_empleado,
-        resultado.servicio,
-        resultado.curso,
-        resultado.calificacion,
-        Number(resultado.aprobado) === 1 ? "Aprobado" : "No aprobado",
-        formatearFecha(resultado.fecha)
-      ]);
+      const filas = gruposFiltrados
+        .flatMap(grupo => grupo.historial)
+        .sort((a, b) => {
+          const diferencia = obtenerFechaOrden(b) - obtenerFechaOrden(a);
+          return diferencia || Number(b.id || 0) - Number(a.id || 0);
+        })
+        .map(resultado => [
+          resultado.id,
+          resultado.nombre,
+          resultado.numero_empleado,
+          resultado.servicio,
+          resultado.curso,
+          resultado.intento_visible,
+          resultado.calificacion,
+          obtenerEscala(resultado),
+          Number(resultado.aprobado) === 1 ? "Aprobado" : "No aprobado",
+          formatearFecha(resultado.fecha),
+          resumenErroresParaExportar(resultado)
+        ]);
 
       const contenidoCSV = [
         encabezados.map(protegerTextoCSV).join(","),
@@ -1116,7 +1567,6 @@
 
       const enlace = document.createElement("a");
       const url = URL.createObjectURL(archivo);
-
       const fechaArchivo = new Date()
         .toISOString()
         .slice(0, 10);
@@ -1132,9 +1582,12 @@
     }
 
     async function cargarResultados() {
+      grupoHistorialAbierto = null;
+      detallesPorResultado.clear();
+
       tabla.innerHTML = `
         <tr>
-          <td colspan="8" class="estado-tabla">
+          <td colspan="9" class="estado-tabla">
             Actualizando resultados...
           </td>
         </tr>
@@ -1153,24 +1606,26 @@
           ? resultados.sort((a, b) => Number(b.id) - Number(a.id))
           : [];
 
+        gruposOriginales = crearGrupos(resultadosOriginales);
+
         llenarFiltros();
         actualizarResumen();
         actualizarUltimaActualizacion();
         aplicarFiltros();
-
       } catch (error) {
         console.error("Error al cargar resultados:", error);
 
         resultadosOriginales = [];
-        resultadosFiltrados = [];
+        gruposOriginales = [];
+        gruposFiltrados = [];
 
         actualizarResumen();
         actualizarUltimaActualizacion();
 
         tabla.innerHTML = `
           <tr>
-            <td colspan="8" class="estado-tabla">
-              No fue posible cargar los resultados. contacte con el programador ... el fercho.
+            <td colspan="9" class="estado-tabla">
+              No fue posible cargar los resultados. Contacta con el programador: el Fercho.
             </td>
           </tr>
         `;
@@ -1179,9 +1634,11 @@
           "Sin resultados disponibles";
 
         document.getElementById("mensajeFiltro").textContent =
-          "No se pudo establecer conexión con la plataforma llama a fer.";
+          "No se pudo establecer conexión con la plataforma. Llama a Fer.";
       }
     }
+
+    window.alternarHistorial = alternarHistorial;
 
     buscador.addEventListener("input", aplicarFiltros);
     filtroServicio.addEventListener("change", aplicarFiltros);
