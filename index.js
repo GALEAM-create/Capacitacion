@@ -1,5 +1,6 @@
 require("dotenv").config();
 
+const crypto = require("crypto");
 const express = require("express");
 const cors = require("cors");
 const mysql = require("mysql2/promise");
@@ -7,23 +8,117 @@ const mysql = require("mysql2/promise");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const CALIFICACION_MAXIMA = 100;
+const CALIFICACION_APROBATORIA = 70;
+
+if (!process.env.DATABASE_URL) {
+  throw new Error("Falta configurar la variable DATABASE_URL en Railway.");
+}
+
 app.use(cors());
 app.use(express.json({ limit: "1mb" }));
 
 const pool = mysql.createPool(process.env.DATABASE_URL);
 
-function obtenerEscalaPredeterminada(curso) {
-  return String(curso || "").toLowerCase().includes("arma") ? 100 : 10;
+function crearNombreBloqueo(numeroEmpleado, curso) {
+  const identificador = `${numeroEmpleado}__${curso}`;
+
+  const hash = crypto
+    .createHash("sha256")
+    .update(identificador)
+    .digest("hex")
+    .slice(0, 48);
+
+  return `galeam_intento_${hash}`;
+}
+
+function obtenerEscalaDeEntrada(curso, calificacionMaximaRecibida) {
+  if (
+    calificacionMaximaRecibida !== undefined &&
+    calificacionMaximaRecibida !== null &&
+    calificacionMaximaRecibida !== ""
+  ) {
+    const escala = Number(calificacionMaximaRecibida);
+
+    if (escala !== 10 && escala !== 100) {
+      const error = new Error(
+        "La calificación máxima de origen debe ser 10 o 100."
+      );
+      error.codigo = 400;
+      throw error;
+    }
+
+    return escala;
+  }
+
+  /*
+    Compatibilidad temporal:
+    la versión anterior del curso de Armas enviaba resultados de 0 a 10.
+    Mientras actualizamos esa página, aquí los convertimos a 0-100.
+  */
+  return String(curso || "").toLowerCase().includes("arma")
+    ? 10
+    : 100;
+}
+
+function normalizarCalificacion(
+  curso,
+  calificacionRecibida,
+  calificacionMaximaRecibida
+) {
+  const calificacion = Number(calificacionRecibida);
+
+  const escalaEntrada = obtenerEscalaDeEntrada(
+    curso,
+    calificacionMaximaRecibida
+  );
+
+  if (!Number.isInteger(calificacion)) {
+    const error = new Error(
+      "La calificación debe ser un número entero."
+    );
+    error.codigo = 400;
+    throw error;
+  }
+
+  if (calificacion < 0 || calificacion > escalaEntrada) {
+    const error = new Error(
+      `La calificación debe estar entre 0 y ${escalaEntrada}.`
+    );
+    error.codigo = 400;
+    throw error;
+  }
+
+  return escalaEntrada === 10
+    ? calificacion * 10
+    : calificacion;
+}
+
+function validarTexto(valor, nombreCampo, longitudMaxima) {
+  const limpio = String(valor || "").trim();
+
+  if (!limpio) {
+    const error = new Error(
+      `Falta el campo obligatorio: ${nombreCampo}.`
+    );
+    error.codigo = 400;
+    throw error;
+  }
+
+  if (limpio.length > longitudMaxima) {
+    const error = new Error(
+      `El campo ${nombreCampo} excede la longitud permitida.`
+    );
+    error.codigo = 400;
+    throw error;
+  }
+
+  return limpio;
 }
 
 function normalizarErrores(errores) {
-  // Los cursos viejos todavía no enviarán este campo.
-  // Por eso permitimos que sea null mientras actualizamos sus archivos.
   if (errores === undefined || errores === null) {
-    return {
-      fueEnviado: false,
-      datos: null
-    };
+    return null;
   }
 
   if (!Array.isArray(errores)) {
@@ -42,19 +137,27 @@ function normalizarErrores(errores) {
     throw error;
   }
 
-  const datos = errores.map((respuesta, indice) => {
+  return errores.map((respuesta, indice) => {
     const numero = Number(
-      respuesta?.numero ?? respuesta?.pregunta_numero ?? indice + 1
+      respuesta?.numero ??
+      respuesta?.pregunta_numero ??
+      indice + 1
     );
 
-    const pregunta = String(respuesta?.pregunta ?? "").trim();
+    const pregunta = String(
+      respuesta?.pregunta ?? ""
+    ).trim();
 
     const respuestaUsuario = String(
-      respuesta?.respuesta_usuario ?? respuesta?.respondio ?? ""
+      respuesta?.respuesta_usuario ??
+      respuesta?.respondio ??
+      ""
     ).trim();
 
     const respuestaCorrecta = String(
-      respuesta?.respuesta_correcta ?? respuesta?.correcta ?? ""
+      respuesta?.respuesta_correcta ??
+      respuesta?.correcta ??
+      ""
     ).trim();
 
     if (!Number.isInteger(numero) || numero < 1 || numero > 100) {
@@ -92,241 +195,230 @@ function normalizarErrores(errores) {
       respuesta_correcta: respuestaCorrecta
     };
   });
-
-  return {
-    fueEnviado: true,
-    datos
-  };
 }
 
 app.get("/", (req, res) => {
-  res.send(
-    "Servidor de Capacitación Galeam funcionando correctamente con MySQL Railway"
-  );
+  res.send("API de Capacitación Galeam funcionando.");
 });
 
 app.get("/api/prueba", (req, res) => {
   res.json({
-    mensaje: "La API está funcionando",
-    sistema: "Capacitación Galeam"
+    mensaje: "La API está funcionando.",
+    sistema: "Capacitación Galeam",
+    escala: "0 a 100",
+    aprobatorio: CALIFICACION_APROBATORIA
   });
 });
 
-app.get("/api/db-test", async (req, res) => {
+app.get("/api/diagnostico-db", async (req, res) => {
   try {
-    const [filas] = await pool.query(
-      "SELECT NOW() AS fecha_servidor"
+    const [datosBase] = await pool.query(
+      "SELECT DATABASE() AS base_actual"
+    );
+
+    const [conteo] = await pool.query(
+      "SELECT COUNT(*) AS registros FROM resultados_capacitacion"
     );
 
     res.json({
-      mensaje: "Conexión a MySQL Railway correcta",
-      datos: filas[0]
+      base_actual: datosBase[0].base_actual,
+      registros: conteo[0].registros
     });
   } catch (error) {
+    console.error("Error en diagnóstico de base:", error);
+
     res.status(500).json({
-      mensaje: "Error conectando a MySQL",
-      error: error.message
+      mensaje: "No fue posible revisar la conexión con la base de datos."
     });
   }
 });
 
 app.post("/api/resultados", async (req, res) => {
   let conexion;
+  let bloqueoObtenido = false;
+  let nombreBloqueo = null;
+  let transaccionIniciada = false;
 
   try {
-    const {
-      nombre,
-      numero_empleado,
-      servicio,
+    const nombre = validarTexto(
+      req.body.nombre,
+      "nombre",
+      150
+    );
+
+    const numeroEmpleado = validarTexto(
+      req.body.numero_empleado,
+      "número de empleado",
+      50
+    );
+
+    const servicio = validarTexto(
+      req.body.servicio,
+      "servicio",
+      100
+    );
+
+    const curso = validarTexto(
+      req.body.curso,
+      "curso",
+      150
+    );
+
+    const calificacion = normalizarCalificacion(
       curso,
-      calificacion,
-      aprobado,
-      calificacion_maxima,
-      total_preguntas,
-      respuestas_incorrectas
-    } = req.body;
+      req.body.calificacion,
+      req.body.calificacion_maxima
+    );
 
-    const nombreLimpio = String(nombre || "").trim();
-    const numeroEmpleadoLimpio = String(
-      numero_empleado || ""
-    ).trim();
-
-    const servicioLimpio = String(servicio || "").trim();
-    const cursoLimpio = String(curso || "").trim();
-    const calificacionNumero = Number(calificacion);
+    let totalPreguntas = null;
 
     if (
-      !nombreLimpio ||
-      !numeroEmpleadoLimpio ||
-      !servicioLimpio ||
-      !cursoLimpio
+      req.body.total_preguntas !== undefined &&
+      req.body.total_preguntas !== null &&
+      req.body.total_preguntas !== ""
     ) {
-      return res.status(400).json({
-        mensaje:
-          "Faltan datos obligatorios: nombre, número de empleado, servicio o curso."
-      });
-    }
-
-    if (
-      nombreLimpio.length > 150 ||
-      numeroEmpleadoLimpio.length > 60 ||
-      servicioLimpio.length > 150 ||
-      cursoLimpio.length > 255
-    ) {
-      return res.status(400).json({
-        mensaje:
-          "Uno de los datos de identificación excede la longitud permitida."
-      });
-    }
-
-    // Extorsión usa 0 a 10.
-    // Armas usa 0 a 100.
-    const escalaPredeterminada =
-      obtenerEscalaPredeterminada(cursoLimpio);
-
-    const calificacionMaxima =
-      calificacion_maxima === undefined ||
-      calificacion_maxima === null ||
-      calificacion_maxima === ""
-        ? escalaPredeterminada
-        : Number(calificacion_maxima);
-
-    if (
-      !Number.isInteger(calificacionMaxima) ||
-      calificacionMaxima < 1 ||
-      calificacionMaxima > 100
-    ) {
-      return res.status(400).json({
-        mensaje:
-          "La calificación máxima debe ser un entero entre 1 y 100."
-      });
-    }
-
-    if (
-      calificacion === "" ||
-      calificacion === null ||
-      calificacion === undefined ||
-      !Number.isFinite(calificacionNumero) ||
-      calificacionNumero < 0 ||
-      calificacionNumero > calificacionMaxima
-    ) {
-      return res.status(400).json({
-        mensaje: `La calificación debe ser un número entre 0 y ${calificacionMaxima}.`
-      });
-    }
-
-    if (typeof aprobado !== "boolean") {
-      return res.status(400).json({
-        mensaje:
-          "El campo aprobado debe enviarse como true o false."
-      });
-    }
-
-    let totalPreguntasNumero = null;
-
-    if (
-      total_preguntas !== undefined &&
-      total_preguntas !== null &&
-      total_preguntas !== ""
-    ) {
-      totalPreguntasNumero = Number(total_preguntas);
+      totalPreguntas = Number(req.body.total_preguntas);
 
       if (
-        !Number.isInteger(totalPreguntasNumero) ||
-        totalPreguntasNumero < 1 ||
-        totalPreguntasNumero > 100
+        !Number.isInteger(totalPreguntas) ||
+        totalPreguntas < 1 ||
+        totalPreguntas > 100
       ) {
-        return res.status(400).json({
-          mensaje:
-            "El total de preguntas debe ser un entero entre 1 y 100."
-        });
+        const error = new Error(
+          "El total de preguntas debe ser un entero entre 1 y 100."
+        );
+        error.codigo = 400;
+        throw error;
       }
     }
 
-    const errores = normalizarErrores(respuestas_incorrectas);
+    const respuestasIncorrectas = normalizarErrores(
+      req.body.respuestas_incorrectas
+    );
 
     if (
-      totalPreguntasNumero !== null &&
-      errores.datos !== null &&
-      errores.datos.length > totalPreguntasNumero
+      totalPreguntas !== null &&
+      respuestasIncorrectas !== null &&
+      respuestasIncorrectas.length > totalPreguntas
     ) {
-      return res.status(400).json({
+      const error = new Error(
+        "La cantidad de respuestas incorrectas no puede superar el total de preguntas."
+      );
+      error.codigo = 400;
+      throw error;
+    }
+
+    const aprobado =
+      calificacion >= CALIFICACION_APROBATORIA;
+
+    conexion = await pool.getConnection();
+
+    nombreBloqueo = crearNombreBloqueo(
+      numeroEmpleado,
+      curso
+    );
+
+    const [resultadoBloqueo] = await conexion.query(
+      "SELECT GET_LOCK(?, 10) AS obtenido",
+      [nombreBloqueo]
+    );
+
+    bloqueoObtenido =
+      Number(resultadoBloqueo[0].obtenido) === 1;
+
+    if (!bloqueoObtenido) {
+      return res.status(503).json({
         mensaje:
-          "La cantidad de respuestas incorrectas no puede ser mayor al total de preguntas."
+          "No fue posible asignar el intento en este momento. Inténtalo nuevamente."
       });
     }
 
-    conexion = await pool.getConnection();
     await conexion.beginTransaction();
+    transaccionIniciada = true;
 
-    // Busca cuántos intentos previos lleva esta persona
-    // específicamente en este curso.
     const [filasPrevias] = await conexion.query(
-      `SELECT COUNT(*) AS cantidad
+      `SELECT
+        GREATEST(
+          COALESCE(MAX(intento), 0),
+          COUNT(*)
+        ) AS ultimo_intento
        FROM resultados_capacitacion
-       WHERE numero_empleado = ? AND curso = ?
-       FOR UPDATE`,
-      [numeroEmpleadoLimpio, cursoLimpio]
+       WHERE numero_empleado = ? AND curso = ?`,
+      [numeroEmpleado, curso]
     );
 
-    const intento = Number(filasPrevias[0].cantidad) + 1;
+    const intento =
+      Number(filasPrevias[0].ultimo_intento) + 1;
 
     const [resultado] = await conexion.query(
       `INSERT INTO resultados_capacitacion
-      (
+        (
+          nombre,
+          numero_empleado,
+          servicio,
+          curso,
+          calificacion,
+          calificacion_maxima,
+          total_preguntas,
+          respuestas_incorrectas,
+          aprobado,
+          intento
+        )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
         nombre,
-        numero_empleado,
+        numeroEmpleado,
         servicio,
         curso,
         calificacion,
-        calificacion_maxima,
+        CALIFICACION_MAXIMA,
+        totalPreguntas,
+        respuestasIncorrectas === null
+          ? null
+          : JSON.stringify(respuestasIncorrectas),
         aprobado,
-        intento,
-        total_preguntas,
-        respuestas_incorrectas
-      )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        nombreLimpio,
-        numeroEmpleadoLimpio,
-        servicioLimpio,
-        cursoLimpio,
-        calificacionNumero,
-        calificacionMaxima,
-        aprobado,
-        intento,
-        totalPreguntasNumero,
-        errores.fueEnviado
-          ? JSON.stringify(errores.datos)
-          : null
+        intento
       ]
     );
 
     await conexion.commit();
+    transaccionIniciada = false;
 
     res.status(201).json({
-      mensaje: "Resultado guardado correctamente",
+      mensaje: "Resultado guardado correctamente.",
       id: resultado.insertId,
-      intento
+      intento,
+      calificacion,
+      aprobado
     });
   } catch (error) {
-    if (conexion) {
+    if (conexion && transaccionIniciada) {
       await conexion.rollback();
     }
 
     console.error("Error al guardar resultado:", error);
 
-    const status =
-      error.codigo ||
-      (error.code === "ER_DUP_ENTRY" ? 409 : 500);
-
-    res.status(status).json({
+    res.status(error.codigo || 500).json({
       mensaje:
-        status === 409
-          ? "No fue posible asignar el intento. Envía el resultado nuevamente."
-          : error.message || "Error al guardar resultado"
+        error.codigo === 400
+          ? error.message
+          : "No fue posible guardar el resultado."
     });
   } finally {
+    if (conexion && bloqueoObtenido && nombreBloqueo) {
+      try {
+        await conexion.query(
+          "SELECT RELEASE_LOCK(?)",
+          [nombreBloqueo]
+        );
+      } catch (error) {
+        console.error(
+          "No fue posible liberar el bloqueo:",
+          error
+        );
+      }
+    }
+
     if (conexion) {
       conexion.release();
     }
@@ -346,9 +438,9 @@ app.get("/api/resultados", async (req, res) => {
         curso,
         calificacion,
         calificacion_maxima,
+        total_preguntas,
         aprobado,
         intento,
-        total_preguntas,
         fecha
       FROM resultados_capacitacion
     `;
@@ -372,8 +464,7 @@ app.get("/api/resultados", async (req, res) => {
     console.error("Error al consultar resultados:", error);
 
     res.status(500).json({
-      mensaje: "Error al consultar resultados",
-      error: error.message
+      mensaje: "No fue posible consultar los resultados."
     });
   }
 });
@@ -394,8 +485,8 @@ app.get("/api/resultados/:id/detalle", async (req, res) => {
         intento,
         total_preguntas,
         respuestas_incorrectas
-      FROM resultados_capacitacion
-      WHERE id = ?`,
+       FROM resultados_capacitacion
+       WHERE id = ?`,
       [id]
     );
 
@@ -408,19 +499,16 @@ app.get("/api/resultados/:id/detalle", async (req, res) => {
     res.json(resultados[0]);
   } catch (error) {
     console.error(
-      "Error al consultar el detalle del resultado:",
+      "Error al consultar detalle de intento:",
       error
     );
 
     res.status(500).json({
-      mensaje: "Error al consultar el detalle del resultado",
-      error: error.message
+      mensaje: "No fue posible consultar el detalle del intento."
     });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(
-    `Servidor corriendo en http://localhost:${PORT}`
-  );
+  console.log(`Servidor corriendo en el puerto ${PORT}.`);
 });
