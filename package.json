@@ -7,12 +7,6 @@
     "start": "node index.js",
     "generar-hash": "node generar-hash.js"
   },
-  "keywords": [
-    "galeam",
-    "capacitacion",
-    "express",
-    "mysql"
-  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
@@ -20,12 +14,11 @@
     "node": ">=20"
   },
   "dependencies": {
-    "bcryptjs": "^3.0.3",
-    "cors": "^2.8.6",
-    "dotenv": "^17.4.2",
-    "express": "^5.2.1",
-    "express-rate-limit": "^8.5.2",
-    "helmet": "^8.2.0",
-    "mysql2": "^3.22.5"
+    "bcryptjs": "3.0.3",
+    "cors": "2.8.6",
+    "express": "5.2.1",
+    "express-rate-limit": "8.5.2",
+    "helmet": "8.2.0",
+    "mysql2": "3.22.5"
   }
 }
