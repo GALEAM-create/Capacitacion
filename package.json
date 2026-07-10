@@ -1,20 +1,31 @@
-
 {
-  "name": "gesvera-api",
-  "version": "1.0.0",
-  "description": "",
+  "name": "galeam-capacitacion-api",
+  "version": "1.1.0",
+  "description": "API y panel administrativo protegido para Galeam Capacitación",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "generar-hash": "node generar-hash.js"
   },
-  "keywords": [],
+  "keywords": [
+    "galeam",
+    "capacitacion",
+    "express",
+    "mysql"
+  ],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "helmet": "^8.2.0",
     "mysql2": "^3.22.5"
   }
 }

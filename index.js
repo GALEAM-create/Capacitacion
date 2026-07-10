@@ -1,8 +1,13 @@
 require("dotenv").config();
 
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
+const bcrypt = require("bcryptjs");
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
+const { rateLimit } = require("express-rate-limit");
 const mysql = require("mysql2/promise");
 
 const app = express();
@@ -10,15 +15,337 @@ const PORT = process.env.PORT || 3000;
 
 const CALIFICACION_MAXIMA = 100;
 const CALIFICACION_APROBATORIA = 70;
+const NOMBRE_COOKIE = "galeam_admin";
+const DURACION_SESION_MINUTOS = Number(process.env.SESSION_MINUTES || 30);
+const DURACION_SESION_MS = DURACION_SESION_MINUTOS * 60 * 1000;
+const ES_PRODUCCION =
+  process.env.NODE_ENV === "production" ||
+  Boolean(process.env.RAILWAY_ENVIRONMENT);
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("Falta configurar la variable DATABASE_URL en Railway.");
+const VARIABLES_OBLIGATORIAS = [
+  "DATABASE_URL",
+  "ADMIN_USER",
+  "ADMIN_PASSWORD_HASH",
+  "SESSION_SECRET"
+];
+
+const variablesFaltantes = VARIABLES_OBLIGATORIAS.filter(
+  nombre => !String(process.env[nombre] || "").trim()
+);
+
+if (variablesFaltantes.length) {
+  throw new Error(
+    `Faltan variables de Railway: ${variablesFaltantes.join(", ")}.`
+  );
 }
 
-app.use(cors());
+if (String(process.env.SESSION_SECRET).length < 32) {
+  throw new Error(
+    "SESSION_SECRET debe contener por lo menos 32 caracteres."
+  );
+}
+
+if (
+  !Number.isFinite(DURACION_SESION_MINUTOS) ||
+  DURACION_SESION_MINUTOS < 5 ||
+  DURACION_SESION_MINUTOS > 720
+) {
+  throw new Error(
+    "SESSION_MINUTES debe ser un número entre 5 y 720."
+  );
+}
+
+app.set("trust proxy", 1);
+
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: false
+  })
+);
 app.use(express.json({ limit: "1mb" }));
 
+const origenesPermitidos = new Set(
+  String(process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map(origen => origen.trim())
+    .filter(Boolean)
+);
+
+const corsCapacitaciones = cors({
+  origin(origen, callback) {
+    if (!origen || origenesPermitidos.size === 0) {
+      return callback(null, true);
+    }
+
+    return callback(null, origenesPermitidos.has(origen));
+  },
+  methods: ["POST", "OPTIONS"],
+  allowedHeaders: ["Content-Type"],
+  maxAge: 86400
+});
+
+const limiteLogin = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    mensaje:
+      "Demasiados intentos de acceso. Espera 15 minutos antes de volver a intentarlo."
+  }
+});
+
+const limiteResultados = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  message: {
+    mensaje:
+      "Se recibieron demasiados registros desde esta conexión. Inténtalo más tarde."
+  }
+});
+
 const pool = mysql.createPool(process.env.DATABASE_URL);
+
+
+function codificarBase64Url(valor) {
+  return Buffer.from(valor).toString("base64url");
+}
+
+function crearTokenSesion(usuario) {
+  const ahora = Date.now();
+  const datos = {
+    usuario,
+    emitido: ahora,
+    expira: ahora + DURACION_SESION_MS,
+    nonce: crypto.randomBytes(16).toString("hex")
+  };
+
+  const cuerpo = codificarBase64Url(JSON.stringify(datos));
+  const firma = crypto
+    .createHmac("sha256", process.env.SESSION_SECRET)
+    .update(cuerpo)
+    .digest("base64url");
+
+  return `${cuerpo}.${firma}`;
+}
+
+function comparacionSegura(a, b) {
+  const bufferA = Buffer.from(String(a || ""));
+  const bufferB = Buffer.from(String(b || ""));
+
+  if (bufferA.length !== bufferB.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(bufferA, bufferB);
+}
+
+function verificarTokenSesion(token) {
+  try {
+    const [cuerpo, firmaRecibida, sobrante] = String(token || "").split(".");
+
+    if (!cuerpo || !firmaRecibida || sobrante !== undefined) {
+      return null;
+    }
+
+    const firmaEsperada = crypto
+      .createHmac("sha256", process.env.SESSION_SECRET)
+      .update(cuerpo)
+      .digest("base64url");
+
+    if (!comparacionSegura(firmaRecibida, firmaEsperada)) {
+      return null;
+    }
+
+    const datos = JSON.parse(
+      Buffer.from(cuerpo, "base64url").toString("utf8")
+    );
+
+    if (
+      datos.usuario !== process.env.ADMIN_USER ||
+      !Number.isFinite(datos.expira) ||
+      datos.expira <= Date.now()
+    ) {
+      return null;
+    }
+
+    return datos;
+  } catch (error) {
+    return null;
+  }
+}
+
+function obtenerCookies(req) {
+  const encabezado = String(req.headers.cookie || "");
+  const cookies = {};
+
+  encabezado.split(";").forEach(parte => {
+    const indice = parte.indexOf("=");
+
+    if (indice < 1) return;
+
+    const nombre = parte.slice(0, indice).trim();
+    const valor = parte.slice(indice + 1).trim();
+
+    try {
+      cookies[nombre] = decodeURIComponent(valor);
+    } catch (error) {
+      cookies[nombre] = valor;
+    }
+  });
+
+  return cookies;
+}
+
+function obtenerSesion(req) {
+  const cookies = obtenerCookies(req);
+  return verificarTokenSesion(cookies[NOMBRE_COOKIE]);
+}
+
+function opcionesCookie() {
+  return {
+    httpOnly: true,
+    secure: ES_PRODUCCION,
+    sameSite: "strict",
+    path: "/",
+    maxAge: DURACION_SESION_MS,
+    priority: "high"
+  };
+}
+
+function requerirAdministrador(req, res, next) {
+  const sesion = obtenerSesion(req);
+
+  if (!sesion) {
+    res.clearCookie(NOMBRE_COOKIE, {
+      httpOnly: true,
+      secure: ES_PRODUCCION,
+      sameSite: "strict",
+      path: "/"
+    });
+
+    return res.status(401).json({
+      mensaje: "Debes iniciar sesión para consultar esta información."
+    });
+  }
+
+  res.set("Cache-Control", "no-store");
+  req.sesionAdmin = sesion;
+  next();
+}
+
+function enviarPanelAdmin(req, res) {
+  const rutaAdmin = path.join(__dirname, "admin.html");
+
+  try {
+    const nonce = crypto.randomBytes(18).toString("base64");
+    const html = fs
+      .readFileSync(rutaAdmin, "utf8")
+      .replaceAll("__CSP_NONCE__", nonce);
+
+    res.set({
+      "Cache-Control": "no-store",
+      "Content-Security-Policy": [
+        "default-src 'self'",
+        `script-src 'self' 'nonce-${nonce}'`,
+        `style-src 'self' 'nonce-${nonce}'`,
+        "img-src 'self' data:",
+        "connect-src 'self'",
+        "font-src 'self'",
+        "object-src 'none'",
+        "base-uri 'none'",
+        "frame-ancestors 'none'",
+        "form-action 'self'"
+      ].join("; ")
+    });
+
+    res.type("html").send(html);
+  } catch (error) {
+    console.error("No fue posible cargar admin.html:", error);
+    res.status(500).send("No fue posible cargar el panel administrativo.");
+  }
+}
+
+app.get("/admin", enviarPanelAdmin);
+app.get("/admin/", enviarPanelAdmin);
+app.get("/admin.html", (req, res) => res.redirect(302, "/admin"));
+
+app.get("/api/admin/session", (req, res) => {
+  const sesion = obtenerSesion(req);
+
+  res.set("Cache-Control", "no-store");
+
+  if (!sesion) {
+    return res.status(401).json({ autenticado: false });
+  }
+
+  res.json({
+    autenticado: true,
+    usuario: sesion.usuario,
+    expira: sesion.expira
+  });
+});
+
+app.post("/api/admin/login", limiteLogin, async (req, res) => {
+  try {
+    const usuario = String(req.body.usuario || "").trim();
+    const clave = String(req.body.clave || "");
+
+    if (!usuario || !clave || usuario.length > 100 || clave.length > 200) {
+      return res.status(400).json({
+        mensaje: "Escribe un usuario y una contraseña válidos."
+      });
+    }
+
+    const usuarioValido = comparacionSegura(
+      usuario,
+      process.env.ADMIN_USER
+    );
+
+    // La comparación de contraseña se ejecuta aun si el usuario no coincide,
+    // para reducir diferencias de tiempo entre ambos tipos de error.
+    const claveValida = await bcrypt.compare(
+      clave,
+      process.env.ADMIN_PASSWORD_HASH
+    );
+
+    if (!usuarioValido || !claveValida) {
+      return res.status(401).json({
+        mensaje: "Usuario o contraseña incorrectos."
+      });
+    }
+
+    const token = crearTokenSesion(process.env.ADMIN_USER);
+    res.cookie(NOMBRE_COOKIE, token, opcionesCookie());
+    res.set("Cache-Control", "no-store");
+
+    res.json({
+      mensaje: "Acceso autorizado.",
+      usuario: process.env.ADMIN_USER,
+      duracion_minutos: DURACION_SESION_MINUTOS
+    });
+  } catch (error) {
+    console.error("Error al iniciar sesión:", error);
+    res.status(500).json({
+      mensaje: "No fue posible iniciar sesión."
+    });
+  }
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  res.clearCookie(NOMBRE_COOKIE, {
+    httpOnly: true,
+    secure: ES_PRODUCCION,
+    sameSite: "strict",
+    path: "/"
+  });
+  res.set("Cache-Control", "no-store");
+  res.json({ mensaje: "Sesión cerrada correctamente." });
+});
 
 function crearNombreBloqueo(numeroEmpleado, curso) {
   const identificador = `${numeroEmpleado}__${curso}`;
@@ -210,7 +537,10 @@ app.get("/api/prueba", (req, res) => {
   });
 });
 
-app.get("/api/diagnostico-db", async (req, res) => {
+app.get(
+  "/api/diagnostico-db",
+  requerirAdministrador,
+  async (req, res) => {
   try {
     const [datosBase] = await pool.query(
       "SELECT DATABASE() AS base_actual"
@@ -231,9 +561,16 @@ app.get("/api/diagnostico-db", async (req, res) => {
       mensaje: "No fue posible revisar la conexión con la base de datos."
     });
   }
-});
+  }
+);
 
-app.post("/api/resultados", async (req, res) => {
+app.options("/api/resultados", corsCapacitaciones);
+
+app.post(
+  "/api/resultados",
+  corsCapacitaciones,
+  limiteResultados,
+  async (req, res) => {
   let conexion;
   let bloqueoObtenido = false;
   let nombreBloqueo = null;
@@ -423,9 +760,10 @@ app.post("/api/resultados", async (req, res) => {
       conexion.release();
     }
   }
-});
+  }
+);
 
-app.get("/api/resultados", async (req, res) => {
+app.get("/api/resultados", requerirAdministrador, async (req, res) => {
   try {
     const curso = String(req.query.curso || "").trim();
 
@@ -469,7 +807,10 @@ app.get("/api/resultados", async (req, res) => {
   }
 });
 
-app.get("/api/resultados/:id/detalle", async (req, res) => {
+app.get(
+  "/api/resultados/:id/detalle",
+  requerirAdministrador,
+  async (req, res) => {
   try {
     const id = Number(req.params.id);
 
@@ -507,7 +848,8 @@ app.get("/api/resultados/:id/detalle", async (req, res) => {
       mensaje: "No fue posible consultar el detalle del intento."
     });
   }
-});
+  }
+);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en el puerto ${PORT}.`);

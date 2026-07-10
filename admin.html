@@ -7,7 +7,7 @@
 
   <title>Panel Ejecutivo | Galeam Capacitación</title>
 
-  <style>
+  <style nonce="__CSP_NONCE__">
     :root {
       --azul-oscuro: #081c2c;
       --azul-medio: #123b59;
@@ -693,12 +693,229 @@
         flex-shrink: 0;
       }
     }
+
+
+    .oculto {
+      display: none !important;
+    }
+
+    .pantalla-login {
+      min-height: calc(100vh - 56px);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+
+    .login-tarjeta {
+      width: min(440px, 100%);
+      background: var(--blanco);
+      border: 1px solid var(--gris-borde);
+      border-radius: 20px;
+      box-shadow: var(--sombra);
+      overflow: hidden;
+    }
+
+    .login-encabezado {
+      position: relative;
+      overflow: hidden;
+      padding: 30px;
+      color: var(--blanco);
+      background: linear-gradient(135deg, var(--azul-oscuro), var(--azul-medio));
+    }
+
+    .login-encabezado::after {
+      content: "◈";
+      position: absolute;
+      right: -20px;
+      top: -45px;
+      font-size: 170px;
+      color: rgba(255, 255, 255, 0.05);
+      transform: rotate(18deg);
+    }
+
+    .login-marca {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .login-marca-icono {
+      width: 52px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(201, 163, 78, 0.8);
+      border-radius: 14px;
+      color: var(--dorado);
+      font-size: 26px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .login-encabezado h1 {
+      margin-bottom: 5px;
+      font-size: 25px;
+    }
+
+    .login-encabezado p {
+      color: rgba(255, 255, 255, 0.72);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .login-formulario {
+      padding: 30px;
+    }
+
+    .login-grupo {
+      margin-bottom: 18px;
+    }
+
+    .login-grupo label {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--azul-oscuro);
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .login-campo {
+      width: 100%;
+      min-height: 46px;
+      padding: 12px 13px;
+      border: 1px solid var(--gris-borde);
+      border-radius: 10px;
+      outline: none;
+      color: var(--azul-oscuro);
+      font-size: 15px;
+      background: var(--blanco);
+    }
+
+    .login-campo:focus {
+      border-color: var(--azul-claro);
+      box-shadow: 0 0 0 3px rgba(30, 91, 130, 0.10);
+    }
+
+    .login-boton {
+      width: 100%;
+      min-height: 47px;
+      border: 0;
+      border-radius: 10px;
+      cursor: pointer;
+      background: var(--azul-oscuro);
+      color: var(--blanco);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .login-boton:hover {
+      background: var(--azul-medio);
+    }
+
+    .login-boton:disabled {
+      cursor: wait;
+      opacity: 0.65;
+    }
+
+    .login-mensaje {
+      min-height: 20px;
+      margin-top: 15px;
+      color: var(--rojo);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .login-nota {
+      margin-top: 18px;
+      color: var(--gris-texto);
+      text-align: center;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .acciones-sesion {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .boton-salir {
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      border-radius: 9px;
+      padding: 9px 13px;
+      color: var(--blanco);
+      background: rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .boton-salir:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
   </style>
 </head>
 
 <body>
 
-  <main class="contenedor-principal">
+
+  <section id="pantallaLogin" class="pantalla-login">
+    <div class="login-tarjeta">
+      <div class="login-encabezado">
+        <div class="login-marca">
+          <div class="login-marca-icono">◈</div>
+          <div>
+            <h1>Acceso administrativo</h1>
+            <p>Panel privado de resultados · Galeam Capacitación</p>
+          </div>
+        </div>
+      </div>
+
+      <form id="formularioLogin" class="login-formulario" autocomplete="on">
+        <div class="login-grupo">
+          <label for="usuarioLogin">Usuario</label>
+          <input
+            id="usuarioLogin"
+            class="login-campo"
+            type="text"
+            name="username"
+            maxlength="100"
+            autocomplete="username"
+            required
+          >
+        </div>
+
+        <div class="login-grupo">
+          <label for="claveLogin">Contraseña</label>
+          <input
+            id="claveLogin"
+            class="login-campo"
+            type="password"
+            name="password"
+            maxlength="200"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button id="botonLogin" class="login-boton" type="submit">
+          Iniciar sesión
+        </button>
+
+        <p id="mensajeLogin" class="login-mensaje" role="alert"></p>
+        <p class="login-nota">
+          La sesión se cerrará automáticamente después del tiempo configurado en Railway.
+        </p>
+      </form>
+    </div>
+  </section>
+
+  <main id="panelPrincipal" class="contenedor-principal oculto">
 
     <header class="encabezado">
       <div class="encabezado-contenido">
@@ -712,9 +929,14 @@
           </div>
         </div>
 
-        <div class="actualizacion">
-          <strong>Información actualizada</strong>
-          <span id="ultimaActualizacion">Cargando información...</span>
+        <div class="acciones-sesion">
+          <div class="actualizacion">
+            <strong>Información actualizada</strong>
+            <span id="ultimaActualizacion">Cargando información...</span>
+          </div>
+          <button id="botonCerrarSesion" class="boton-salir" type="button">
+            Cerrar sesión
+          </button>
         </div>
 
       </div>
@@ -857,9 +1079,8 @@
 
   </main>
 
-  <script>
-    const URL_RESULTADOS =
-      "https://capacitacion-production-3120.up.railway.app/api/resultados";
+  <script nonce="__CSP_NONCE__">
+    const URL_RESULTADOS = "/api/resultados";
 
     let resultadosOriginales = [];
     let gruposOriginales = [];
@@ -872,6 +1093,107 @@
     const filtroServicio = document.getElementById("filtroServicio");
     const filtroCurso = document.getElementById("filtroCurso");
     const filtroEstado = document.getElementById("filtroEstado");
+    const pantallaLogin = document.getElementById("pantallaLogin");
+    const panelPrincipal = document.getElementById("panelPrincipal");
+    const formularioLogin = document.getElementById("formularioLogin");
+    const usuarioLogin = document.getElementById("usuarioLogin");
+    const claveLogin = document.getElementById("claveLogin");
+    const botonLogin = document.getElementById("botonLogin");
+    const mensajeLogin = document.getElementById("mensajeLogin");
+    const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+
+    function mostrarLogin(mensaje = "") {
+      panelPrincipal.classList.add("oculto");
+      pantallaLogin.classList.remove("oculto");
+      mensajeLogin.textContent = mensaje;
+      claveLogin.value = "";
+      setTimeout(() => usuarioLogin.focus(), 0);
+    }
+
+    function mostrarPanel() {
+      pantallaLogin.classList.add("oculto");
+      panelPrincipal.classList.remove("oculto");
+      mensajeLogin.textContent = "";
+    }
+
+    async function verificarSesion() {
+      try {
+        const respuesta = await fetch("/api/admin/session", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (!respuesta.ok) {
+          mostrarLogin();
+          return;
+        }
+
+        mostrarPanel();
+        await cargarResultados();
+      } catch (error) {
+        console.error("Error al verificar la sesión:", error);
+        mostrarLogin("No fue posible conectar con el servidor.");
+      }
+    }
+
+    async function iniciarSesion(evento) {
+      evento.preventDefault();
+      mensajeLogin.textContent = "";
+      botonLogin.disabled = true;
+      botonLogin.textContent = "Verificando...";
+
+      try {
+        const respuesta = await fetch("/api/admin/login", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            usuario: usuarioLogin.value.trim(),
+            clave: claveLogin.value
+          })
+        });
+
+        const datos = await respuesta.json().catch(() => ({}));
+
+        if (!respuesta.ok) {
+          throw new Error(datos.mensaje || "No fue posible iniciar sesión.");
+        }
+
+        mostrarPanel();
+        await cargarResultados();
+      } catch (error) {
+        mostrarLogin(error.message);
+      } finally {
+        botonLogin.disabled = false;
+        botonLogin.textContent = "Iniciar sesión";
+      }
+    }
+
+    async function cerrarSesion() {
+      try {
+        await fetch("/api/admin/logout", {
+          method: "POST",
+          credentials: "same-origin"
+        });
+      } catch (error) {
+        console.error("Error al cerrar sesión:", error);
+      } finally {
+        resultadosOriginales = [];
+        gruposOriginales = [];
+        gruposFiltrados = [];
+        detallesPorResultado.clear();
+        mostrarLogin("La sesión se cerró correctamente.");
+      }
+    }
+
+    function revisarAutenticacion(respuesta) {
+      if (respuesta.status === 401) {
+        mostrarLogin("Tu sesión terminó. Inicia sesión nuevamente.");
+        return false;
+      }
+
+      return true;
+    }
 
     function escaparHtml(texto) {
       return String(texto ?? "")
@@ -1458,7 +1780,14 @@
       detallesPorResultado.set(id, { estado: "cargando" });
 
       try {
-        const respuesta = await fetch(`${URL_RESULTADOS}/${encodeURIComponent(id)}/detalle`);
+        const respuesta = await fetch(
+          `${URL_RESULTADOS}/${encodeURIComponent(id)}/detalle`,
+          { credentials: "same-origin", cache: "no-store" }
+        );
+
+        if (!revisarAutenticacion(respuesta)) {
+          throw new Error("Sesión terminada");
+        }
 
         if (!respuesta.ok) {
           throw new Error(`Error HTTP: ${respuesta.status}`);
@@ -1594,7 +1923,14 @@
       `;
 
       try {
-        const respuesta = await fetch(URL_RESULTADOS);
+        const respuesta = await fetch(URL_RESULTADOS, {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+
+        if (!revisarAutenticacion(respuesta)) {
+          return;
+        }
 
         if (!respuesta.ok) {
           throw new Error(`Error HTTP: ${respuesta.status}`);
@@ -1644,8 +1980,10 @@
     filtroServicio.addEventListener("change", aplicarFiltros);
     filtroCurso.addEventListener("change", aplicarFiltros);
     filtroEstado.addEventListener("change", aplicarFiltros);
+    formularioLogin.addEventListener("submit", iniciarSesion);
+    botonCerrarSesion.addEventListener("click", cerrarSesion);
 
-    cargarResultados();
+    verificarSesion();
   </script>
 
 </body>
