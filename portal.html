@@ -607,6 +607,195 @@
       .emblema-panel { min-height:240px; }
     }
 
+
+    /* =========================================================
+       AMBIENTE FINAL: CASCO EN MARCA DE AGUA + LUZ DE ESQUINA
+       Este bloque va al final para sobrescribir el estilo anterior.
+    ========================================================== */
+
+    body::after {
+      content:"";
+      position:fixed;
+      right:-290px;
+      bottom:-315px;
+      width:760px;
+      height:760px;
+      pointer-events:none;
+      z-index:0;
+      background:radial-gradient(
+        circle,
+        rgba(255,198,92,.28) 0%,
+        rgba(226,155,55,.14) 20%,
+        rgba(150,96,30,.065) 42%,
+        rgba(81,55,27,.025) 56%,
+        transparent 72%
+      );
+      filter:blur(20px);
+      opacity:.78;
+    }
+
+    .polvo {
+      z-index:2;
+    }
+
+    .polvo span {
+      width:2px;
+      height:2px;
+      background:rgba(255,207,118,.88);
+      box-shadow:
+        0 0 5px rgba(255,212,125,.75),
+        0 0 12px rgba(230,160,55,.34),
+        0 0 22px rgba(206,126,30,.12);
+      animation-name:brasa-flota;
+      animation-timing-function:linear;
+      animation-iteration-count:infinite;
+    }
+
+    @keyframes brasa-flota {
+      0% {
+        transform:translate3d(0,35px,0) scale(.65);
+        opacity:0;
+        filter:blur(.15px);
+      }
+      14% { opacity:.22; }
+      42% {
+        opacity:.9;
+        filter:blur(0);
+      }
+      60% {
+        opacity:.4;
+        transform:translate3d(-8px,-42px,0) scale(1.15);
+      }
+      78% { opacity:.96; }
+      100% {
+        transform:translate3d(-22px,-125px,0) scale(.8);
+        opacity:0;
+        filter:blur(.25px);
+      }
+    }
+
+    /* Pocas partículas en la izquierda; mayor concentración junto al casco. */
+    .polvo span:nth-child(1)  {left:7%;  top:45%; animation-duration:17s; animation-delay:-7s;  width:2px; height:2px}
+    .polvo span:nth-child(2)  {left:18%; top:78%; animation-duration:15s; animation-delay:-2s;  width:2px; height:2px}
+    .polvo span:nth-child(3)  {left:36%; top:62%; animation-duration:19s; animation-delay:-12s; width:1px; height:1px}
+    .polvo span:nth-child(4)  {left:48%; top:90%; animation-duration:14s; animation-delay:-5s;  width:2px; height:2px}
+    .polvo span:nth-child(5)  {left:57%; top:74%; animation-duration:13s; animation-delay:-8s;  width:2px; height:2px}
+    .polvo span:nth-child(6)  {left:62%; top:88%; animation-duration:16s; animation-delay:-4s;  width:3px; height:3px}
+    .polvo span:nth-child(7)  {left:67%; top:58%; animation-duration:18s; animation-delay:-14s; width:1px; height:1px}
+    .polvo span:nth-child(8)  {left:71%; top:94%; animation-duration:12s; animation-delay:-6s;  width:2px; height:2px}
+    .polvo span:nth-child(9)  {left:75%; top:70%; animation-duration:15s; animation-delay:-9s;  width:3px; height:3px}
+    .polvo span:nth-child(10) {left:79%; top:52%; animation-duration:17s; animation-delay:-3s;  width:2px; height:2px}
+    .polvo span:nth-child(11) {left:82%; top:84%; animation-duration:11s; animation-delay:-7s;  width:3px; height:3px}
+    .polvo span:nth-child(12) {left:85%; top:64%; animation-duration:16s; animation-delay:-11s; width:2px; height:2px}
+    .polvo span:nth-child(13) {left:88%; top:92%; animation-duration:13s; animation-delay:-2s;  width:4px; height:4px}
+    .polvo span:nth-child(14) {left:91%; top:75%; animation-duration:18s; animation-delay:-15s; width:2px; height:2px}
+    .polvo span:nth-child(15) {left:94%; top:46%; animation-duration:14s; animation-delay:-8s;  width:2px; height:2px}
+    .polvo span:nth-child(16) {left:97%; top:88%; animation-duration:12s; animation-delay:-5s;  width:3px; height:3px}
+    .polvo span:nth-child(17) {left:72%; top:42%; animation-duration:20s; animation-delay:-13s; width:1px; height:1px}
+    .polvo span:nth-child(18) {left:87%; top:34%; animation-duration:17s; animation-delay:-10s; width:2px; height:2px}
+
+    /* Las tarjetas quedan delante de las partículas; el casco queda detrás. */
+    .cabecera,
+    .perfil,
+    .titulo-seccion,
+    .cursos {
+      position:relative;
+      z-index:3;
+    }
+
+    .zona-cursos {
+      position:relative;
+    }
+
+    .emblema-panel {
+      position:sticky;
+      top:24px;
+      z-index:1;
+      min-height:520px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      padding:0 0 4px;
+      overflow:visible;
+      border:0 !important;
+      border-radius:0 !important;
+      background:transparent !important;
+      box-shadow:none !important;
+      backdrop-filter:none !important;
+      text-align:center;
+    }
+
+    .emblema-panel::before,
+    .emblema-panel::after,
+    .emblema-resplandor,
+    .emblema-panel h3,
+    .emblema-panel p,
+    .emblema-panel .lema {
+      display:none !important;
+    }
+
+    .marca-agua-casco {
+      width:100%;
+      min-height:480px;
+      display:flex;
+      align-items:flex-end;
+      justify-content:center;
+      background:transparent !important;
+      box-shadow:none !important;
+    }
+
+    .marca-agua-casco::before,
+    .marca-agua-casco::after {
+      display:none !important;
+    }
+
+    .casco {
+      position:relative;
+      z-index:1;
+      width:min(430px,94%);
+      max-height:500px;
+      margin:0 -12px -20px 0;
+      object-fit:contain;
+      opacity:.15;
+      mix-blend-mode:screen;
+      filter:
+        grayscale(.55)
+        sepia(.72)
+        saturate(.62)
+        brightness(.72)
+        contrast(.95)
+        drop-shadow(0 0 12px rgba(223,160,65,.09));
+      animation:casco-respira 10s ease-in-out infinite;
+    }
+
+    @keyframes casco-respira {
+      0%,100% { transform:translateY(0) scale(1); opacity:.13; }
+      50% { transform:translateY(-5px) scale(1.01); opacity:.17; }
+    }
+
+    @media(max-width:1000px) {
+      .emblema-panel {
+        position:relative;
+        top:auto;
+        min-height:300px;
+      }
+
+      .marca-agua-casco { min-height:280px; }
+      .casco { width:min(250px,62%); margin-bottom:-8px; }
+    }
+
+    @media(max-width:560px) {
+      body::after {
+        right:-330px;
+        bottom:-350px;
+        opacity:.58;
+      }
+
+      .emblema-panel { min-height:230px; }
+      .marca-agua-casco { min-height:220px; }
+      .casco { width:min(190px,58%); opacity:.12; }
+    }
+
   </style>
 </head>
 <body>
