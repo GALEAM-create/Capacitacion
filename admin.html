@@ -872,6 +872,55 @@
     .mensaje-gestion { min-height:20px; margin-bottom:12px; color:var(--gris-texto); font-size:12px; }
     .mensaje-gestion.ok { color:var(--verde); }
     .mensaje-gestion.error { color:var(--rojo); }
+    .gestion-acciones { display:flex; align-items:center; justify-content:flex-end; gap:8px; flex-wrap:wrap; }
+    .boton-mini-clave { color:var(--azul-oscuro); background:var(--dorado-suave); border-color:#e5d4a9; }
+    .boton-mini-clave:hover { background:#eadcb9; }
+
+    .modal-clave-admin {
+      position:fixed;
+      inset:0;
+      z-index:1000;
+      display:grid;
+      place-items:center;
+      padding:20px;
+    }
+
+    .modal-clave-fondo {
+      position:absolute;
+      inset:0;
+      background:rgba(8,28,44,.64);
+      backdrop-filter:blur(5px);
+    }
+
+    .modal-clave-tarjeta {
+      position:relative;
+      z-index:1;
+      width:min(460px,100%);
+      padding:25px;
+      border:1px solid var(--gris-borde);
+      border-radius:16px;
+      background:var(--blanco);
+      box-shadow:0 24px 70px rgba(8,28,44,.32);
+    }
+
+    .modal-clave-tarjeta h2 {
+      margin-bottom:7px;
+      color:var(--azul-oscuro);
+      font-size:20px;
+    }
+
+    .modal-clave-descripcion {
+      margin-bottom:19px;
+      color:var(--gris-texto);
+      font-size:13px;
+      line-height:1.5;
+    }
+
+    .modal-clave-grupo { margin-bottom:14px; }
+    .modal-clave-grupo label { display:block; margin-bottom:7px; font-size:13px; font-weight:bold; }
+    .modal-clave-acciones { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+    .modal-clave-acciones .boton { min-height:40px; }
+
     @media (max-width:900px){ .gestion-grid{grid-template-columns:1fr}.gestion-form{grid-template-columns:1fr}.gestion-form .ancho-completo{grid-column:auto} }
 
   </style>
@@ -1119,6 +1168,54 @@
     </section>
 
 
+    <section id="modalClaveAdmin" class="modal-clave-admin oculto" role="dialog" aria-modal="true" aria-labelledby="tituloModalClave">
+      <div id="fondoModalClave" class="modal-clave-fondo"></div>
+
+      <div class="modal-clave-tarjeta">
+        <h2 id="tituloModalClave">Cambiar contraseña</h2>
+        <p id="descripcionModalClave" class="modal-clave-descripcion">
+          Escribe una nueva contraseña para este usuario.
+        </p>
+
+        <form id="formCambiarClaveAdmin">
+          <div class="modal-clave-grupo">
+            <label for="nuevaClaveAdmin">Nueva contraseña</label>
+            <input
+              id="nuevaClaveAdmin"
+              class="campo-control"
+              type="password"
+              maxlength="200"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+
+          <div class="modal-clave-grupo">
+            <label for="confirmarClaveAdmin">Confirmar contraseña</label>
+            <input
+              id="confirmarClaveAdmin"
+              class="campo-control"
+              type="password"
+              maxlength="200"
+              autocomplete="new-password"
+              required
+            >
+          </div>
+
+          <p id="mensajeCambioClave" class="mensaje-gestion" role="alert"></p>
+
+          <div class="modal-clave-acciones">
+            <button id="cancelarCambioClave" class="boton boton-secundario" type="button">
+              Cancelar
+            </button>
+            <button id="guardarCambioClave" class="boton boton-principal" type="submit">
+              Guardar contraseña
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
     <p class="nota-final">
       Panel de consulta ejecutiva · Los resultados se actualizan desde la plataforma de capacitación.
     </p>
@@ -1148,6 +1245,14 @@
     const mensajeLogin = document.getElementById("mensajeLogin");
     const botonCerrarSesion = document.getElementById("botonCerrarSesion");
     const seccionGestion = document.getElementById("seccionGestion");
+    const modalClaveAdmin = document.getElementById("modalClaveAdmin");
+    const descripcionModalClave = document.getElementById("descripcionModalClave");
+    const formCambiarClaveAdmin = document.getElementById("formCambiarClaveAdmin");
+    const nuevaClaveAdmin = document.getElementById("nuevaClaveAdmin");
+    const confirmarClaveAdmin = document.getElementById("confirmarClaveAdmin");
+    const mensajeCambioClave = document.getElementById("mensajeCambioClave");
+    const guardarCambioClave = document.getElementById("guardarCambioClave");
+    let usuarioCambioClave = null;
     let sesionAdminActual = null;
 
     function mostrarLogin(mensaje = "") {
@@ -2064,6 +2169,26 @@
       }));
     }
 
+    function abrirModalCambioClave(usuario) {
+      usuarioCambioClave = usuario;
+      descripcionModalClave.textContent =
+        `Nueva contraseña para ${usuario.nombre} (${usuario.usuario}).`;
+      nuevaClaveAdmin.value = "";
+      confirmarClaveAdmin.value = "";
+      mensajeCambioClave.textContent = "";
+      mensajeCambioClave.className = "mensaje-gestion";
+      modalClaveAdmin.classList.remove("oculto");
+      setTimeout(() => nuevaClaveAdmin.focus(), 0);
+    }
+
+    function cerrarModalCambioClave() {
+      usuarioCambioClave = null;
+      formCambiarClaveAdmin.reset();
+      mensajeCambioClave.textContent = "";
+      mensajeCambioClave.className = "mensaje-gestion";
+      modalClaveAdmin.classList.add("oculto");
+    }
+
     async function cargarUsuariosAdmin() {
       const r = await fetch("/api/admin/usuarios", { credentials:"same-origin", cache:"no-store" });
       if (!revisarAutenticacion(r)) return;
@@ -2072,12 +2197,26 @@
       contenedor.innerHTML = datos.length ? datos.map(item => `
         <div class="gestion-item">
           <div><strong>${escaparHtml(item.nombre)} · ${escaparHtml(item.usuario)}</strong><small>${escaparHtml(item.rol)} · ${Number(item.activo)===1?"Activo":"Inactivo"}</small></div>
-          <button class="boton-mini" type="button" data-admin-id="${item.id}" data-activo="${Number(item.activo)===1?0:1}">${Number(item.activo)===1?"Desactivar":"Activar"}</button>
+          <div class="gestion-acciones">
+            <button class="boton-mini boton-mini-clave" type="button" data-admin-clave-id="${item.id}">Cambiar contraseña</button>
+            <button class="boton-mini" type="button" data-admin-id="${item.id}" data-activo="${Number(item.activo)===1?0:1}">${Number(item.activo)===1?"Desactivar":"Activar"}</button>
+          </div>
         </div>`).join("") : '<p class="sin-datos">No hay usuarios.</p>';
+
+      contenedor.querySelectorAll("[data-admin-clave-id]").forEach(btn =>
+        btn.addEventListener("click", () => {
+          const usuario = datos.find(
+            item => Number(item.id) === Number(btn.dataset.adminClaveId)
+          );
+          if (usuario) abrirModalCambioClave(usuario);
+        })
+      );
+
       contenedor.querySelectorAll("[data-admin-id]").forEach(btn => btn.addEventListener("click", async () => {
         const r2 = await fetch(`/api/admin/usuarios/${btn.dataset.adminId}/estado`, { method:"PATCH", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({activo:Number(btn.dataset.activo)}) });
         const d2 = await r2.json().catch(()=>({}));
         if (!r2.ok) { mensajeGestion("mensajeUsuarios", d2.mensaje || "No fue posible cambiar el estado.", true); return; }
+        mensajeGestion("mensajeUsuarios", d2.mensaje || "Estado actualizado.");
         await cargarUsuariosAdmin();
       }));
     }
@@ -2088,6 +2227,82 @@
       const d = await r.json().catch(()=>({}));
       if (!r.ok) { mensajeGestion("mensajeParticipantes", d.mensaje || "No fue posible guardar.", true); return; }
       e.target.reset(); mensajeGestion("mensajeParticipantes", d.mensaje || "Participante guardado."); await cargarParticipantes();
+    });
+
+    formCambiarClaveAdmin.addEventListener("submit", async e => {
+      e.preventDefault();
+
+      if (!usuarioCambioClave) {
+        cerrarModalCambioClave();
+        return;
+      }
+
+      const clave = nuevaClaveAdmin.value;
+      const confirmacion = confirmarClaveAdmin.value;
+
+      if (!clave || !confirmacion) {
+        mensajeCambioClave.textContent = "Completa los dos campos.";
+        mensajeCambioClave.className = "mensaje-gestion error";
+        return;
+      }
+
+      if (clave !== confirmacion) {
+        mensajeCambioClave.textContent = "Las contraseñas no coinciden.";
+        mensajeCambioClave.className = "mensaje-gestion error";
+        return;
+      }
+
+      guardarCambioClave.disabled = true;
+      guardarCambioClave.textContent = "Guardando...";
+
+      try {
+        const r = await fetch(
+          `/api/admin/usuarios/${usuarioCambioClave.id}/contrasena`,
+          {
+            method:"PATCH",
+            credentials:"same-origin",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({ clave, confirmacion })
+          }
+        );
+
+        const d = await r.json().catch(()=>({}));
+
+        if (!revisarAutenticacion(r)) return;
+
+        if (!r.ok) {
+          mensajeCambioClave.textContent =
+            d.mensaje || "No fue posible cambiar la contraseña.";
+          mensajeCambioClave.className = "mensaje-gestion error";
+          return;
+        }
+
+        const mensajeExito = d.mensaje || "Contraseña actualizada.";
+        cerrarModalCambioClave();
+        mensajeGestion("mensajeUsuarios", mensajeExito);
+      } catch (error) {
+        mensajeCambioClave.textContent = "No fue posible conectar con el servidor.";
+        mensajeCambioClave.className = "mensaje-gestion error";
+      } finally {
+        guardarCambioClave.disabled = false;
+        guardarCambioClave.textContent = "Guardar contraseña";
+      }
+    });
+
+    document.getElementById("cancelarCambioClave").addEventListener(
+      "click",
+      cerrarModalCambioClave
+    );
+
+    document.getElementById("fondoModalClave").addEventListener(
+      "click",
+      cerrarModalCambioClave
+    );
+
+    document.addEventListener("keydown", evento => {
+      if (evento.key === "Escape" && !modalClaveAdmin.classList.contains("oculto")) {
+        cerrarModalCambioClave();
+      }
     });
 
     document.getElementById("formUsuarioAdmin").addEventListener("submit", async e => {
