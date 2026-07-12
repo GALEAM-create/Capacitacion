@@ -1113,7 +1113,7 @@
           video.pause();
         }
       } catch (error) {
-        mensajeVideo.textContent = "No fue posible iniciar el video. Verifica que el archivo video.mp4 esté en la misma carpeta que esta página.";
+        mensajeVideo.textContent = "No fue posible iniciar el video. Verifica que video.mp4 esté disponible en la ruta protegida del curso.";
         console.error(error);
       }
     });
@@ -1158,7 +1158,7 @@
     btnContinuarEvaluacion.addEventListener("click", mostrarEvaluacion);
 
     video.addEventListener("error", function() {
-      mensajeVideo.textContent = "No se pudo cargar el video. Confirma que el archivo se llame exactamente video.mp4 y esté en la misma carpeta que index.html.";
+      mensajeVideo.textContent = "No se pudo cargar el video. Confirma que video.mp4 esté subido en la raíz del proyecto y disponible mediante la ruta protegida.";
     });
 
     // La presentación es independiente del flujo de datos y video. Si alguna
