@@ -858,6 +858,22 @@
       background: rgba(255, 255, 255, 0.16);
     }
 
+
+
+    .gestion-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px; }
+    .gestion-form { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-bottom:18px; }
+    .gestion-form .ancho-completo { grid-column:1/-1; }
+    .gestion-lista { max-height:360px; overflow:auto; border:1px solid var(--gris-borde); border-radius:11px; }
+    .gestion-item { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:13px; border-bottom:1px solid #e7edf1; }
+    .gestion-item:last-child { border-bottom:0; }
+    .gestion-item strong { display:block; font-size:14px; }
+    .gestion-item small { color:var(--gris-texto); line-height:1.45; }
+    .boton-mini { border:1px solid var(--gris-borde); background:#f7f9fb; color:var(--azul-oscuro); border-radius:8px; padding:7px 10px; cursor:pointer; font-size:11px; font-weight:bold; }
+    .mensaje-gestion { min-height:20px; margin-bottom:12px; color:var(--gris-texto); font-size:12px; }
+    .mensaje-gestion.ok { color:var(--verde); }
+    .mensaje-gestion.error { color:var(--rojo); }
+    @media (max-width:900px){ .gestion-grid{grid-template-columns:1fr}.gestion-form{grid-template-columns:1fr}.gestion-form .ancho-completo{grid-column:auto} }
+
   </style>
 </head>
 
@@ -1032,11 +1048,11 @@
           <option value="no-aprobado">No aprobados</option>
         </select>
 
-        <button class="boton boton-principal" onclick="cargarResultados()">
+        <button id="btnActualizarResultados" class="boton boton-principal" type="button">
           ↻ Actualizar
         </button>
 
-        <button class="boton boton-secundario" onclick="exportarExcel()">
+        <button id="btnExportarResultados" class="boton boton-secundario" type="button">
           ↓ Exportar a Excel
         </button>
 
@@ -1073,6 +1089,36 @@
 
     </section>
 
+
+
+    <section id="seccionGestion" class="gestion-grid oculto">
+      <article class="panel">
+        <div class="panel-encabezado"><h2>Padrón de participantes</h2><span>Acceso al portal</span></div>
+        <form id="formParticipante" class="gestion-form">
+          <input id="participanteNombre" class="campo-control ancho-completo" placeholder="Nombre completo" maxlength="150" required>
+          <input id="participanteNumero" class="campo-control" placeholder="Número de empleado" maxlength="50" required>
+          <input id="participanteServicio" class="campo-control" placeholder="Servicio" maxlength="100">
+          <button class="boton boton-principal ancho-completo" type="submit">Guardar participante</button>
+        </form>
+        <p id="mensajeParticipantes" class="mensaje-gestion"></p>
+        <div id="listaParticipantes" class="gestion-lista"><p class="sin-datos">Cargando padrón...</p></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-encabezado"><h2>Usuarios administrativos</h2><span>Cuentas individuales</span></div>
+        <form id="formUsuarioAdmin" class="gestion-form">
+          <input id="adminNombre" class="campo-control ancho-completo" placeholder="Nombre de la persona" maxlength="150" required>
+          <input id="adminUsuario" class="campo-control" placeholder="Usuario" maxlength="100" required>
+          <select id="adminRol" class="campo-control"><option value="consulta">Consulta</option><option value="administrador">Administrador</option></select>
+          <input id="adminClave" class="campo-control ancho-completo" type="password" placeholder="Contraseña" maxlength="200" required>
+          <button class="boton boton-principal ancho-completo" type="submit">Crear usuario</button>
+        </form>
+        <p id="mensajeUsuarios" class="mensaje-gestion"></p>
+        <div id="listaUsuarios" class="gestion-lista"><p class="sin-datos">Cargando usuarios...</p></div>
+      </article>
+    </section>
+
+
     <p class="nota-final">
       Panel de consulta ejecutiva · Los resultados se actualizan desde la plataforma de capacitación.
     </p>
@@ -1101,6 +1147,8 @@
     const botonLogin = document.getElementById("botonLogin");
     const mensajeLogin = document.getElementById("mensajeLogin");
     const botonCerrarSesion = document.getElementById("botonCerrarSesion");
+    const seccionGestion = document.getElementById("seccionGestion");
+    let sesionAdminActual = null;
 
     function mostrarLogin(mensaje = "") {
       panelPrincipal.classList.add("oculto");
@@ -1128,8 +1176,11 @@
           return;
         }
 
+        const datosSesion = await respuesta.json();
+        sesionAdminActual = datosSesion;
         mostrarPanel();
         await cargarResultados();
+        await cargarGestion();
       } catch (error) {
         console.error("Error al verificar la sesión:", error);
         mostrarLogin("No fue posible conectar con el servidor.");
@@ -1159,8 +1210,10 @@
           throw new Error(datos.mensaje || "No fue posible iniciar sesión.");
         }
 
+        sesionAdminActual = datos;
         mostrarPanel();
         await cargarResultados();
+        await cargarGestion();
       } catch (error) {
         mostrarLogin(error.message);
       } finally {
@@ -1744,7 +1797,7 @@
               <td>${obtenerEtiquetaEstado(aprobado)}</td>
               <td>${formatearFecha(ultimo.fecha)}</td>
               <td>
-                <button class="boton-historial" type="button" onclick="alternarHistorial(${indice})">
+                <button class="boton-historial" type="button" data-historial-indice="${indice}">
                   ${estaAbierto ? "Ocultar historial" : "Ver historial"}
                 </button>
               </td>
@@ -1757,6 +1810,12 @@
           `;
         });
       }
+
+      tabla.querySelectorAll("[data-historial-indice]").forEach(boton => {
+        boton.addEventListener("click", () => {
+          alternarHistorial(Number(boton.dataset.historialIndice));
+        });
+      });
 
       const visibles = gruposFiltrados.length;
       const total = gruposOriginales.length;
@@ -1974,7 +2033,74 @@
       }
     }
 
-    window.alternarHistorial = alternarHistorial;
+
+
+    function mensajeGestion(id, texto, esError = false) {
+      const elemento = document.getElementById(id);
+      elemento.textContent = texto;
+      elemento.className = `mensaje-gestion ${esError ? "error" : "ok"}`;
+    }
+
+    async function cargarGestion() {
+      const puedeAdministrar = sesionAdminActual?.rol === "administrador";
+      seccionGestion.classList.toggle("oculto", !puedeAdministrar);
+      if (!puedeAdministrar) return;
+      await Promise.all([cargarParticipantes(), cargarUsuariosAdmin()]);
+    }
+
+    async function cargarParticipantes() {
+      const r = await fetch("/api/admin/participantes", { credentials:"same-origin", cache:"no-store" });
+      if (!revisarAutenticacion(r)) return;
+      const datos = await r.json();
+      const contenedor = document.getElementById("listaParticipantes");
+      contenedor.innerHTML = datos.length ? datos.map(item => `
+        <div class="gestion-item">
+          <div><strong>${escaparHtml(item.nombre)}</strong><small>${escaparHtml(item.numero_empleado)} · ${escaparHtml(item.servicio || "Sin servicio")} · ${Number(item.activo)===1?"Activo":"Inactivo"}</small></div>
+          <button class="boton-mini" type="button" data-participante-id="${item.id}" data-activo="${Number(item.activo)===1?0:1}">${Number(item.activo)===1?"Desactivar":"Activar"}</button>
+        </div>`).join("") : '<p class="sin-datos">No hay participantes.</p>';
+      contenedor.querySelectorAll("[data-participante-id]").forEach(btn => btn.addEventListener("click", async () => {
+        await fetch(`/api/admin/participantes/${btn.dataset.participanteId}/estado`, { method:"PATCH", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({activo:Number(btn.dataset.activo)}) });
+        await cargarParticipantes();
+      }));
+    }
+
+    async function cargarUsuariosAdmin() {
+      const r = await fetch("/api/admin/usuarios", { credentials:"same-origin", cache:"no-store" });
+      if (!revisarAutenticacion(r)) return;
+      const datos = await r.json();
+      const contenedor = document.getElementById("listaUsuarios");
+      contenedor.innerHTML = datos.length ? datos.map(item => `
+        <div class="gestion-item">
+          <div><strong>${escaparHtml(item.nombre)} · ${escaparHtml(item.usuario)}</strong><small>${escaparHtml(item.rol)} · ${Number(item.activo)===1?"Activo":"Inactivo"}</small></div>
+          <button class="boton-mini" type="button" data-admin-id="${item.id}" data-activo="${Number(item.activo)===1?0:1}">${Number(item.activo)===1?"Desactivar":"Activar"}</button>
+        </div>`).join("") : '<p class="sin-datos">No hay usuarios.</p>';
+      contenedor.querySelectorAll("[data-admin-id]").forEach(btn => btn.addEventListener("click", async () => {
+        const r2 = await fetch(`/api/admin/usuarios/${btn.dataset.adminId}/estado`, { method:"PATCH", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({activo:Number(btn.dataset.activo)}) });
+        const d2 = await r2.json().catch(()=>({}));
+        if (!r2.ok) { mensajeGestion("mensajeUsuarios", d2.mensaje || "No fue posible cambiar el estado.", true); return; }
+        await cargarUsuariosAdmin();
+      }));
+    }
+
+    document.getElementById("formParticipante").addEventListener("submit", async e => {
+      e.preventDefault();
+      const r = await fetch("/api/admin/participantes", { method:"POST", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ nombre:document.getElementById("participanteNombre").value.trim(), numero_empleado:document.getElementById("participanteNumero").value.trim(), servicio:document.getElementById("participanteServicio").value.trim() }) });
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) { mensajeGestion("mensajeParticipantes", d.mensaje || "No fue posible guardar.", true); return; }
+      e.target.reset(); mensajeGestion("mensajeParticipantes", d.mensaje || "Participante guardado."); await cargarParticipantes();
+    });
+
+    document.getElementById("formUsuarioAdmin").addEventListener("submit", async e => {
+      e.preventDefault();
+      const r = await fetch("/api/admin/usuarios", { method:"POST", credentials:"same-origin", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ nombre:document.getElementById("adminNombre").value.trim(), usuario:document.getElementById("adminUsuario").value.trim(), clave:document.getElementById("adminClave").value, rol:document.getElementById("adminRol").value }) });
+      const d = await r.json().catch(()=>({}));
+      if (!r.ok) { mensajeGestion("mensajeUsuarios", d.mensaje || "No fue posible crear el usuario.", true); return; }
+      e.target.reset(); mensajeGestion("mensajeUsuarios", d.mensaje || "Usuario creado."); await cargarUsuariosAdmin();
+    });
+
+
+    document.getElementById("btnActualizarResultados").addEventListener("click", cargarResultados);
+    document.getElementById("btnExportarResultados").addEventListener("click", exportarExcel);
 
     buscador.addEventListener("input", aplicarFiltros);
     filtroServicio.addEventListener("change", aplicarFiltros);
@@ -1988,4 +2114,3 @@
 
 </body>
 </html>
-```
