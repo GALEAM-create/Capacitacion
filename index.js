@@ -1,4 +1,3 @@
-
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -14,9 +13,12 @@ const PORT = process.env.PORT || 3000;
 
 const CALIFICACION_MAXIMA = 100;
 const CALIFICACION_APROBATORIA = 70;
-const NOMBRE_COOKIE = "galeam_admin";
-const DURACION_SESION_MINUTOS = Number(process.env.SESSION_MINUTES || 30);
-const DURACION_SESION_MS = DURACION_SESION_MINUTOS * 60 * 1000;
+const COOKIE_ADMIN = "galeam_admin";
+const COOKIE_PARTICIPANTE = "galeam_participante";
+const SESION_ADMIN_MINUTOS = Number(process.env.SESSION_MINUTES || 30);
+const SESION_PARTICIPANTE_MINUTOS = Number(
+  process.env.PARTICIPANT_SESSION_MINUTES || 120
+);
 const ES_PRODUCCION =
   process.env.NODE_ENV === "production" ||
   Boolean(process.env.RAILWAY_ENVIRONMENT);
@@ -39,23 +41,19 @@ if (variablesFaltantes.length) {
 }
 
 if (String(process.env.SESSION_SECRET).length < 32) {
-  throw new Error(
-    "SESSION_SECRET debe contener por lo menos 32 caracteres."
-  );
+  throw new Error("SESSION_SECRET debe contener por lo menos 32 caracteres.");
 }
 
-if (
-  !Number.isFinite(DURACION_SESION_MINUTOS) ||
-  DURACION_SESION_MINUTOS < 5 ||
-  DURACION_SESION_MINUTOS > 720
-) {
-  throw new Error(
-    "SESSION_MINUTES debe ser un número entre 5 y 720."
-  );
+for (const [nombre, valor] of [
+  ["SESSION_MINUTES", SESION_ADMIN_MINUTOS],
+  ["PARTICIPANT_SESSION_MINUTES", SESION_PARTICIPANTE_MINUTOS]
+]) {
+  if (!Number.isFinite(valor) || valor < 5 || valor > 720) {
+    throw new Error(`${nombre} debe ser un número entre 5 y 720.`);
+  }
 }
 
 app.set("trust proxy", 1);
-
 app.use(
   helmet({
     contentSecurityPolicy: false,
@@ -76,7 +74,6 @@ const corsCapacitaciones = cors({
     if (!origen || origenesPermitidos.size === 0) {
       return callback(null, true);
     }
-
     return callback(null, origenesPermitidos.has(origen));
   },
   methods: ["POST", "OPTIONS"],
@@ -84,9 +81,21 @@ const corsCapacitaciones = cors({
   maxAge: 86400
 });
 
-const limiteLogin = rateLimit({
+const limiteLoginAdmin = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: 5,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    mensaje:
+      "Demasiados intentos de acceso. Espera 15 minutos antes de volver a intentarlo."
+  }
+});
+
+const limiteLoginParticipante = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
   standardHeaders: "draft-8",
   legacyHeaders: false,
   skipSuccessfulRequests: true,
@@ -109,69 +118,84 @@ const limiteResultados = rateLimit({
 
 const pool = mysql.createPool(process.env.DATABASE_URL);
 
+function normalizarNombre(valor) {
+  return String(valor || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function validarTexto(valor, nombreCampo, longitudMaxima) {
+  const limpio = String(valor || "").trim();
+  if (!limpio) {
+    const error = new Error(`Falta el campo obligatorio: ${nombreCampo}.`);
+    error.codigo = 400;
+    throw error;
+  }
+  if (limpio.length > longitudMaxima) {
+    const error = new Error(
+      `El campo ${nombreCampo} excede la longitud permitida.`
+    );
+    error.codigo = 400;
+    throw error;
+  }
+  return limpio;
+}
+
+function compararSeguro(a, b) {
+  const bufferA = Buffer.from(String(a || ""));
+  const bufferB = Buffer.from(String(b || ""));
+  if (bufferA.length !== bufferB.length) return false;
+  return crypto.timingSafeEqual(bufferA, bufferB);
+}
 
 function codificarBase64Url(valor) {
   return Buffer.from(valor).toString("base64url");
 }
 
-function crearTokenSesion(usuario) {
+function crearTokenSesion(tipo, datos, duracionMinutos) {
   const ahora = Date.now();
-  const datos = {
-    usuario,
+  const cuerpoDatos = {
+    tipo,
+    ...datos,
     emitido: ahora,
-    expira: ahora + DURACION_SESION_MS,
+    expira: ahora + duracionMinutos * 60 * 1000,
     nonce: crypto.randomBytes(16).toString("hex")
   };
-
-  const cuerpo = codificarBase64Url(JSON.stringify(datos));
+  const cuerpo = codificarBase64Url(JSON.stringify(cuerpoDatos));
   const firma = crypto
     .createHmac("sha256", process.env.SESSION_SECRET)
     .update(cuerpo)
     .digest("base64url");
-
   return `${cuerpo}.${firma}`;
 }
 
-function comparacionSegura(a, b) {
-  const bufferA = Buffer.from(String(a || ""));
-  const bufferB = Buffer.from(String(b || ""));
-
-  if (bufferA.length !== bufferB.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(bufferA, bufferB);
-}
-
-function verificarTokenSesion(token) {
+function verificarTokenSesion(token, tipoEsperado) {
   try {
     const [cuerpo, firmaRecibida, sobrante] = String(token || "").split(".");
-
-    if (!cuerpo || !firmaRecibida || sobrante !== undefined) {
-      return null;
-    }
+    if (!cuerpo || !firmaRecibida || sobrante !== undefined) return null;
 
     const firmaEsperada = crypto
       .createHmac("sha256", process.env.SESSION_SECRET)
       .update(cuerpo)
       .digest("base64url");
 
-    if (!comparacionSegura(firmaRecibida, firmaEsperada)) {
-      return null;
-    }
+    if (!compararSeguro(firmaRecibida, firmaEsperada)) return null;
 
     const datos = JSON.parse(
       Buffer.from(cuerpo, "base64url").toString("utf8")
     );
 
     if (
-      datos.usuario !== process.env.ADMIN_USER ||
+      datos.tipo !== tipoEsperado ||
       !Number.isFinite(datos.expira) ||
       datos.expira <= Date.now()
     ) {
       return null;
     }
-
     return datos;
   } catch (error) {
     return null;
@@ -179,182 +203,170 @@ function verificarTokenSesion(token) {
 }
 
 function obtenerCookies(req) {
-  const encabezado = String(req.headers.cookie || "");
   const cookies = {};
-
-  encabezado.split(";").forEach(parte => {
-    const indice = parte.indexOf("=");
-
-    if (indice < 1) return;
-
-    const nombre = parte.slice(0, indice).trim();
-    const valor = parte.slice(indice + 1).trim();
-
-    try {
-      cookies[nombre] = decodeURIComponent(valor);
-    } catch (error) {
-      cookies[nombre] = valor;
-    }
-  });
-
+  String(req.headers.cookie || "")
+    .split(";")
+    .forEach(parte => {
+      const indice = parte.indexOf("=");
+      if (indice < 1) return;
+      const nombre = parte.slice(0, indice).trim();
+      const valor = parte.slice(indice + 1).trim();
+      try {
+        cookies[nombre] = decodeURIComponent(valor);
+      } catch (error) {
+        cookies[nombre] = valor;
+      }
+    });
   return cookies;
 }
 
-function obtenerSesion(req) {
-  const cookies = obtenerCookies(req);
-  return verificarTokenSesion(cookies[NOMBRE_COOKIE]);
-}
-
-function opcionesCookie() {
+function opcionesCookie(duracionMinutos) {
   return {
     httpOnly: true,
     secure: ES_PRODUCCION,
     sameSite: "strict",
     path: "/",
-    maxAge: DURACION_SESION_MS,
+    maxAge: duracionMinutos * 60 * 1000,
     priority: "high"
   };
 }
 
-function requerirAdministrador(req, res, next) {
-  const sesion = obtenerSesion(req);
-
-  if (!sesion) {
-    res.clearCookie(NOMBRE_COOKIE, {
-      httpOnly: true,
-      secure: ES_PRODUCCION,
-      sameSite: "strict",
-      path: "/"
-    });
-
-    return res.status(401).json({
-      mensaje: "Debes iniciar sesión para consultar esta información."
-    });
-  }
-
-  res.set("Cache-Control", "no-store");
-  req.sesionAdmin = sesion;
-  next();
-}
-
-function enviarPanelAdmin(req, res) {
-  const rutaAdmin = path.join(__dirname, "admin.html");
-
-  try {
-    const nonce = crypto.randomBytes(18).toString("base64");
-    const html = fs
-      .readFileSync(rutaAdmin, "utf8")
-      .replaceAll("__CSP_NONCE__", nonce);
-
-    res.set({
-      "Cache-Control": "no-store",
-      "Content-Security-Policy": [
-        "default-src 'self'",
-        `script-src 'self' 'nonce-${nonce}'`,
-        `style-src 'self' 'nonce-${nonce}'`,
-        "img-src 'self' data:",
-        "connect-src 'self'",
-        "font-src 'self'",
-        "object-src 'none'",
-        "base-uri 'none'",
-        "frame-ancestors 'none'",
-        "form-action 'self'"
-      ].join("; ")
-    });
-
-    res.type("html").send(html);
-  } catch (error) {
-    console.error("No fue posible cargar admin.html:", error);
-    res.status(500).send("No fue posible cargar el panel administrativo.");
-  }
-}
-
-app.get("/admin", enviarPanelAdmin);
-app.get("/admin/", enviarPanelAdmin);
-app.get("/admin.html", (req, res) => res.redirect(302, "/admin"));
-
-app.get("/api/admin/session", (req, res) => {
-  const sesion = obtenerSesion(req);
-
-  res.set("Cache-Control", "no-store");
-
-  if (!sesion) {
-    return res.status(401).json({ autenticado: false });
-  }
-
-  res.json({
-    autenticado: true,
-    usuario: sesion.usuario,
-    expira: sesion.expira
-  });
-});
-
-app.post("/api/admin/login", limiteLogin, async (req, res) => {
-  try {
-    const usuario = String(req.body.usuario || "").trim();
-    const clave = String(req.body.clave || "");
-
-    if (!usuario || !clave || usuario.length > 100 || clave.length > 200) {
-      return res.status(400).json({
-        mensaje: "Escribe un usuario y una contraseña válidos."
-      });
-    }
-
-    const usuarioValido = comparacionSegura(
-      usuario,
-      process.env.ADMIN_USER
-    );
-
-    // La comparación de contraseña se ejecuta aun si el usuario no coincide,
-    // para reducir diferencias de tiempo entre ambos tipos de error.
-    const claveValida = await bcrypt.compare(
-      clave,
-      process.env.ADMIN_PASSWORD_HASH
-    );
-
-    if (!usuarioValido || !claveValida) {
-      return res.status(401).json({
-        mensaje: "Usuario o contraseña incorrectos."
-      });
-    }
-
-    const token = crearTokenSesion(process.env.ADMIN_USER);
-    res.cookie(NOMBRE_COOKIE, token, opcionesCookie());
-    res.set("Cache-Control", "no-store");
-
-    res.json({
-      mensaje: "Acceso autorizado.",
-      usuario: process.env.ADMIN_USER,
-      duracion_minutos: DURACION_SESION_MINUTOS
-    });
-  } catch (error) {
-    console.error("Error al iniciar sesión:", error);
-    res.status(500).json({
-      mensaje: "No fue posible iniciar sesión."
-    });
-  }
-});
-
-app.post("/api/admin/logout", (req, res) => {
-  res.clearCookie(NOMBRE_COOKIE, {
+function limpiarCookie(res, nombre) {
+  res.clearCookie(nombre, {
     httpOnly: true,
     secure: ES_PRODUCCION,
     sameSite: "strict",
     path: "/"
   });
-  res.set("Cache-Control", "no-store");
-  res.json({ mensaje: "Sesión cerrada correctamente." });
-});
+}
+
+async function obtenerAdministradorDesdeSesion(req) {
+  const token = obtenerCookies(req)[COOKIE_ADMIN];
+  const sesion = verificarTokenSesion(token, "admin");
+  if (!sesion || !Number.isInteger(Number(sesion.admin_id))) return null;
+
+  const [filas] = await pool.query(
+    `SELECT id, usuario, nombre, rol, activo
+       FROM usuarios_admin
+      WHERE id = ? AND activo = 1
+      LIMIT 1`,
+    [Number(sesion.admin_id)]
+  );
+  return filas[0] || null;
+}
+
+async function requerirAdministrador(req, res, next) {
+  try {
+    const administrador = await obtenerAdministradorDesdeSesion(req);
+    if (!administrador) {
+      limpiarCookie(res, COOKIE_ADMIN);
+      return res.status(401).json({
+        mensaje: "Debes iniciar sesión para consultar esta información."
+      });
+    }
+    res.set("Cache-Control", "no-store");
+    req.administrador = administrador;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+function requerirRolAdministrador(req, res, next) {
+  if (req.administrador?.rol !== "administrador") {
+    return res.status(403).json({
+      mensaje: "Tu cuenta no tiene permiso para administrar usuarios."
+    });
+  }
+  next();
+}
+
+async function obtenerParticipanteDesdeSesion(req) {
+  const token = obtenerCookies(req)[COOKIE_PARTICIPANTE];
+  const sesion = verificarTokenSesion(token, "participante");
+  if (!sesion || !Number.isInteger(Number(sesion.participante_id))) return null;
+
+  const [filas] = await pool.query(
+    `SELECT id, numero_empleado, nombre, servicio, activo
+       FROM participantes
+      WHERE id = ? AND activo = 1
+      LIMIT 1`,
+    [Number(sesion.participante_id)]
+  );
+  return filas[0] || null;
+}
+
+async function requerirParticipante(req, res, next) {
+  try {
+    const participante = await obtenerParticipanteDesdeSesion(req);
+    if (!participante) {
+      limpiarCookie(res, COOKIE_PARTICIPANTE);
+      return res.status(401).json({
+        mensaje: "Debes identificarte para acceder a la capacitación."
+      });
+    }
+    res.set("Cache-Control", "no-store");
+    req.participante = participante;
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+function inyectarNonce(html, nonce) {
+  return html
+    .replaceAll("__CSP_NONCE__", nonce)
+    .replace(/<script(?![^>]*\bnonce=)([^>]*)>/gi, `<script nonce="${nonce}"$1>`);
+}
+
+function enviarHtmlConNonce(res, ruta, tipo = "app") {
+  try {
+    const nonce = crypto.randomBytes(18).toString("base64");
+    const html = inyectarNonce(fs.readFileSync(ruta, "utf8"), nonce);
+    const politica = tipo === "curso"
+      ? [
+          "default-src 'self'",
+          `script-src 'self' 'nonce-${nonce}'`,
+          "style-src 'self' 'unsafe-inline'",
+          "img-src 'self' data:",
+          "media-src 'self'",
+          "connect-src 'self'",
+          "font-src 'self'",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "form-action 'self'"
+        ]
+      : [
+          "default-src 'self'",
+          `script-src 'self' 'nonce-${nonce}'`,
+          `style-src 'self' 'nonce-${nonce}'`,
+          "img-src 'self' data:",
+          "connect-src 'self'",
+          "font-src 'self'",
+          "object-src 'none'",
+          "base-uri 'none'",
+          "frame-ancestors 'none'",
+          "form-action 'self'"
+        ];
+
+    res.set({
+      "Cache-Control": "no-store",
+      "Content-Security-Policy": politica.join("; ")
+    });
+    res.type("html").send(html);
+  } catch (error) {
+    console.error(`No fue posible cargar ${ruta}:`, error);
+    res.status(500).send("No fue posible cargar la página solicitada.");
+  }
+}
 
 function crearNombreBloqueo(numeroEmpleado, curso) {
-  const identificador = `${numeroEmpleado}__${curso}`;
-
   const hash = crypto
     .createHash("sha256")
-    .update(identificador)
+    .update(`${numeroEmpleado}__${curso}`)
     .digest("hex")
     .slice(0, 48);
-
   return `galeam_intento_${hash}`;
 }
 
@@ -365,7 +377,6 @@ function obtenerEscalaDeEntrada(curso, calificacionMaximaRecibida) {
     calificacionMaximaRecibida !== ""
   ) {
     const escala = Number(calificacionMaximaRecibida);
-
     if (escala !== 10 && escala !== 100) {
       const error = new Error(
         "La calificación máxima de origen debe ser 10 o 100."
@@ -373,18 +384,9 @@ function obtenerEscalaDeEntrada(curso, calificacionMaximaRecibida) {
       error.codigo = 400;
       throw error;
     }
-
     return escala;
   }
-
-  /*
-    Compatibilidad temporal:
-    la versión anterior del curso de Armas enviaba resultados de 0 a 10.
-    Mientras actualizamos esa página, aquí los convertimos a 0-100.
-  */
-  return String(curso || "").toLowerCase().includes("arma")
-    ? 10
-    : 100;
+  return String(curso || "").toLowerCase().includes("arma") ? 10 : 100;
 }
 
 function normalizarCalificacion(
@@ -393,20 +395,15 @@ function normalizarCalificacion(
   calificacionMaximaRecibida
 ) {
   const calificacion = Number(calificacionRecibida);
-
   const escalaEntrada = obtenerEscalaDeEntrada(
     curso,
     calificacionMaximaRecibida
   );
-
   if (!Number.isInteger(calificacion)) {
-    const error = new Error(
-      "La calificación debe ser un número entero."
-    );
+    const error = new Error("La calificación debe ser un número entero.");
     error.codigo = 400;
     throw error;
   }
-
   if (calificacion < 0 || calificacion > escalaEntrada) {
     const error = new Error(
       `La calificación debe estar entre 0 y ${escalaEntrada}.`
@@ -414,39 +411,11 @@ function normalizarCalificacion(
     error.codigo = 400;
     throw error;
   }
-
-  return escalaEntrada === 10
-    ? calificacion * 10
-    : calificacion;
-}
-
-function validarTexto(valor, nombreCampo, longitudMaxima) {
-  const limpio = String(valor || "").trim();
-
-  if (!limpio) {
-    const error = new Error(
-      `Falta el campo obligatorio: ${nombreCampo}.`
-    );
-    error.codigo = 400;
-    throw error;
-  }
-
-  if (limpio.length > longitudMaxima) {
-    const error = new Error(
-      `El campo ${nombreCampo} excede la longitud permitida.`
-    );
-    error.codigo = 400;
-    throw error;
-  }
-
-  return limpio;
+  return escalaEntrada === 10 ? calificacion * 10 : calificacion;
 }
 
 function normalizarErrores(errores) {
-  if (errores === undefined || errores === null) {
-    return null;
-  }
-
+  if (errores === undefined || errores === null) return null;
   if (!Array.isArray(errores)) {
     const error = new Error(
       "El campo respuestas_incorrectas debe ser un arreglo."
@@ -454,36 +423,21 @@ function normalizarErrores(errores) {
     error.codigo = 400;
     throw error;
   }
-
   if (errores.length > 100) {
-    const error = new Error(
-      "Se recibieron demasiadas respuestas incorrectas."
-    );
+    const error = new Error("Se recibieron demasiadas respuestas incorrectas.");
     error.codigo = 400;
     throw error;
   }
-
   return errores.map((respuesta, indice) => {
     const numero = Number(
-      respuesta?.numero ??
-      respuesta?.pregunta_numero ??
-      indice + 1
+      respuesta?.numero ?? respuesta?.pregunta_numero ?? indice + 1
     );
-
-    const pregunta = String(
-      respuesta?.pregunta ?? ""
-    ).trim();
-
+    const pregunta = String(respuesta?.pregunta ?? "").trim();
     const respuestaUsuario = String(
-      respuesta?.respuesta_usuario ??
-      respuesta?.respondio ??
-      ""
+      respuesta?.respuesta_usuario ?? respuesta?.respondio ?? ""
     ).trim();
-
     const respuestaCorrecta = String(
-      respuesta?.respuesta_correcta ??
-      respuesta?.correcta ??
-      ""
+      respuesta?.respuesta_correcta ?? respuesta?.correcta ?? ""
     ).trim();
 
     if (!Number.isInteger(numero) || numero < 1 || numero > 100) {
@@ -493,7 +447,6 @@ function normalizarErrores(errores) {
       error.codigo = 400;
       throw error;
     }
-
     if (!pregunta || !respuestaUsuario || !respuestaCorrecta) {
       const error = new Error(
         "Cada respuesta incorrecta debe incluir pregunta, respuesta del participante y respuesta correcta."
@@ -501,7 +454,6 @@ function normalizarErrores(errores) {
       error.codigo = 400;
       throw error;
     }
-
     if (
       pregunta.length > 1200 ||
       respuestaUsuario.length > 300 ||
@@ -513,7 +465,6 @@ function normalizarErrores(errores) {
       error.codigo = 400;
       throw error;
     }
-
     return {
       numero,
       pregunta,
@@ -523,98 +474,36 @@ function normalizarErrores(errores) {
   });
 }
 
-app.get("/", (req, res) => {
-  res.send("API de Capacitación Galeam funcionando.");
-});
-
-app.get("/api/prueba", (req, res) => {
-  res.json({
-    mensaje: "La API está funcionando.",
-    sistema: "Capacitación Galeam",
-    escala: "0 a 100",
-    aprobatorio: CALIFICACION_APROBATORIA
-  });
-});
-
-app.get(
-  "/api/diagnostico-db",
-  requerirAdministrador,
-  async (req, res) => {
-  try {
-    const [datosBase] = await pool.query(
-      "SELECT DATABASE() AS base_actual"
-    );
-
-    const [conteo] = await pool.query(
-      "SELECT COUNT(*) AS registros FROM resultados_capacitacion"
-    );
-
-    res.json({
-      base_actual: datosBase[0].base_actual,
-      registros: conteo[0].registros
-    });
-  } catch (error) {
-    console.error("Error en diagnóstico de base:", error);
-
-    res.status(500).json({
-      mensaje: "No fue posible revisar la conexión con la base de datos."
-    });
-  }
-  }
-);
-
-app.options("/api/resultados", corsCapacitaciones);
-
-app.post(
-  "/api/resultados",
-  corsCapacitaciones,
-  limiteResultados,
-  async (req, res) => {
+async function guardarResultado({
+  nombre,
+  numeroEmpleado,
+  servicio,
+  curso,
+  calificacionRecibida,
+  calificacionMaximaRecibida,
+  totalPreguntasRecibido,
+  erroresRecibidos,
+  calificacionAprobatoria = CALIFICACION_APROBATORIA
+}) {
   let conexion;
   let bloqueoObtenido = false;
   let nombreBloqueo = null;
   let transaccionIniciada = false;
 
   try {
-    const nombre = validarTexto(
-      req.body.nombre,
-      "nombre",
-      150
-    );
-
-    const numeroEmpleado = validarTexto(
-      req.body.numero_empleado,
-      "número de empleado",
-      50
-    );
-
-    const servicio = validarTexto(
-      req.body.servicio,
-      "servicio",
-      100
-    );
-
-    const curso = validarTexto(
-      req.body.curso,
-      "curso",
-      150
-    );
-
     const calificacion = normalizarCalificacion(
       curso,
-      req.body.calificacion,
-      req.body.calificacion_maxima
+      calificacionRecibida,
+      calificacionMaximaRecibida
     );
 
     let totalPreguntas = null;
-
     if (
-      req.body.total_preguntas !== undefined &&
-      req.body.total_preguntas !== null &&
-      req.body.total_preguntas !== ""
+      totalPreguntasRecibido !== undefined &&
+      totalPreguntasRecibido !== null &&
+      totalPreguntasRecibido !== ""
     ) {
-      totalPreguntas = Number(req.body.total_preguntas);
-
+      totalPreguntas = Number(totalPreguntasRecibido);
       if (
         !Number.isInteger(totalPreguntas) ||
         totalPreguntas < 1 ||
@@ -628,10 +517,7 @@ app.post(
       }
     }
 
-    const respuestasIncorrectas = normalizarErrores(
-      req.body.respuestas_incorrectas
-    );
-
+    const respuestasIncorrectas = normalizarErrores(erroresRecibidos);
     if (
       totalPreguntas !== null &&
       respuestasIncorrectas !== null &&
@@ -644,62 +530,39 @@ app.post(
       throw error;
     }
 
-    const aprobado =
-      calificacion >= CALIFICACION_APROBATORIA;
-
+    const aprobado = calificacion >= calificacionAprobatoria;
     conexion = await pool.getConnection();
-
-    nombreBloqueo = crearNombreBloqueo(
-      numeroEmpleado,
-      curso
-    );
+    nombreBloqueo = crearNombreBloqueo(numeroEmpleado, curso);
 
     const [resultadoBloqueo] = await conexion.query(
       "SELECT GET_LOCK(?, 10) AS obtenido",
       [nombreBloqueo]
     );
-
-    bloqueoObtenido =
-      Number(resultadoBloqueo[0].obtenido) === 1;
-
+    bloqueoObtenido = Number(resultadoBloqueo[0].obtenido) === 1;
     if (!bloqueoObtenido) {
-      return res.status(503).json({
-        mensaje:
-          "No fue posible asignar el intento en este momento. Inténtalo nuevamente."
-      });
+      const error = new Error(
+        "No fue posible asignar el intento en este momento. Inténtalo nuevamente."
+      );
+      error.codigo = 503;
+      throw error;
     }
 
     await conexion.beginTransaction();
     transaccionIniciada = true;
 
     const [filasPrevias] = await conexion.query(
-      `SELECT
-        GREATEST(
-          COALESCE(MAX(intento), 0),
-          COUNT(*)
-        ) AS ultimo_intento
-       FROM resultados_capacitacion
-       WHERE numero_empleado = ? AND curso = ?`,
+      `SELECT GREATEST(COALESCE(MAX(intento), 0), COUNT(*)) AS ultimo_intento
+         FROM resultados_capacitacion
+        WHERE numero_empleado = ? AND curso = ?`,
       [numeroEmpleado, curso]
     );
-
-    const intento =
-      Number(filasPrevias[0].ultimo_intento) + 1;
+    const intento = Number(filasPrevias[0].ultimo_intento) + 1;
 
     const [resultado] = await conexion.query(
       `INSERT INTO resultados_capacitacion
-        (
-          nombre,
-          numero_empleado,
-          servicio,
-          curso,
-          calificacion,
-          calificacion_maxima,
-          total_preguntas,
-          respuestas_incorrectas,
-          aprobado,
-          intento
-        )
+        (nombre, numero_empleado, servicio, curso, calificacion,
+         calificacion_maxima, total_preguntas, respuestas_incorrectas,
+         aprobado, intento)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         nombre,
@@ -719,90 +582,712 @@ app.post(
 
     await conexion.commit();
     transaccionIniciada = false;
-
-    res.status(201).json({
-      mensaje: "Resultado guardado correctamente.",
+    return {
       id: resultado.insertId,
       intento,
       calificacion,
       aprobado
-    });
+    };
   } catch (error) {
-    if (conexion && transaccionIniciada) {
-      await conexion.rollback();
-    }
-
-    console.error("Error al guardar resultado:", error);
-
-    res.status(error.codigo || 500).json({
-      mensaje:
-        error.codigo === 400
-          ? error.message
-          : "No fue posible guardar el resultado."
-    });
+    if (conexion && transaccionIniciada) await conexion.rollback();
+    throw error;
   } finally {
     if (conexion && bloqueoObtenido && nombreBloqueo) {
       try {
-        await conexion.query(
-          "SELECT RELEASE_LOCK(?)",
-          [nombreBloqueo]
-        );
+        await conexion.query("SELECT RELEASE_LOCK(?)", [nombreBloqueo]);
       } catch (error) {
-        console.error(
-          "No fue posible liberar el bloqueo:",
-          error
-        );
+        console.error("No fue posible liberar el bloqueo:", error);
       }
     }
+    if (conexion) conexion.release();
+  }
+}
 
-    if (conexion) {
-      conexion.release();
+async function inicializarBase() {
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS usuarios_admin (
+      id INT NOT NULL AUTO_INCREMENT,
+      usuario VARCHAR(100) NOT NULL,
+      password_hash VARCHAR(255) NOT NULL,
+      nombre VARCHAR(150) NOT NULL,
+      rol ENUM('administrador', 'consulta') NOT NULL DEFAULT 'consulta',
+      activo TINYINT(1) NOT NULL DEFAULT 1,
+      fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ultimo_acceso DATETIME NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uk_usuarios_admin_usuario (usuario)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS participantes (
+      id INT NOT NULL AUTO_INCREMENT,
+      numero_empleado VARCHAR(50) NOT NULL,
+      nombre VARCHAR(150) NOT NULL,
+      nombre_normalizado VARCHAR(150) NOT NULL,
+      servicio VARCHAR(100) NULL,
+      activo TINYINT(1) NOT NULL DEFAULT 1,
+      fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      ultimo_acceso DATETIME NULL,
+      PRIMARY KEY (id),
+      UNIQUE KEY uk_participantes_numero (numero_empleado),
+      KEY idx_participantes_nombre (nombre_normalizado)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS cursos_capacitacion (
+      id INT NOT NULL AUTO_INCREMENT,
+      nombre VARCHAR(150) NOT NULL,
+      slug VARCHAR(150) NOT NULL,
+      descripcion VARCHAR(500) NULL,
+      archivo_html VARCHAR(255) NOT NULL,
+      carpeta_assets VARCHAR(255) NOT NULL DEFAULT '.',
+      activo TINYINT(1) NOT NULL DEFAULT 1,
+      orden INT NOT NULL DEFAULT 0,
+      fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (id),
+      UNIQUE KEY uk_cursos_slug (slug),
+      UNIQUE KEY uk_cursos_nombre (nombre)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+  `);
+
+  await pool.query(
+    `INSERT INTO usuarios_admin
+      (usuario, password_hash, nombre, rol, activo)
+     VALUES (?, ?, ?, 'administrador', 1)
+     ON DUPLICATE KEY UPDATE
+       password_hash = VALUES(password_hash),
+       activo = 1`,
+    [
+      String(process.env.ADMIN_USER).trim(),
+      String(process.env.ADMIN_PASSWORD_HASH).trim(),
+      "Administrador Galeam"
+    ]
+  );
+
+  await pool.query(
+    `INSERT INTO cursos_capacitacion
+      (nombre, slug, descripcion, archivo_html, carpeta_assets, activo, orden)
+     VALUES (?, ?, ?, ?, ?, 1, 1)
+     ON DUPLICATE KEY UPDATE
+       descripcion = VALUES(descripcion),
+       archivo_html = VALUES(archivo_html),
+       carpeta_assets = VALUES(carpeta_assets)`,
+    [
+      "Ingeniería Social (llamada de extorsión)",
+      "ingenieria-social",
+      "Reconoce técnicas de manipulación, señales de alerta y el protocolo de actuación ante una llamada de extorsión.",
+      "index.html",
+      "."
+    ]
+  );
+
+  const [resultados] = await pool.query(
+    `SELECT nombre, numero_empleado, servicio
+       FROM resultados_capacitacion
+      WHERE numero_empleado IS NOT NULL
+        AND TRIM(numero_empleado) <> ''
+        AND nombre IS NOT NULL
+        AND TRIM(nombre) <> ''
+      ORDER BY fecha DESC, id DESC`
+  );
+
+  const vistos = new Set();
+  for (const fila of resultados) {
+    const numero = String(fila.numero_empleado || "").trim();
+    if (!numero || vistos.has(numero.toLowerCase())) continue;
+    vistos.add(numero.toLowerCase());
+    const nombre = String(fila.nombre || "").trim();
+    await pool.query(
+      `INSERT IGNORE INTO participantes
+        (numero_empleado, nombre, nombre_normalizado, servicio, activo)
+       VALUES (?, ?, ?, ?, 1)`,
+      [numero, nombre, normalizarNombre(nombre), String(fila.servicio || "").trim() || null]
+    );
+  }
+}
+
+app.get("/", (req, res) => {
+  res.send(
+    "API de Capacitación Galeam funcionando. Portal: /portal · Administración: /admin"
+  );
+});
+
+app.get("/api/prueba", (req, res) => {
+  res.json({
+    mensaje: "La API está funcionando.",
+    sistema: "Capacitación Galeam",
+    portal: "/portal",
+    administracion: "/admin"
+  });
+});
+
+app.get("/admin", (req, res) =>
+  enviarHtmlConNonce(res, path.join(__dirname, "admin.html"))
+);
+app.get("/admin/", (req, res) => res.redirect(302, "/admin"));
+app.get("/admin.html", (req, res) => res.redirect(302, "/admin"));
+
+app.get("/portal", (req, res) =>
+  enviarHtmlConNonce(res, path.join(__dirname, "portal.html"))
+);
+app.get("/portal/", (req, res) => res.redirect(302, "/portal"));
+
+app.get("/api/admin/session", async (req, res) => {
+  try {
+    const administrador = await obtenerAdministradorDesdeSesion(req);
+    res.set("Cache-Control", "no-store");
+    if (!administrador) return res.status(401).json({ autenticado: false });
+    res.json({
+      autenticado: true,
+      usuario: administrador.usuario,
+      nombre: administrador.nombre,
+      rol: administrador.rol
+    });
+  } catch (error) {
+    res.status(500).json({ mensaje: "No fue posible revisar la sesión." });
+  }
+});
+
+app.post("/api/admin/login", limiteLoginAdmin, async (req, res) => {
+  try {
+    const usuario = validarTexto(req.body.usuario, "usuario", 100);
+    const clave = validarTexto(req.body.clave, "contraseña", 200);
+    const [filas] = await pool.query(
+      `SELECT id, usuario, password_hash, nombre, rol, activo
+         FROM usuarios_admin
+        WHERE usuario = ?
+        LIMIT 1`,
+      [usuario]
+    );
+    const administrador = filas[0];
+    const hashComparacion =
+      administrador?.password_hash || process.env.ADMIN_PASSWORD_HASH;
+    const claveValida = await bcrypt.compare(clave, hashComparacion);
+
+    if (!administrador || !administrador.activo || !claveValida) {
+      return res.status(401).json({
+        mensaje: "Usuario o contraseña incorrectos."
+      });
+    }
+
+    await pool.query(
+      "UPDATE usuarios_admin SET ultimo_acceso = NOW() WHERE id = ?",
+      [administrador.id]
+    );
+    const token = crearTokenSesion(
+      "admin",
+      { admin_id: administrador.id },
+      SESION_ADMIN_MINUTOS
+    );
+    res.cookie(COOKIE_ADMIN, token, opcionesCookie(SESION_ADMIN_MINUTOS));
+    res.set("Cache-Control", "no-store");
+    res.json({
+      mensaje: "Acceso autorizado.",
+      usuario: administrador.usuario,
+      nombre: administrador.nombre,
+      rol: administrador.rol
+    });
+  } catch (error) {
+    console.error("Error al iniciar sesión administrativa:", error);
+    res.status(error.codigo || 500).json({
+      mensaje:
+        error.codigo === 400 ? error.message : "No fue posible iniciar sesión."
+    });
+  }
+});
+
+app.post("/api/admin/logout", (req, res) => {
+  limpiarCookie(res, COOKIE_ADMIN);
+  res.set("Cache-Control", "no-store");
+  res.json({ mensaje: "Sesión cerrada correctamente." });
+});
+
+app.get(
+  "/api/admin/usuarios",
+  requerirAdministrador,
+  requerirRolAdministrador,
+  async (req, res) => {
+    const [filas] = await pool.query(
+      `SELECT id, usuario, nombre, rol, activo, fecha_creacion, ultimo_acceso
+         FROM usuarios_admin
+        ORDER BY activo DESC, usuario ASC`
+    );
+    res.json(filas);
+  }
+);
+
+app.post(
+  "/api/admin/usuarios",
+  requerirAdministrador,
+  requerirRolAdministrador,
+  async (req, res) => {
+    try {
+      const usuario = validarTexto(req.body.usuario, "usuario", 100)
+        .toLowerCase()
+        .replace(/\s+/g, "_");
+      const nombre = validarTexto(req.body.nombre, "nombre", 150);
+      const clave = validarTexto(req.body.clave, "contraseña", 200);
+      const rol = req.body.rol === "administrador" ? "administrador" : "consulta";
+      if (!/^[a-z0-9._-]{3,100}$/.test(usuario)) {
+        return res.status(400).json({
+          mensaje:
+            "El usuario debe tener al menos 3 caracteres y usar letras, números, punto, guion o guion bajo."
+        });
+      }
+      const hash = await bcrypt.hash(clave, 12);
+      const [resultado] = await pool.query(
+        `INSERT INTO usuarios_admin
+          (usuario, password_hash, nombre, rol, activo)
+         VALUES (?, ?, ?, ?, 1)`,
+        [usuario, hash, nombre, rol]
+      );
+      res.status(201).json({
+        mensaje: "Usuario administrativo creado.",
+        id: resultado.insertId,
+        usuario,
+        nombre,
+        rol
+      });
+    } catch (error) {
+      if (error.code === "ER_DUP_ENTRY") {
+        return res.status(409).json({ mensaje: "Ese usuario ya existe." });
+      }
+      console.error("Error al crear usuario administrativo:", error);
+      res.status(error.codigo || 500).json({
+        mensaje:
+          error.codigo === 400
+            ? error.message
+            : "No fue posible crear el usuario."
+      });
     }
   }
+);
+
+app.patch(
+  "/api/admin/usuarios/:id/estado",
+  requerirAdministrador,
+  requerirRolAdministrador,
+  async (req, res) => {
+    const id = Number(req.params.id);
+    const activo = Number(req.body.activo) === 1 ? 1 : 0;
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ mensaje: "Usuario no válido." });
+    }
+    if (id === Number(req.administrador.id) && activo === 0) {
+      return res.status(400).json({
+        mensaje: "No puedes desactivar la cuenta con la que iniciaste sesión."
+      });
+    }
+    await pool.query("UPDATE usuarios_admin SET activo = ? WHERE id = ?", [
+      activo,
+      id
+    ]);
+    res.json({ mensaje: activo ? "Usuario activado." : "Usuario desactivado." });
+  }
+);
+
+app.get("/api/admin/participantes", requerirAdministrador, async (req, res) => {
+  const [filas] = await pool.query(
+    `SELECT id, numero_empleado, nombre, servicio, activo,
+            fecha_creacion, ultimo_acceso
+       FROM participantes
+      ORDER BY activo DESC, nombre ASC
+      LIMIT 2000`
+  );
+  res.json(filas);
+});
+
+app.post(
+  "/api/admin/participantes",
+  requerirAdministrador,
+  requerirRolAdministrador,
+  async (req, res) => {
+    try {
+      const numeroEmpleado = validarTexto(
+        req.body.numero_empleado,
+        "número de empleado",
+        50
+      );
+      const nombre = validarTexto(req.body.nombre, "nombre", 150);
+      const servicio = String(req.body.servicio || "").trim().slice(0, 100) || null;
+      await pool.query(
+        `INSERT INTO participantes
+          (numero_empleado, nombre, nombre_normalizado, servicio, activo)
+         VALUES (?, ?, ?, ?, 1)
+         ON DUPLICATE KEY UPDATE
+           nombre = VALUES(nombre),
+           nombre_normalizado = VALUES(nombre_normalizado),
+           servicio = VALUES(servicio),
+           activo = 1`,
+        [numeroEmpleado, nombre, normalizarNombre(nombre), servicio]
+      );
+      res.status(201).json({ mensaje: "Participante guardado correctamente." });
+    } catch (error) {
+      console.error("Error al guardar participante:", error);
+      res.status(error.codigo || 500).json({
+        mensaje:
+          error.codigo === 400
+            ? error.message
+            : "No fue posible guardar al participante."
+      });
+    }
+  }
+);
+
+app.patch(
+  "/api/admin/participantes/:id/estado",
+  requerirAdministrador,
+  requerirRolAdministrador,
+  async (req, res) => {
+    const id = Number(req.params.id);
+    const activo = Number(req.body.activo) === 1 ? 1 : 0;
+    if (!Number.isInteger(id) || id < 1) {
+      return res.status(400).json({ mensaje: "Participante no válido." });
+    }
+    await pool.query("UPDATE participantes SET activo = ? WHERE id = ?", [
+      activo,
+      id
+    ]);
+    res.json({
+      mensaje: activo ? "Participante activado." : "Participante desactivado."
+    });
+  }
+);
+
+app.get("/api/admin/cursos", requerirAdministrador, async (req, res) => {
+  const [filas] = await pool.query(
+    `SELECT id, nombre, slug, descripcion, activo, orden, fecha_creacion
+       FROM cursos_capacitacion
+      ORDER BY orden ASC, nombre ASC`
+  );
+  res.json(filas);
+});
+
+app.get("/api/portal/session", async (req, res) => {
+  try {
+    const participante = await obtenerParticipanteDesdeSesion(req);
+    res.set("Cache-Control", "no-store");
+    if (!participante) return res.status(401).json({ autenticado: false });
+    res.json({ autenticado: true, participante });
+  } catch (error) {
+    res.status(500).json({ mensaje: "No fue posible revisar la sesión." });
+  }
+});
+
+app.post(
+  "/api/portal/login",
+  limiteLoginParticipante,
+  async (req, res) => {
+    try {
+      const nombre = validarTexto(req.body.nombre, "nombre completo", 150);
+      const numeroEmpleado = validarTexto(
+        req.body.numero_empleado,
+        "número de empleado",
+        50
+      );
+      const [filas] = await pool.query(
+        `SELECT id, numero_empleado, nombre, nombre_normalizado, servicio, activo
+           FROM participantes
+          WHERE numero_empleado = ?
+          LIMIT 1`,
+        [numeroEmpleado]
+      );
+      const participante = filas[0];
+      const nombreCoincide = participante
+        ? compararSeguro(
+            normalizarNombre(nombre),
+            String(participante.nombre_normalizado)
+          )
+        : false;
+
+      if (!participante || !participante.activo || !nombreCoincide) {
+        return res.status(401).json({
+          mensaje:
+            "No encontramos una coincidencia activa con ese nombre y número de empleado."
+        });
+      }
+
+      await pool.query(
+        "UPDATE participantes SET ultimo_acceso = NOW() WHERE id = ?",
+        [participante.id]
+      );
+      const token = crearTokenSesion(
+        "participante",
+        { participante_id: participante.id },
+        SESION_PARTICIPANTE_MINUTOS
+      );
+      res.cookie(
+        COOKIE_PARTICIPANTE,
+        token,
+        opcionesCookie(SESION_PARTICIPANTE_MINUTOS)
+      );
+      res.set("Cache-Control", "no-store");
+      res.json({
+        mensaje: "Acceso autorizado.",
+        participante: {
+          id: participante.id,
+          numero_empleado: participante.numero_empleado,
+          nombre: participante.nombre,
+          servicio: participante.servicio
+        }
+      });
+    } catch (error) {
+      console.error("Error al iniciar sesión del participante:", error);
+      res.status(error.codigo || 500).json({
+        mensaje:
+          error.codigo === 400 ? error.message : "No fue posible iniciar sesión."
+      });
+    }
+  }
+);
+
+app.post("/api/portal/logout", (req, res) => {
+  limpiarCookie(res, COOKIE_PARTICIPANTE);
+  res.set("Cache-Control", "no-store");
+  res.json({ mensaje: "Sesión cerrada correctamente." });
+});
+
+app.get("/api/portal/cursos", requerirParticipante, async (req, res) => {
+  const [cursos] = await pool.query(
+    `SELECT id, nombre, slug, descripcion, orden
+       FROM cursos_capacitacion
+      WHERE activo = 1
+      ORDER BY orden ASC, nombre ASC`
+  );
+  const [resultados] = await pool.query(
+    `SELECT id, curso, calificacion, calificacion_maxima, aprobado, intento, fecha
+       FROM resultados_capacitacion
+      WHERE numero_empleado = ?
+      ORDER BY fecha ASC, id ASC`,
+    [req.participante.numero_empleado]
+  );
+
+  const porCurso = new Map();
+  for (const resultado of resultados) {
+    const clave = String(resultado.curso || "").trim().toLowerCase();
+    if (!porCurso.has(clave)) porCurso.set(clave, []);
+    porCurso.get(clave).push(resultado);
+  }
+
+  const respuesta = cursos.map(curso => {
+    const historial = porCurso.get(curso.nombre.toLowerCase()) || [];
+    const ultimo = historial[historial.length - 1] || null;
+    const mejor = historial.length
+      ? Math.max(...historial.map(item => Number(item.calificacion || 0)))
+      : null;
+    return {
+      id: curso.id,
+      nombre: curso.nombre,
+      slug: curso.slug,
+      descripcion: curso.descripcion,
+      url: `/curso/${encodeURIComponent(curso.slug)}`,
+      estado: !ultimo
+        ? "no_iniciado"
+        : Number(ultimo.aprobado) === 1
+          ? "aprobado"
+          : "no_aprobado",
+      intentos: historial.length,
+      ultima_calificacion: ultimo ? Number(ultimo.calificacion) : null,
+      mejor_calificacion: mejor,
+      calificacion_maxima: ultimo
+        ? Number(ultimo.calificacion_maxima || 100)
+        : 100,
+      ultima_fecha: ultimo?.fecha || null,
+      historial: historial.map(item => ({
+        id: item.id,
+        intento: Number(item.intento || 0),
+        calificacion: Number(item.calificacion || 0),
+        calificacion_maxima: Number(item.calificacion_maxima || 100),
+        aprobado: Number(item.aprobado) === 1,
+        fecha: item.fecha
+      }))
+    };
+  });
+  res.json({ participante: req.participante, cursos: respuesta });
+});
+
+app.get("/curso/:slug", requerirParticipante, async (req, res) => {
+  const [filas] = await pool.query(
+    `SELECT id, nombre, slug, archivo_html, carpeta_assets
+       FROM cursos_capacitacion
+      WHERE slug = ? AND activo = 1
+      LIMIT 1`,
+    [String(req.params.slug || "").trim()]
+  );
+  const curso = filas[0];
+  if (!curso) return res.status(404).send("Curso no encontrado.");
+
+  const ruta = path.resolve(__dirname, curso.carpeta_assets, curso.archivo_html);
+  if (!ruta.startsWith(path.resolve(__dirname))) {
+    return res.status(400).send("Ruta de curso no válida.");
+  }
+  enviarHtmlConNonce(res, ruta, "curso");
+});
+
+app.get(
+  "/curso/:slug/archivo/:nombre",
+  requerirParticipante,
+  async (req, res) => {
+    const [filas] = await pool.query(
+      `SELECT carpeta_assets
+         FROM cursos_capacitacion
+        WHERE slug = ? AND activo = 1
+        LIMIT 1`,
+      [String(req.params.slug || "").trim()]
+    );
+    const curso = filas[0];
+    if (!curso) return res.status(404).send("Curso no encontrado.");
+
+    const nombre = path.basename(String(req.params.nombre || ""));
+    const extension = path.extname(nombre).toLowerCase();
+    const permitidas = new Set([
+      ".webp", ".png", ".jpg", ".jpeg", ".gif", ".svg",
+      ".mp4", ".webm", ".css", ".js", ".woff", ".woff2"
+    ]);
+    if (!permitidas.has(extension)) {
+      return res.status(403).send("Tipo de archivo no permitido.");
+    }
+
+    const base = path.resolve(__dirname, curso.carpeta_assets);
+    const ruta = path.resolve(base, nombre);
+    if (!ruta.startsWith(base + path.sep) && ruta !== base) {
+      return res.status(400).send("Ruta no válida.");
+    }
+    if (!fs.existsSync(ruta) || !fs.statSync(ruta).isFile()) {
+      return res.status(404).send("Archivo no encontrado.");
+    }
+    res.set("Cache-Control", "private, max-age=3600");
+    res.sendFile(ruta);
+  }
+);
+
+app.post(
+  "/api/portal/resultados",
+  requerirParticipante,
+  limiteResultados,
+  async (req, res) => {
+    try {
+      const slug = validarTexto(req.body.curso_slug, "curso", 150);
+      const [filas] = await pool.query(
+        `SELECT nombre
+           FROM cursos_capacitacion
+          WHERE slug = ? AND activo = 1
+          LIMIT 1`,
+        [slug]
+      );
+      if (!filas.length) {
+        return res.status(404).json({ mensaje: "El curso no está disponible." });
+      }
+      const resultado = await guardarResultado({
+        nombre: req.participante.nombre,
+        numeroEmpleado: req.participante.numero_empleado,
+        servicio: req.participante.servicio || "Sin servicio asignado",
+        curso: filas[0].nombre,
+        calificacionRecibida: req.body.calificacion,
+        calificacionMaximaRecibida: req.body.calificacion_maxima || 100,
+        totalPreguntasRecibido: req.body.total_preguntas,
+        erroresRecibidos: req.body.respuestas_incorrectas,
+        calificacionAprobatoria: slug === "ingenieria-social" ? 80 : CALIFICACION_APROBATORIA
+      });
+      res.status(201).json({
+        mensaje: "Resultado guardado correctamente.",
+        ...resultado
+      });
+    } catch (error) {
+      console.error("Error al guardar resultado del portal:", error);
+      res.status(error.codigo || 500).json({
+        mensaje:
+          error.codigo && error.codigo < 500
+            ? error.message
+            : "No fue posible guardar el resultado."
+      });
+    }
+  }
+);
+
+app.get(
+  "/api/diagnostico-db",
+  requerirAdministrador,
+  async (req, res) => {
+    try {
+      const [datosBase] = await pool.query("SELECT DATABASE() AS base_actual");
+      const [conteo] = await pool.query(
+        "SELECT COUNT(*) AS registros FROM resultados_capacitacion"
+      );
+      res.json({
+        base_actual: datosBase[0].base_actual,
+        registros: conteo[0].registros
+      });
+    } catch (error) {
+      console.error("Error en diagnóstico de base:", error);
+      res.status(500).json({
+        mensaje: "No fue posible revisar la conexión con la base de datos."
+      });
+    }
+  }
+);
+
+app.options("/api/resultados", corsCapacitaciones);
+app.post(
+  "/api/resultados",
+  corsCapacitaciones,
+  limiteResultados,
+  async (req, res) => {
+    try {
+      const nombre = validarTexto(req.body.nombre, "nombre", 150);
+      const numeroEmpleado = validarTexto(
+        req.body.numero_empleado,
+        "número de empleado",
+        50
+      );
+      const servicio = validarTexto(req.body.servicio, "servicio", 100);
+      const curso = validarTexto(req.body.curso, "curso", 150);
+      const resultado = await guardarResultado({
+        nombre,
+        numeroEmpleado,
+        servicio,
+        curso,
+        calificacionRecibida: req.body.calificacion,
+        calificacionMaximaRecibida: req.body.calificacion_maxima,
+        totalPreguntasRecibido: req.body.total_preguntas,
+        erroresRecibidos: req.body.respuestas_incorrectas
+      });
+      res.status(201).json({
+        mensaje: "Resultado guardado correctamente.",
+        ...resultado
+      });
+    } catch (error) {
+      console.error("Error al guardar resultado público temporal:", error);
+      res.status(error.codigo || 500).json({
+        mensaje:
+          error.codigo && error.codigo < 500
+            ? error.message
+            : "No fue posible guardar el resultado."
+      });
+    }
   }
 );
 
 app.get("/api/resultados", requerirAdministrador, async (req, res) => {
   try {
     const curso = String(req.query.curso || "").trim();
-
     let consulta = `
-      SELECT
-        id,
-        nombre,
-        numero_empleado,
-        servicio,
-        curso,
-        calificacion,
-        calificacion_maxima,
-        total_preguntas,
-        aprobado,
-        intento,
-        fecha
-      FROM resultados_capacitacion
-    `;
-
+      SELECT id, nombre, numero_empleado, servicio, curso, calificacion,
+             calificacion_maxima, total_preguntas, aprobado, intento, fecha
+        FROM resultados_capacitacion`;
     const parametros = [];
-
     if (curso) {
       consulta += " WHERE curso = ?";
       parametros.push(curso);
     }
-
     consulta += " ORDER BY fecha DESC, id DESC";
-
-    const [resultados] = await pool.query(
-      consulta,
-      parametros
-    );
-
+    const [resultados] = await pool.query(consulta, parametros);
     res.json(resultados);
   } catch (error) {
     console.error("Error al consultar resultados:", error);
-
-    res.status(500).json({
-      mensaje: "No fue posible consultar los resultados."
-    });
+    res.status(500).json({ mensaje: "No fue posible consultar los resultados." });
   }
 });
 
@@ -810,46 +1295,48 @@ app.get(
   "/api/resultados/:id/detalle",
   requerirAdministrador,
   async (req, res) => {
-  try {
-    const id = Number(req.params.id);
-
-    if (!Number.isInteger(id) || id < 1) {
-      return res.status(400).json({
-        mensaje: "El identificador del resultado no es válido."
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isInteger(id) || id < 1) {
+        return res.status(400).json({
+          mensaje: "El identificador del resultado no es válido."
+        });
+      }
+      const [resultados] = await pool.query(
+        `SELECT id, intento, total_preguntas, respuestas_incorrectas
+           FROM resultados_capacitacion
+          WHERE id = ?`,
+        [id]
+      );
+      if (!resultados.length) {
+        return res.status(404).json({
+          mensaje: "No se encontró el resultado solicitado."
+        });
+      }
+      res.json(resultados[0]);
+    } catch (error) {
+      console.error("Error al consultar detalle de intento:", error);
+      res.status(500).json({
+        mensaje: "No fue posible consultar el detalle del intento."
       });
     }
-
-    const [resultados] = await pool.query(
-      `SELECT
-        id,
-        intento,
-        total_preguntas,
-        respuestas_incorrectas
-       FROM resultados_capacitacion
-       WHERE id = ?`,
-      [id]
-    );
-
-    if (!resultados.length) {
-      return res.status(404).json({
-        mensaje: "No se encontró el resultado solicitado."
-      });
-    }
-
-    res.json(resultados[0]);
-  } catch (error) {
-    console.error(
-      "Error al consultar detalle de intento:",
-      error
-    );
-
-    res.status(500).json({
-      mensaje: "No fue posible consultar el detalle del intento."
-    });
-  }
   }
 );
 
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en el puerto ${PORT}.`);
+app.use((error, req, res, next) => {
+  console.error("Error no controlado:", error);
+  if (res.headersSent) return next(error);
+  res.status(500).json({ mensaje: "Ocurrió un error interno." });
 });
+
+inicializarBase()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en el puerto ${PORT}.`);
+      console.log("Portal protegido disponible en /portal.");
+    });
+  })
+  .catch(error => {
+    console.error("No fue posible inicializar la plataforma:", error);
+    process.exit(1);
+  });
