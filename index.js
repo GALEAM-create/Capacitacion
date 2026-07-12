@@ -821,6 +821,17 @@ async function guardarResultado({
 }
 
 async function inicializarBase() {
+  const rutaCursoIngenieriaSocial = path.join(
+    __dirname,
+    "curso-ingenieria-social.html"
+  );
+
+  if (!fs.existsSync(rutaCursoIngenieriaSocial)) {
+    throw new Error(
+      "Falta el archivo curso-ingenieria-social.html en la raíz del proyecto."
+    );
+  }
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS usuarios_admin (
       id INT NOT NULL AUTO_INCREMENT,
@@ -934,7 +945,7 @@ async function inicializarBase() {
       "Ingeniería Social (llamada de extorsión)",
       "ingenieria-social",
       "Reconoce técnicas de manipulación, señales de alerta y el protocolo de actuación ante una llamada de extorsión.",
-      "index.html",
+      "curso-ingenieria-social.html",
       "."
     ]
   );
