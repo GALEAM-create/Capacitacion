@@ -638,7 +638,7 @@
             <div class="video-marco">
               <video id="videoCapacitacion" class="video-obligatorio" preload="metadata" playsinline tabindex="-1"
                 disablepictureinpicture controlslist="nodownload noplaybackrate noremoteplayback">
-                <source src="video.mp4" type="video/mp4">
+                <source src="/curso/ingenieria-social/archivo/video.mp4" type="video/mp4">
                 Tu navegador no puede reproducir este video.
               </video>
             </div>
@@ -658,7 +658,7 @@
 
             <div class="presentacion-diapositivas" aria-live="polite">
               <div class="visor-diapositiva">
-                <img id="imagenDiapositiva" class="imagen-diapositiva" src="01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="eager">
+                <img id="imagenDiapositiva" class="imagen-diapositiva" src="/curso/ingenieria-social/archivo/01-ingenieria-social.webp" alt="Diapositiva: ¿Qué es la ingeniería social?" loading="eager">
               </div>
               <div class="texto-diapositiva" id="textoDiapositiva">¿Qué es la ingeniería social?</div>
             </div>
@@ -707,7 +707,49 @@
   </main>
 
   <script>
-    const API_URL = "https://capacitacion-production-3120.up.railway.app/api/resultados";
+    const API_URL = "/api/portal/resultados";
+    const CURSO_SLUG = "ingenieria-social";
+
+
+    let identidadParticipanteLista = false;
+
+    async function cargarIdentidadParticipante() {
+      try {
+        const respuesta = await fetch("/api/portal/session", {
+          credentials: "same-origin",
+          cache: "no-store"
+        });
+        if (!respuesta.ok) {
+          window.location.href = "/portal";
+          return false;
+        }
+        const datos = await respuesta.json();
+        const participante = datos.participante;
+        const campoNombre = document.getElementById("nombre");
+        const campoNumero = document.getElementById("numero_empleado");
+        const campoServicio = document.getElementById("servicio");
+
+        campoNombre.value = participante.nombre || "";
+        campoNombre.readOnly = true;
+        campoNumero.value = participante.numero_empleado || "";
+        campoNumero.readOnly = true;
+
+        const servicio = participante.servicio || "Sin servicio asignado";
+        let opcion = [...campoServicio.options].find(item => item.value === servicio);
+        if (!opcion) {
+          opcion = new Option(servicio, servicio);
+          campoServicio.add(opcion);
+        }
+        campoServicio.value = servicio;
+        campoServicio.disabled = true;
+        identidadParticipanteLista = true;
+        return true;
+      } catch (error) {
+        console.error("No fue posible cargar la identidad del participante:", error);
+        window.location.href = "/portal";
+        return false;
+      }
+    }
 
     const preguntas = [
       {
@@ -835,19 +877,19 @@
     const logo = document.querySelector(".logo");
 
     const diapositivasInfo = [
-      { src: "01-ingenieria-social.webp", texto: "¿Qué es la ingeniería social?" },
-      { src: "02-manipulacion-delincuente.webp", texto: "Recursos que utiliza el delincuente." },
-      { src: "03-que-es-la-extorsion.webp", texto: "¿Qué es la extorsión?" },
-      { src: "04-empresas-objetivos.webp", texto: "¿Por qué las empresas de seguridad son objetivos?" },
-      { src: "05-informacion-sensible.webp", texto: "Información sensible que debe protegerse." },
-      { src: "06-tipos-de-extorsion.webp", texto: "Tipos de extorsión: telefónica, digital y secuestro virtual." },
-      { src: "07-suplantacion-y-extorsion-interna.webp", texto: "Suplantación de identidad y extorsión interna." },
-      { src: "08-extorsion-directa-e-indirecta.webp", texto: "Diferencias entre extorsión directa e indirecta." },
-      { src: "09-senales-de-alerta.webp", texto: "Señales de alerta." },
-      { src: "10-informacion-no-compartir.webp", texto: "Información que nunca debe compartirse." },
-      { src: "11-caso-practico.webp", texto: "Caso práctico." },
-      { src: "12-protocolo-de-actuacion.webp", texto: "Protocolo de actuación." },
-      { src: "13-conclusiones.webp", texto: "Conclusiones." }
+      { src: "/curso/ingenieria-social/archivo/01-ingenieria-social.webp", texto: "¿Qué es la ingeniería social?" },
+      { src: "/curso/ingenieria-social/archivo/02-manipulacion-delincuente.webp", texto: "Recursos que utiliza el delincuente." },
+      { src: "/curso/ingenieria-social/archivo/03-que-es-la-extorsion.webp", texto: "¿Qué es la extorsión?" },
+      { src: "/curso/ingenieria-social/archivo/04-empresas-objetivos.webp", texto: "¿Por qué las empresas de seguridad son objetivos?" },
+      { src: "/curso/ingenieria-social/archivo/05-informacion-sensible.webp", texto: "Información sensible que debe protegerse." },
+      { src: "/curso/ingenieria-social/archivo/06-tipos-de-extorsion.webp", texto: "Tipos de extorsión: telefónica, digital y secuestro virtual." },
+      { src: "/curso/ingenieria-social/archivo/07-suplantacion-y-extorsion-interna.webp", texto: "Suplantación de identidad y extorsión interna." },
+      { src: "/curso/ingenieria-social/archivo/08-extorsion-directa-e-indirecta.webp", texto: "Diferencias entre extorsión directa e indirecta." },
+      { src: "/curso/ingenieria-social/archivo/09-senales-de-alerta.webp", texto: "Señales de alerta." },
+      { src: "/curso/ingenieria-social/archivo/10-informacion-no-compartir.webp", texto: "Información que nunca debe compartirse." },
+      { src: "/curso/ingenieria-social/archivo/11-caso-practico.webp", texto: "Caso práctico." },
+      { src: "/curso/ingenieria-social/archivo/12-protocolo-de-actuacion.webp", texto: "Protocolo de actuación." },
+      { src: "/curso/ingenieria-social/archivo/13-conclusiones.webp", texto: "Conclusiones." }
     ];
 
     if (marcaAgua && logo) {
@@ -1172,13 +1214,26 @@
       const calificacion = Math.round((correctas / preguntas.length) * 100);
       const aprobado = calificacion >= 80;
 
+      const respuestasIncorrectas = [];
+
+      preguntas.forEach((pregunta, index) => {
+        const respuesta = document.querySelector(`input[name="pregunta_${index}"]:checked`);
+        if (respuesta && Number(respuesta.value) !== pregunta.correcta) {
+          respuestasIncorrectas.push({
+            numero: index + 1,
+            pregunta: pregunta.texto,
+            respuesta_usuario: pregunta.opciones[Number(respuesta.value)],
+            respuesta_correcta: pregunta.opciones[pregunta.correcta]
+          });
+        }
+      });
+
       const datos = {
-        nombre: document.getElementById("nombre").value.trim().toUpperCase(),
-        numero_empleado: document.getElementById("numero_empleado").value.trim(),
-        servicio: document.getElementById("servicio").value,
-        curso: document.getElementById("curso").value,
+        curso_slug: CURSO_SLUG,
         calificacion: calificacion,
-        aprobado: aprobado,
+        calificacion_maxima: 100,
+        total_preguntas: preguntas.length,
+        respuestas_incorrectas: respuestasIncorrectas,
         video_completado: true
       };
 
@@ -1197,7 +1252,7 @@
         const resultado = await respuesta.json();
 
         if (!respuesta.ok) {
-          throw new Error(resultado.error || "Error al guardar resultado");
+          throw new Error(resultado.mensaje || "Error al guardar resultado");
         }
 
         resultadoDiv.style.display = "block";
@@ -1205,10 +1260,12 @@
         resultadoDiv.innerHTML = `
           Resultado enviado correctamente.<br>
           Calificación: ${calificacion}<br>
-          Estado: ${aprobado ? "Aprobado" : "No aprobado"}
+          Estado: ${aprobado ? "Aprobado" : "No aprobado"}<br><br>
+          <a href="/portal" style="color:inherit;font-weight:bold;">Volver a mi portal</a>
         `;
 
         formCapacitacion.reset();
+        await cargarIdentidadParticipante();
         document.getElementById("curso").value = "Ingeniería Social (llamada de extorsión)";
         video.pause();
         video.currentTime = 0;
@@ -1231,7 +1288,10 @@
       } catch (error) {
         resultadoDiv.style.display = "block";
         resultadoDiv.className = "no-aprobado";
-        resultadoDiv.innerHTML = "Error al enviar el resultado. Intenta nuevamente.";
+        resultadoDiv.textContent = error.message || "Error al enviar el resultado. Intenta nuevamente.";
+        if (String(error.message).toLowerCase().includes("identificarte") || String(error.message).toLowerCase().includes("sesión")) {
+          setTimeout(() => { window.location.href = "/portal"; }, 1800);
+        }
         console.error(error);
       } finally {
         btnEnviar.disabled = false;
@@ -1239,6 +1299,7 @@
       }
     });
 
+    cargarIdentidadParticipante();
     actualizarProgreso();
   </script>
 
@@ -1256,7 +1317,11 @@
 
       if (!boton || !seccion || !nombre || !empleado || !servicio || !videoLocal) return;
 
-      boton.addEventListener("click", function () {
+      boton.addEventListener("click", async function () {
+        if (!identidadParticipanteLista) {
+          const lista = await cargarIdentidadParticipante();
+          if (!lista) return;
+        }
         if (!nombre.value.trim()) { nombre.focus(); return; }
         if (!empleado.value.trim()) { empleado.focus(); return; }
         if (!servicio.value) { servicio.focus(); return; }
