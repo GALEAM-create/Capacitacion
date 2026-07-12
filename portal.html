@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Capacitación | Galeam</title>
+  <style nonce="__CSP_NONCE__">
+    :root {
+      --azul:#081c2c; --azul2:#123b59; --azul3:#1e5b82;
+      --dorado:#c9a34e; --fondo:#eef3f6; --blanco:#fff;
+      --gris:#62717b; --borde:#dbe3e8; --verde:#198754;
+      --rojo:#c83d3d; --ambar:#b7791f;
+      --sombra:0 12px 34px rgba(8,28,44,.12);
+    }
+    *{box-sizing:border-box;margin:0;padding:0;font-family:Arial,Helvetica,sans-serif}
+    body{min-height:100vh;background:var(--fondo);color:var(--azul)}
+    .oculto{display:none!important}
+    .login{min-height:100vh;display:grid;place-items:center;padding:22px}
+    .login-card{width:min(470px,100%);background:var(--blanco);border:1px solid var(--borde);border-radius:22px;overflow:hidden;box-shadow:var(--sombra)}
+    .login-head{padding:32px;background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;position:relative;overflow:hidden}
+    .login-head:after{content:"◈";position:absolute;right:-15px;top:-55px;font-size:190px;color:rgba(255,255,255,.05);transform:rotate(18deg)}
+    .marca{position:relative;z-index:1;display:flex;gap:15px;align-items:center}
+    .icono{width:56px;height:56px;border:1px solid var(--dorado);border-radius:15px;display:grid;place-items:center;color:var(--dorado);font-size:28px;background:rgba(255,255,255,.05)}
+    h1{font-size:28px;margin-bottom:6px}.login-head p{color:rgba(255,255,255,.75);font-size:14px;line-height:1.45}
+    form{padding:30px}.grupo{margin-bottom:18px}.grupo label{display:block;font-weight:bold;font-size:14px;margin-bottom:8px}
+    input{width:100%;min-height:48px;border:1px solid var(--borde);border-radius:11px;padding:12px 14px;font-size:15px;outline:none}
+    input:focus{border-color:var(--azul3);box-shadow:0 0 0 3px rgba(30,91,130,.1)}
+    button,.btn{border:0;cursor:pointer;border-radius:10px;font-weight:bold;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+    .btn-principal{width:100%;min-height:49px;background:var(--azul);color:#fff;font-size:15px}.btn-principal:hover{background:var(--azul2)}
+    .mensaje{min-height:22px;margin-top:14px;text-align:center;color:var(--rojo);font-size:13px;line-height:1.45}
+    .nota{margin-top:16px;text-align:center;color:var(--gris);font-size:12px;line-height:1.5}
+    .app{max-width:1280px;margin:auto;padding:26px}
+    .cabecera{background:linear-gradient(135deg,var(--azul),var(--azul2));color:#fff;border-radius:20px;padding:28px 32px;box-shadow:var(--sombra);display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap}
+    .cabecera h1{font-size:clamp(25px,4vw,36px)}.cabecera p{color:rgba(255,255,255,.72);margin-top:7px}
+    .salir{min-height:41px;padding:10px 15px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.25);color:#fff}
+    .perfil{margin:22px 0;display:grid;grid-template-columns:2fr 1fr;gap:18px}
+    .panel{background:#fff;border:1px solid var(--borde);border-radius:16px;padding:22px;box-shadow:0 5px 18px rgba(8,28,44,.07)}
+    .perfil-datos h2{font-size:22px;margin-bottom:8px}.perfil-datos p{color:var(--gris);line-height:1.6}
+    .resumen{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.resumen div{background:#f7f9fb;border:1px solid var(--borde);border-radius:12px;padding:15px;text-align:center}.resumen strong{display:block;font-size:25px;margin-bottom:5px}.resumen span{font-size:12px;color:var(--gris)}
+    .titulo-seccion{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:24px 0 14px}.titulo-seccion h2{font-size:22px}.titulo-seccion p{color:var(--gris);font-size:13px}
+    .cursos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+    .curso{background:#fff;border:1px solid var(--borde);border-radius:17px;padding:22px;box-shadow:0 5px 18px rgba(8,28,44,.07);display:flex;flex-direction:column;gap:14px}
+    .curso-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.curso h3{font-size:19px;line-height:1.3}.curso p{color:var(--gris);font-size:13px;line-height:1.55}
+    .badge{border-radius:100px;padding:6px 10px;font-size:11px;font-weight:bold;white-space:nowrap}.aprobado{background:#e8f6ee;color:var(--verde)}.no-aprobado{background:#fdecec;color:var(--rojo)}.no-iniciado{background:#fff5df;color:var(--ambar)}
+    .datos-curso{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.dato{background:#f7f9fb;border-radius:10px;padding:11px}.dato strong{display:block;font-size:16px}.dato span{font-size:11px;color:var(--gris)}
+    .acciones{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}.abrir{min-height:42px;padding:10px 16px;background:var(--azul);color:#fff}.historial-btn{min-height:42px;padding:10px 16px;background:#f3ead5;color:var(--azul);border:1px solid #e5d4a9}
+    .historial{border-top:1px solid var(--borde);padding-top:12px}.historial table{width:100%;border-collapse:collapse;font-size:12px}.historial th,.historial td{padding:9px 7px;text-align:left;border-bottom:1px solid #edf1f4}.historial th{color:var(--gris)}
+    .vacio{grid-column:1/-1;text-align:center;padding:40px;color:var(--gris)}
+    @media(max-width:850px){.perfil{grid-template-columns:1fr}.cursos{grid-template-columns:1fr}}
+    @media(max-width:560px){.app{padding:14px}.cabecera{padding:23px 20px}.resumen,.datos-curso{grid-template-columns:1fr}.curso-top{flex-direction:column}}
+  </style>
+</head>
+<body>
+  <section id="pantallaLogin" class="login">
+    <div class="login-card">
+      <div class="login-head">
+        <div class="marca"><div class="icono">◈</div><div><h1>Mi capacitación</h1><p>Accede a tus cursos e historial personal · Galeam</p></div></div>
+      </div>
+      <form id="formLogin" autocomplete="on">
+        <div class="grupo"><label for="nombre">Nombre completo</label><input id="nombre" maxlength="150" autocomplete="name" required></div>
+        <div class="grupo"><label for="numeroEmpleado">Número de empleado</label><input id="numeroEmpleado" maxlength="50" inputmode="numeric" autocomplete="off" required></div>
+        <button id="btnLogin" class="btn-principal" type="submit">Ingresar</button>
+        <p id="mensajeLogin" class="mensaje" role="alert"></p>
+        <p class="nota">Tu nombre y número deben coincidir con el padrón de capacitación. Si no puedes entrar, solicita a Recursos Humanos que verifique tus datos.</p>
+      </form>
+    </div>
+  </section>
+
+  <main id="aplicacion" class="app oculto">
+    <header class="cabecera"><div><h1>Mi capacitación</h1><p>Consulta tu avance y abre los cursos disponibles.</p></div><button id="btnSalir" class="salir" type="button">Cerrar sesión</button></header>
+    <section class="perfil">
+      <article class="panel perfil-datos"><h2 id="nombrePerfil">—</h2><p>Número de empleado: <strong id="numeroPerfil">—</strong><br>Servicio: <strong id="servicioPerfil">—</strong></p></article>
+      <article class="panel resumen"><div><strong id="totalCursos">0</strong><span>Cursos disponibles</span></div><div><strong id="totalAprobados">0</strong><span>Aprobados</span></div><div><strong id="promedio">0%</strong><span>Promedio de últimos intentos</span></div></article>
+    </section>
+    <div class="titulo-seccion"><div><h2>Cursos disponibles</h2><p>Tu historial se actualiza después de cada intento.</p></div></div>
+    <section id="listaCursos" class="cursos"><div class="panel vacio">Cargando cursos...</div></section>
+  </main>
+
+  <script nonce="__CSP_NONCE__">
+    const login = document.getElementById("pantallaLogin");
+    const app = document.getElementById("aplicacion");
+    const form = document.getElementById("formLogin");
+    const mensaje = document.getElementById("mensajeLogin");
+    const btnLogin = document.getElementById("btnLogin");
+    const lista = document.getElementById("listaCursos");
+
+    function escapar(valor){return String(valor??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
+    function fecha(valor){if(!valor)return "—";const f=new Date(valor);return isNaN(f)?"—":f.toLocaleString("es-MX",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}
+    function mostrarLogin(texto=""){app.classList.add("oculto");login.classList.remove("oculto");mensaje.textContent=texto}
+    function mostrarApp(){login.classList.add("oculto");app.classList.remove("oculto");mensaje.textContent=""}
+    function etiqueta(estado){if(estado==="aprobado")return '<span class="badge aprobado">APROBADO</span>';if(estado==="no_aprobado")return '<span class="badge no-aprobado">NO APROBADO</span>';return '<span class="badge no-iniciado">NO INICIADO</span>'}
+
+    async function cargarCursos(){
+      const respuesta=await fetch("/api/portal/cursos",{credentials:"same-origin",cache:"no-store"});
+      if(respuesta.status===401){mostrarLogin("Tu sesión terminó. Ingresa nuevamente.");return}
+      if(!respuesta.ok)throw new Error("No fue posible cargar los cursos.");
+      const datos=await respuesta.json();
+      mostrarApp();
+      document.getElementById("nombrePerfil").textContent=datos.participante.nombre;
+      document.getElementById("numeroPerfil").textContent=datos.participante.numero_empleado;
+      document.getElementById("servicioPerfil").textContent=datos.participante.servicio||"Sin asignar";
+      document.getElementById("totalCursos").textContent=datos.cursos.length;
+      const aprobados=datos.cursos.filter(c=>c.estado==="aprobado").length;
+      document.getElementById("totalAprobados").textContent=aprobados;
+      const realizados=datos.cursos.filter(c=>c.ultima_calificacion!==null);
+      const promedio=realizados.length?realizados.reduce((s,c)=>s+Number(c.ultima_calificacion||0),0)/realizados.length:0;
+      document.getElementById("promedio").textContent=`${promedio.toFixed(1)}%`;
+      if(!datos.cursos.length){lista.innerHTML='<div class="panel vacio">Aún no hay cursos activos.</div>';return}
+      lista.innerHTML=datos.cursos.map((curso,indice)=>{
+        const historial=[...curso.historial].reverse().map(item=>`<tr><td>${escapar(item.intento||"—")}</td><td>${escapar(item.calificacion)} / ${escapar(item.calificacion_maxima)}</td><td>${item.aprobado?"Aprobado":"No aprobado"}</td><td>${fecha(item.fecha)}</td></tr>`).join("");
+        return `<article class="curso"><div class="curso-top"><div><h3>${escapar(curso.nombre)}</h3><p>${escapar(curso.descripcion||"")}</p></div>${etiqueta(curso.estado)}</div><div class="datos-curso"><div class="dato"><strong>${curso.intentos}</strong><span>Intentos</span></div><div class="dato"><strong>${curso.ultima_calificacion===null?"—":curso.ultima_calificacion+"%"}</strong><span>Última calificación</span></div><div class="dato"><strong>${curso.mejor_calificacion===null?"—":curso.mejor_calificacion+"%"}</strong><span>Mejor calificación</span></div></div><div class="acciones"><a class="btn abrir" href="${escapar(curso.url)}">${curso.intentos?"Repetir curso":"Comenzar curso"}</a>${curso.intentos?`<button class="historial-btn" type="button" data-historial="${indice}">Ver historial</button>`:""}</div>${curso.intentos?`<div id="historial-${indice}" class="historial oculto"><table><thead><tr><th>Intento</th><th>Calificación</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${historial}</tbody></table></div>`:""}</article>`;
+      }).join("");
+      document.querySelectorAll("[data-historial]").forEach(b=>b.addEventListener("click",()=>{const id=b.dataset.historial;const h=document.getElementById(`historial-${id}`);h.classList.toggle("oculto");b.textContent=h.classList.contains("oculto")?"Ver historial":"Ocultar historial"}));
+    }
+
+    form.addEventListener("submit",async e=>{e.preventDefault();mensaje.textContent="";btnLogin.disabled=true;btnLogin.textContent="Verificando...";try{const r=await fetch("/api/portal/login",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({nombre:document.getElementById("nombre").value.trim(),numero_empleado:document.getElementById("numeroEmpleado").value.trim()})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.mensaje||"No fue posible ingresar.");await cargarCursos()}catch(error){mostrarLogin(error.message)}finally{btnLogin.disabled=false;btnLogin.textContent="Ingresar"}});
+    document.getElementById("btnSalir").addEventListener("click",async()=>{try{await fetch("/api/portal/logout",{method:"POST",credentials:"same-origin"})}finally{mostrarLogin("La sesión se cerró correctamente.")}});
+    (async()=>{try{const r=await fetch("/api/portal/session",{credentials:"same-origin",cache:"no-store"});if(!r.ok){mostrarLogin();return}await cargarCursos()}catch(error){mostrarLogin("No fue posible conectar con el servidor.")}})();
+  </script>
+</body>
+</html>
