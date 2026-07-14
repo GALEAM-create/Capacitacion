@@ -23,6 +23,40 @@ const ES_PRODUCCION =
   process.env.NODE_ENV === "production" ||
   Boolean(process.env.RAILWAY_ENVIRONMENT);
 
+const ARCHIVO_CATALOGO_CURSOS = path.join(
+  __dirname,
+  "cursos.json"
+);
+const ARCHIVO_META_CURSO = "curso.json";
+const DIRECTORIOS_IGNORADOS = new Set([
+  ".git",
+  ".github",
+  "node_modules",
+  "public",
+  "dist",
+  "build"
+]);
+const EXTENSIONES_RECURSOS_CURSO = new Set([
+  ".webp",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".svg",
+  ".avif",
+  ".ico",
+  ".mp4",
+  ".webm",
+  ".vtt",
+  ".css",
+  ".js",
+  ".json",
+  ".woff",
+  ".woff2",
+  ".ttf",
+  ".otf"
+]);
+
 const VARIABLES_OBLIGATORIAS = [
   "DATABASE_URL",
   "ADMIN_USER",
@@ -452,6 +486,379 @@ function enviarHtmlConNonce(res, ruta, tipo = "app") {
       .send(
         "No fue posible cargar la página solicitada."
       );
+  }
+}
+
+
+function rutaEstaDentro(base, candidata) {
+  const relativa = path.relative(
+    path.resolve(base),
+    path.resolve(candidata)
+  );
+
+  return (
+    relativa === "" ||
+    (
+      !relativa.startsWith("..") &&
+      !path.isAbsolute(relativa)
+    )
+  );
+}
+
+function limpiarRutaCatalogo(valor) {
+  const ruta = String(valor || "")
+    .trim()
+    .replace(/\\/g, "/")
+    .replace(/^\.?\//, "")
+    .replace(/\/+$/, "");
+
+  if (
+    !ruta ||
+    ruta.includes("://") ||
+    ruta.startsWith("/") ||
+    ruta.split("/").includes("..")
+  ) {
+    return "";
+  }
+
+  return ruta;
+}
+
+function normalizarSlugCurso(valor) {
+  const slug = String(valor || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug;
+}
+
+function convertirEnteroEnRango(
+  valor,
+  predeterminado,
+  minimo,
+  maximo
+) {
+  const numero = Number(valor);
+
+  if (
+    !Number.isInteger(numero) ||
+    numero < minimo ||
+    numero > maximo
+  ) {
+    return predeterminado;
+  }
+
+  return numero;
+}
+
+function normalizarDefinicionCurso(
+  entrada,
+  carpetaPredeterminada = ""
+) {
+  if (
+    !entrada ||
+    typeof entrada !== "object" ||
+    Array.isArray(entrada)
+  ) {
+    return null;
+  }
+
+  const slug = normalizarSlugCurso(
+    entrada.slug ||
+    entrada.id ||
+    entrada.curso_slug
+  );
+
+  const nombre = String(
+    entrada.nombre ||
+    entrada.curso ||
+    ""
+  ).trim();
+
+  if (!slug || !nombre) {
+    return null;
+  }
+
+  const carpeta =
+    limpiarRutaCatalogo(
+      entrada.carpeta_assets ||
+      entrada.carpeta ||
+      entrada.ruta ||
+      carpetaPredeterminada ||
+      slug
+    );
+
+  const archivoHtml =
+    limpiarRutaCatalogo(
+      entrada.archivo_html ||
+      entrada.archivo ||
+      "index.html"
+    );
+
+  if (!carpeta || !archivoHtml) {
+    return null;
+  }
+
+  const escalaOrigen =
+    Number(
+      entrada.calificacion_maxima_origen ??
+      entrada.escala_origen ??
+      100
+    ) === 10
+      ? 10
+      : 100;
+
+  return {
+    nombre: nombre.slice(0, 150),
+    slug,
+    descripcion: String(
+      entrada.descripcion || ""
+    ).trim().slice(0, 500) || null,
+    archivo_html: archivoHtml,
+    carpeta_assets: carpeta,
+    activo:
+      entrada.activo === undefined
+        ? 1
+        : entrada.activo
+          ? 1
+          : 0,
+    orden: convertirEnteroEnRango(
+      entrada.orden,
+      100,
+      0,
+      100000
+    ),
+    calificacion_aprobatoria:
+      convertirEnteroEnRango(
+        entrada.calificacion_aprobatoria ??
+        entrada.minimo_aprobatorio,
+        70,
+        0,
+        100
+      ),
+    calificacion_maxima_origen:
+      escalaOrigen
+  };
+}
+
+function leerJsonSeguro(ruta) {
+  try {
+    return JSON.parse(
+      fs.readFileSync(ruta, "utf8")
+    );
+  } catch (error) {
+    console.warn(
+      `No fue posible leer ${ruta}:`,
+      error.message
+    );
+
+    return null;
+  }
+}
+
+function descubrirCursosDelRepositorio() {
+  const encontrados = new Map();
+
+  if (fs.existsSync(ARCHIVO_CATALOGO_CURSOS)) {
+    const catalogo =
+      leerJsonSeguro(
+        ARCHIVO_CATALOGO_CURSOS
+      );
+
+    const entradas = Array.isArray(catalogo)
+      ? catalogo
+      : Array.isArray(catalogo?.cursos)
+        ? catalogo.cursos
+        : [];
+
+    for (const entrada of entradas) {
+      const curso =
+        normalizarDefinicionCurso(
+          entrada
+        );
+
+      if (curso) {
+        encontrados.set(
+          curso.slug,
+          curso
+        );
+      }
+    }
+  }
+
+  const elementos = fs.readdirSync(
+    __dirname,
+    {
+      withFileTypes: true
+    }
+  );
+
+  for (const elemento of elementos) {
+    if (
+      !elemento.isDirectory() ||
+      DIRECTORIOS_IGNORADOS.has(
+        elemento.name
+      )
+    ) {
+      continue;
+    }
+
+    const rutaMeta = path.join(
+      __dirname,
+      elemento.name,
+      ARCHIVO_META_CURSO
+    );
+
+    if (!fs.existsSync(rutaMeta)) {
+      continue;
+    }
+
+    const entrada =
+      leerJsonSeguro(rutaMeta);
+
+    const curso =
+      normalizarDefinicionCurso(
+        entrada,
+        elemento.name
+      );
+
+    if (curso) {
+      encontrados.set(
+        curso.slug,
+        curso
+      );
+    }
+  }
+
+  return [...encontrados.values()];
+}
+
+async function agregarColumnaSiFalta(
+  tabla,
+  columna,
+  definicion
+) {
+  const [filas] = await pool.query(
+    `SELECT COUNT(*) AS total
+     FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE()
+       AND TABLE_NAME = ?
+       AND COLUMN_NAME = ?`,
+    [tabla, columna]
+  );
+
+  if (
+    Number(
+      filas[0]?.total || 0
+    ) === 0
+  ) {
+    await pool.query(
+      `ALTER TABLE \`${tabla}\`
+       ADD COLUMN \`${columna}\`
+       ${definicion}`
+    );
+  }
+}
+
+async function sincronizarCursosDesdeRepositorio() {
+  const cursos =
+    descubrirCursosDelRepositorio();
+
+  for (const curso of cursos) {
+    const baseProyecto =
+      path.resolve(__dirname);
+
+    const carpetaCurso =
+      path.resolve(
+        __dirname,
+        curso.carpeta_assets
+      );
+
+    const archivoCurso =
+      path.resolve(
+        carpetaCurso,
+        curso.archivo_html
+      );
+
+    if (
+      !rutaEstaDentro(
+        baseProyecto,
+        carpetaCurso
+      ) ||
+      !rutaEstaDentro(
+        carpetaCurso,
+        archivoCurso
+      )
+    ) {
+      console.warn(
+        `Se ignoró el curso ${curso.slug}: la ruta no es válida.`
+      );
+      continue;
+    }
+
+    if (
+      !fs.existsSync(archivoCurso) ||
+      !fs.statSync(
+        archivoCurso
+      ).isFile()
+    ) {
+      console.warn(
+        `Se ignoró el curso ${curso.slug}: no existe ${curso.carpeta_assets}/${curso.archivo_html}.`
+      );
+      continue;
+    }
+
+    await pool.query(
+      `INSERT INTO cursos_capacitacion
+        (
+          nombre,
+          slug,
+          descripcion,
+          archivo_html,
+          carpeta_assets,
+          activo,
+          orden,
+          calificacion_aprobatoria,
+          calificacion_maxima_origen
+        )
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         nombre =
+           VALUES(nombre),
+         descripcion =
+           VALUES(descripcion),
+         archivo_html =
+           VALUES(archivo_html),
+         carpeta_assets =
+           VALUES(carpeta_assets),
+         activo =
+           VALUES(activo),
+         orden =
+           VALUES(orden),
+         calificacion_aprobatoria =
+           VALUES(calificacion_aprobatoria),
+         calificacion_maxima_origen =
+           VALUES(calificacion_maxima_origen)`,
+      [
+        curso.nombre,
+        curso.slug,
+        curso.descripcion,
+        curso.archivo_html,
+        curso.carpeta_assets,
+        curso.activo,
+        curso.orden,
+        curso.calificacion_aprobatoria,
+        curso.calificacion_maxima_origen
+      ]
+    );
+
+    console.log(
+      `Curso sincronizado: ${curso.nombre} (${curso.slug}).`
+    );
   }
 }
 
@@ -889,6 +1296,8 @@ async function inicializarBase() {
         NOT NULL DEFAULT '.',
       activo TINYINT(1) NOT NULL DEFAULT 1,
       orden INT NOT NULL DEFAULT 0,
+      calificacion_aprobatoria INT NOT NULL DEFAULT 70,
+      calificacion_maxima_origen INT NOT NULL DEFAULT 100,
       fecha_creacion TIMESTAMP NOT NULL
         DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (id),
@@ -898,6 +1307,18 @@ async function inicializarBase() {
       DEFAULT CHARSET=utf8mb4
       COLLATE=utf8mb4_unicode_ci
   `);
+
+  await agregarColumnaSiFalta(
+    "cursos_capacitacion",
+    "calificacion_aprobatoria",
+    "INT NOT NULL DEFAULT 70 AFTER `orden`"
+  );
+
+  await agregarColumnaSiFalta(
+    "cursos_capacitacion",
+    "calificacion_maxima_origen",
+    "INT NOT NULL DEFAULT 100 AFTER `calificacion_aprobatoria`"
+  );
 
   await pool.query(
     `INSERT INTO usuarios_admin
@@ -931,16 +1352,22 @@ async function inicializarBase() {
         archivo_html,
         carpeta_assets,
         activo,
-        orden
+        orden,
+        calificacion_aprobatoria,
+        calificacion_maxima_origen
       )
-     VALUES (?, ?, ?, ?, ?, 1, 1)
+     VALUES (?, ?, ?, ?, ?, 1, 1, 80, 100)
      ON DUPLICATE KEY UPDATE
        descripcion =
          VALUES(descripcion),
        archivo_html =
          VALUES(archivo_html),
        carpeta_assets =
-         VALUES(carpeta_assets)`,
+         VALUES(carpeta_assets),
+       activo = 1,
+       orden = 1,
+       calificacion_aprobatoria = 80,
+       calificacion_maxima_origen = 100`,
     [
       "Ingeniería Social (llamada de extorsión)",
       "ingenieria-social",
@@ -949,6 +1376,8 @@ async function inicializarBase() {
       "."
     ]
   );
+
+  await sincronizarCursosDesdeRepositorio();
 
   const [resultados] =
     await pool.query(
@@ -1658,6 +2087,8 @@ app.get(
           descripcion,
           activo,
           orden,
+          calificacion_aprobatoria,
+          calificacion_maxima_origen,
           fecha_creacion
          FROM cursos_capacitacion
          ORDER BY orden ASC,
@@ -1933,7 +2364,7 @@ app.get(
           url:
             `/curso/${encodeURIComponent(
               curso.slug
-            )}`,
+            )}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -1991,169 +2422,220 @@ app.get(
   }
 );
 
-app.get(
-  "/curso/:slug",
+app.use(
+  "/curso",
   requerirParticipante,
-  async (req, res) => {
-    const [filas] =
-      await pool.query(
-        `SELECT
-          id,
-          nombre,
-          slug,
-          archivo_html,
-          carpeta_assets
-         FROM cursos_capacitacion
-         WHERE slug = ?
-           AND activo = 1
-         LIMIT 1`,
-        [
-          String(
-            req.params.slug || ""
-          ).trim()
-        ]
+  async (req, res, next) => {
+    try {
+      if (
+        req.method !== "GET" &&
+        req.method !== "HEAD"
+      ) {
+        return next();
+      }
+
+      let rutaDecodificada;
+
+      try {
+        rutaDecodificada =
+          decodeURIComponent(
+            String(req.url || "")
+              .split("?")[0]
+          );
+      } catch (error) {
+        return res
+          .status(400)
+          .send(
+            "La ruta solicitada no es válida."
+          );
+      }
+
+      const partes =
+        rutaDecodificada
+          .replace(/^\/+/, "")
+          .split("/")
+          .filter(Boolean);
+
+      const slug =
+        normalizarSlugCurso(
+          partes.shift()
+        );
+
+      if (!slug) {
+        return next();
+      }
+
+      const [filas] =
+        await pool.query(
+          `SELECT
+            id,
+            nombre,
+            slug,
+            archivo_html,
+            carpeta_assets
+           FROM cursos_capacitacion
+           WHERE slug = ?
+             AND activo = 1
+           LIMIT 1`,
+          [slug]
+        );
+
+      const curso = filas[0];
+
+      if (!curso) {
+        return res
+          .status(404)
+          .send(
+            "Curso no encontrado."
+          );
+      }
+
+      const baseProyecto =
+        path.resolve(__dirname);
+
+      const baseCurso =
+        path.resolve(
+          __dirname,
+          curso.carpeta_assets
+        );
+
+      if (
+        !rutaEstaDentro(
+          baseProyecto,
+          baseCurso
+        )
+      ) {
+        return res
+          .status(400)
+          .send(
+            "Ruta de curso no válida."
+          );
+      }
+
+      if (partes.length === 0) {
+        if (
+          !String(
+            req.originalUrl || ""
+          )
+            .split("?")[0]
+            .endsWith("/")
+        ) {
+          return res.redirect(
+            302,
+            `/curso/${encodeURIComponent(
+              curso.slug
+            )}/`
+          );
+        }
+
+        const rutaHtml =
+          path.resolve(
+            baseCurso,
+            curso.archivo_html
+          );
+
+        if (
+          !rutaEstaDentro(
+            baseCurso,
+            rutaHtml
+          ) ||
+          !fs.existsSync(rutaHtml) ||
+          !fs.statSync(
+            rutaHtml
+          ).isFile()
+        ) {
+          return res
+            .status(404)
+            .send(
+              "No se encontró el archivo principal del curso."
+            );
+        }
+
+        return enviarHtmlConNonce(
+          res,
+          rutaHtml,
+          "curso"
+        );
+      }
+
+      if (
+        partes[0] === "archivo"
+      ) {
+        partes.shift();
+      }
+
+      if (partes.length === 0) {
+        return res
+          .status(404)
+          .send(
+            "Archivo no encontrado."
+          );
+      }
+
+      const rutaRelativa =
+        partes.join(path.sep);
+
+      const rutaArchivo =
+        path.resolve(
+          baseCurso,
+          rutaRelativa
+        );
+
+      if (
+        !rutaEstaDentro(
+          baseCurso,
+          rutaArchivo
+        )
+      ) {
+        return res
+          .status(400)
+          .send(
+            "Ruta de archivo no válida."
+          );
+      }
+
+      const extension =
+        path.extname(
+          rutaArchivo
+        ).toLowerCase();
+
+      if (
+        !EXTENSIONES_RECURSOS_CURSO
+          .has(extension)
+      ) {
+        return res
+          .status(403)
+          .send(
+            "Tipo de archivo no permitido."
+          );
+      }
+
+      if (
+        !fs.existsSync(
+          rutaArchivo
+        ) ||
+        !fs.statSync(
+          rutaArchivo
+        ).isFile()
+      ) {
+        return res
+          .status(404)
+          .send(
+            "Archivo no encontrado."
+          );
+      }
+
+      res.set(
+        "Cache-Control",
+        "private, max-age=3600"
       );
 
-    const curso = filas[0];
-
-    if (!curso) {
-      return res
-        .status(404)
-        .send(
-          "Curso no encontrado."
-        );
-    }
-
-    const ruta = path.resolve(
-      __dirname,
-      curso.carpeta_assets,
-      curso.archivo_html
-    );
-
-    if (
-      !ruta.startsWith(
-        path.resolve(__dirname)
-      )
-    ) {
-      return res
-        .status(400)
-        .send(
-          "Ruta de curso no válida."
-        );
-    }
-
-    enviarHtmlConNonce(
-      res,
-      ruta,
-      "curso"
-    );
-  }
-);
-
-app.get(
-  "/curso/:slug/archivo/:nombre",
-  requerirParticipante,
-  async (req, res) => {
-    const [filas] =
-      await pool.query(
-        `SELECT
-          carpeta_assets
-         FROM cursos_capacitacion
-         WHERE slug = ?
-           AND activo = 1
-         LIMIT 1`,
-        [
-          String(
-            req.params.slug || ""
-          ).trim()
-        ]
+      return res.sendFile(
+        rutaArchivo
       );
-
-    const curso = filas[0];
-
-    if (!curso) {
-      return res
-        .status(404)
-        .send(
-          "Curso no encontrado."
-        );
+    } catch (error) {
+      next(error);
     }
-
-    const nombre = path.basename(
-      String(
-        req.params.nombre || ""
-      )
-    );
-
-    const extension =
-      path.extname(nombre)
-        .toLowerCase();
-
-    const permitidas = new Set([
-      ".webp",
-      ".png",
-      ".jpg",
-      ".jpeg",
-      ".gif",
-      ".svg",
-      ".mp4",
-      ".webm",
-      ".css",
-      ".js",
-      ".woff",
-      ".woff2"
-    ]);
-
-    if (
-      !permitidas.has(extension)
-    ) {
-      return res
-        .status(403)
-        .send(
-          "Tipo de archivo no permitido."
-        );
-    }
-
-    const base = path.resolve(
-      __dirname,
-      curso.carpeta_assets
-    );
-
-    const ruta = path.resolve(
-      base,
-      nombre
-    );
-
-    if (
-      !ruta.startsWith(
-        base + path.sep
-      ) &&
-      ruta !== base
-    ) {
-      return res
-        .status(400)
-        .send(
-          "Ruta no válida."
-        );
-    }
-
-    if (
-      !fs.existsSync(ruta) ||
-      !fs.statSync(ruta).isFile()
-    ) {
-      return res
-        .status(404)
-        .send(
-          "Archivo no encontrado."
-        );
-    }
-
-    res.set(
-      "Cache-Control",
-      "private, max-age=3600"
-    );
-
-    res.sendFile(ruta);
   }
 );
 
@@ -2171,7 +2653,10 @@ app.post(
 
       const [filas] =
         await pool.query(
-          `SELECT nombre
+          `SELECT
+            nombre,
+            calificacion_aprobatoria,
+            calificacion_maxima_origen
            FROM cursos_capacitacion
            WHERE slug = ?
              AND activo = 1
@@ -2205,8 +2690,12 @@ app.post(
             req.body.calificacion,
           calificacionMaximaRecibida:
             req.body
-              .calificacion_maxima ||
-            100,
+              .calificacion_maxima ??
+            Number(
+              filas[0]
+                .calificacion_maxima_origen ||
+              100
+            ),
           totalPreguntasRecibido:
             req.body
               .total_preguntas,
@@ -2214,10 +2703,11 @@ app.post(
             req.body
               .respuestas_incorrectas,
           calificacionAprobatoria:
-            slug ===
-            "ingenieria-social"
-              ? 80
-              : CALIFICACION_APROBATORIA
+            Number(
+              filas[0]
+                .calificacion_aprobatoria ||
+              CALIFICACION_APROBATORIA
+            )
         });
 
       res.status(201).json({
@@ -2316,6 +2806,21 @@ app.post(
         150
       );
 
+      const [configuracionesCurso] =
+        await pool.query(
+          `SELECT
+            calificacion_aprobatoria,
+            calificacion_maxima_origen
+           FROM cursos_capacitacion
+           WHERE nombre = ?
+             AND activo = 1
+           LIMIT 1`,
+          [curso]
+        );
+
+      const configuracionCurso =
+        configuracionesCurso[0] || null;
+
       const resultado =
         await guardarResultado({
           nombre,
@@ -2326,13 +2831,21 @@ app.post(
             req.body.calificacion,
           calificacionMaximaRecibida:
             req.body
-              .calificacion_maxima,
+              .calificacion_maxima ??
+            configuracionCurso
+              ?.calificacion_maxima_origen,
           totalPreguntasRecibido:
             req.body
               .total_preguntas,
           erroresRecibidos:
             req.body
-              .respuestas_incorrectas
+              .respuestas_incorrectas,
+          calificacionAprobatoria:
+            Number(
+              configuracionCurso
+                ?.calificacion_aprobatoria ||
+              CALIFICACION_APROBATORIA
+            )
         });
 
       res.status(201).json({
