@@ -102,6 +102,60 @@
     .slide-canvas > img { width: 100%; height: 100%; display: block; object-fit: fill; user-select: none; }
     .video-incrustado { position: absolute; z-index: 3; display: block; object-fit: contain; background: #000; border: 1px solid rgba(255,255,255,.18); box-shadow: 0 8px 24px rgba(0,0,0,.24); }
 
+    /* Libera la capa de reproducción de Android/iOS al terminar el video.
+       display:none es intencional: evita que el reproductor quede flotando
+       encima de la diapositiva siguiente en algunos navegadores móviles. */
+    .video-incrustado.video-finalizado {
+      display: none !important;
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+
+    .boton-repetir-video {
+      position: absolute;
+      right: 2.2%;
+      bottom: 2.8%;
+      z-index: 5;
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 0 12px;
+      color: #fff;
+      background: rgba(7,17,26,.88);
+      border: 1px solid rgba(210,170,78,.72);
+      border-radius: 100px;
+      box-shadow: 0 7px 22px rgba(0,0,0,.28);
+      font-size: 8px;
+      font-weight: 900;
+      letter-spacing: .55px;
+      text-transform: uppercase;
+      backdrop-filter: blur(8px);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .boton-repetir-video:hover,
+    .boton-repetir-video:focus-visible {
+      color: var(--marino);
+      background: var(--oro);
+      border-color: var(--oro);
+    }
+
+    .boton-repetir-video[hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 720px) {
+      .boton-repetir-video {
+        right: 2%;
+        bottom: 2%;
+        min-height: 31px;
+        padding: 0 10px;
+        font-size: 7px;
+      }
+    }
+
     .pantalla-personalizada { overflow-x: hidden; overflow-y: auto; background: var(--hueso); color: var(--texto); scrollbar-width: thin; scrollbar-color: rgba(7,17,26,.28) transparent; }
     .pantalla-personalizada::-webkit-scrollbar { width: 7px; }
     .pantalla-personalizada::-webkit-scrollbar-thumb { background: rgba(7,17,26,.25); border-radius: 8px; }
@@ -469,7 +523,7 @@
         <div class="visor-slide">
           <div class="slide-canvas" data-slide-canvas>
             <img src="assets/slides/slide-02.webp" alt="Diapositiva 2: Reflexión" draggable="false">
-              <video id="videoReflexion" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline style="left:10.833%;top:16.888%;width:76.815%;height:76.811%;">
+              <video id="videoReflexion" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline webkit-playsinline style="left:10.833%;top:16.888%;width:76.815%;height:76.811%;">
                 <source src="assets/videos/video_01_reflexion_vivir_para_servir.mp4" type="video/mp4">
                 Tu navegador no puede reproducir este video.
               </video>
@@ -599,7 +653,7 @@
         <div class="visor-slide">
           <div class="slide-canvas" data-slide-canvas>
             <img src="assets/slides/slide-20.webp" alt="Diapositiva 20: Empatía" draggable="false">
-              <video id="videoEmpatia" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline style="left:6.047%;top:15.571%;width:80.125%;height:80.124%;">
+              <video id="videoEmpatia" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline webkit-playsinline style="left:6.047%;top:15.571%;width:80.125%;height:80.124%;">
                 <source src="assets/videos/video_02_empatia_piedra_papel_tijeras.mp4" type="video/mp4">
                 Tu navegador no puede reproducir este video.
               </video>
@@ -666,7 +720,7 @@
         <div class="visor-slide">
           <div class="slide-canvas" data-slide-canvas>
             <img src="assets/slides/slide-29.webp" alt="Diapositiva 29: Calidad" draggable="false">
-              <video id="videoFinal" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline style="left:6.630%;top:14.214%;width:80.230%;height:80.230%;">
+              <video id="videoFinal" class="video-incrustado" controls controlsList="nodownload" preload="metadata" playsinline webkit-playsinline style="left:6.630%;top:14.214%;width:80.230%;height:80.230%;">
                 <source src="assets/videos/video_03_animacion_atencion_al_cliente.mp4" type="video/mp4">
                 Tu navegador no puede reproducir este video.
               </video>
@@ -855,8 +909,56 @@
       function prepararVideo(idVideo) {
         const video = document.getElementById(idVideo);
         if (!video) return;
+
         let maximoVisto = 0;
         let ajustando = false;
+
+        /* Botón discreto que aparece cuando el video ya terminó.
+           Permite repetirlo sin dejar permanentemente visible el reproductor. */
+        const botonRepetir = document.createElement("button");
+        botonRepetir.type = "button";
+        botonRepetir.className = "boton-repetir-video";
+        botonRepetir.hidden = true;
+        botonRepetir.setAttribute("aria-label", "Reproducir nuevamente el video");
+        botonRepetir.textContent = "↻ Video completado · Ver de nuevo";
+        video.parentNode.appendChild(botonRepetir);
+
+        function liberarCapaDeVideo() {
+          video.pause();
+          video.removeAttribute("controls");
+          video.classList.add("video-finalizado");
+          video.setAttribute("aria-hidden", "true");
+          botonRepetir.hidden = false;
+
+          /* Fuerza al navegador móvil a reconstruir la capa gráfica.
+             Esto evita el rectángulo negro o la imagen del video sobre
+             la diapositiva siguiente. */
+          void video.offsetHeight;
+        }
+
+        function completarVideo() {
+          videosVistos.add(idVideo);
+          liberarCapaDeVideo();
+          actualizarProgreso();
+          actualizarControlesAmpliados();
+        }
+
+        botonRepetir.addEventListener("click", async evento => {
+          evento.stopPropagation();
+          botonRepetir.hidden = true;
+          video.classList.remove("video-finalizado");
+          video.removeAttribute("aria-hidden");
+          video.setAttribute("controls", "");
+          maximoVisto = 0;
+
+          try {
+            video.currentTime = 0;
+            await video.play();
+          } catch (error) {
+            /* Algunos móviles exigen otro toque después de reconstruir
+               el reproductor; en ese caso dejamos los controles visibles. */
+          }
+        });
 
         video.addEventListener("timeupdate", () => {
           if (!ajustando && video.currentTime > maximoVisto + 1.25) {
@@ -865,7 +967,20 @@
             setTimeout(() => { ajustando = false; }, 100);
             return;
           }
-          if (!video.seeking) maximoVisto = Math.max(maximoVisto, video.currentTime);
+
+          if (!video.seeking) {
+            maximoVisto = Math.max(maximoVisto, video.currentTime);
+          }
+
+          /* En ciertos navegadores móviles el evento ended puede demorarse.
+             Consideramos completado el video al llegar prácticamente al final. */
+          if (
+            Number.isFinite(video.duration) &&
+            video.duration > 0 &&
+            video.currentTime >= video.duration - 0.30
+          ) {
+            completarVideo();
+          }
         });
 
         video.addEventListener("seeking", () => {
@@ -876,10 +991,17 @@
           }
         });
 
-        video.addEventListener("ended", () => {
-          videosVistos.add(idVideo);
-          actualizarProgreso();
-          actualizarControlesAmpliados();
+        video.addEventListener("ended", completarVideo);
+
+        /* Ayuda adicional para Safari/Chrome móvil cuando termina y queda en pausa. */
+        video.addEventListener("pause", () => {
+          if (
+            Number.isFinite(video.duration) &&
+            video.duration > 0 &&
+            video.currentTime >= video.duration - 0.30
+          ) {
+            completarVideo();
+          }
         });
       }
 
@@ -913,8 +1035,21 @@
       function pausarVideosExcepto(indice) {
         document.querySelectorAll("video").forEach(video => {
           const pantallaDestino = pantallas[indice];
-          const perteneceAlDestino = pantallaDestino.contains(video) || (canvasAmpliado && canvasAmpliado.contains(video));
-          if (!perteneceAlDestino) video.pause();
+          const perteneceAlDestino =
+            pantallaDestino.contains(video) ||
+            (canvasAmpliado && canvasAmpliado.contains(video));
+
+          if (!perteneceAlDestino) {
+            video.pause();
+
+            /* Si ya terminó, reafirmamos display:none antes de mover
+               las diapositivas para liberar la superficie gráfica móvil. */
+            if (videosVistos.has(video.id)) {
+              video.removeAttribute("controls");
+              video.classList.add("video-finalizado");
+              video.setAttribute("aria-hidden", "true");
+            }
+          }
         });
       }
 
@@ -1003,10 +1138,23 @@
       }
 
       function restaurarCanvasAmpliado() {
+        if (canvasAmpliado) {
+          canvasAmpliado.querySelectorAll("video").forEach(video => {
+            video.pause();
+
+            if (videosVistos.has(video.id)) {
+              video.removeAttribute("controls");
+              video.classList.add("video-finalizado");
+              video.setAttribute("aria-hidden", "true");
+            }
+          });
+        }
+
         if (canvasAmpliado && marcadorCanvas?.parentNode) {
           marcadorCanvas.parentNode.insertBefore(canvasAmpliado, marcadorCanvas);
           marcadorCanvas.remove();
         }
+
         canvasAmpliado = null;
         marcadorCanvas = null;
       }
