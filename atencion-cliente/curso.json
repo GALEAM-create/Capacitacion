@@ -1,0 +1,10 @@
+{
+  "nombre": "Atención al Cliente",
+  "slug": "atencion-cliente",
+  "descripcion": "Fortalece la comunicación, la imagen profesional y el manejo adecuado de visitantes, clientes y proveedores.",
+  "archivo_html": "index.html",
+  "activo": true,
+  "orden": 20,
+  "calificacion_aprobatoria": 80,
+  "calificacion_maxima_origen": 10
+}

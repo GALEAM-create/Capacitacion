@@ -790,7 +790,8 @@
 
   <script>
     document.addEventListener("DOMContentLoaded", () => {
-      const API_URL = "https://capacitacion-production-3120.up.railway.app";
+      const API_URL = window.location.origin;
+      const CURSO_SLUG = "atencion-cliente";
       const NOMBRE_CURSO = "Atención al Cliente";
       const CALIFICACION_MINIMA = 8;
       const INDICE_EVALUACION = 29;
@@ -1117,17 +1118,15 @@
         mostrarEstado("Guardando resultado en la plataforma...", "cargando");
 
         try {
-          const respuesta = await fetch(`${API_URL}/api/resultados`, {
+          const respuesta = await fetch(`${API_URL}/api/portal/resultados`, {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              nombre: datosParticipante.nombre,
-              numero_empleado: datosParticipante.numero_empleado,
-              servicio: datosParticipante.servicio,
-              curso: NOMBRE_CURSO,
+              curso_slug: CURSO_SLUG,
               calificacion: resultado.calificacion,
-              aprobado: resultado.calificacion >= CALIFICACION_MINIMA
+              calificacion_maxima: 10,
+              total_preguntas: 10
             })
           });
           const cuerpo = await respuesta.json().catch(() => ({}));
