@@ -1,0 +1,28 @@
+[
+  {
+    "id": "ingenieria-social",
+    "curso": "Ingeniería Social (llamada de extorsión)",
+    "nombre": "Ingeniería Social (llamada de extorsión)",
+    "descripcion": "Reconoce técnicas de manipulación, señales de alerta y el protocolo de actuación ante una llamada de extorsión.",
+    "activo": true,
+    "orden": 10
+  },
+  {
+    "id": "atencion-cliente",
+    "curso": "Atención al Cliente",
+    "nombre": "Atención al Cliente",
+    "descripcion": "Fortalece la comunicación, la imagen profesional y el manejo adecuado de visitantes, clientes y proveedores.",
+    "ruta": "atencion-cliente/",
+    "activo": true,
+    "orden": 20
+  },
+  {
+    "id": "plantilla-nuevo-curso",
+    "curso": "Nombre exacto que guardará la base de datos",
+    "nombre": "Nombre visible del nuevo curso",
+    "descripcion": "Descripción breve que aparecerá en la tarjeta del portal.",
+    "ruta": "carpeta-del-curso/",
+    "activo": false,
+    "orden": 99
+  }
+]

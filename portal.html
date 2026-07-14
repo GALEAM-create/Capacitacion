@@ -1197,6 +1197,7 @@
     const mensaje = document.getElementById("mensajeLogin");
     const btnLogin = document.getElementById("btnLogin");
     const lista = document.getElementById("listaCursos");
+    const URL_CATALOGO_CURSOS = new URL("cursos.json", document.baseURI);
 
     function escapar(valor){return String(valor??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
     function fecha(valor){if(!valor)return "—";const f=new Date(valor);return isNaN(f)?"—":f.toLocaleString("es-MX",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}
@@ -1204,11 +1205,87 @@
     function mostrarApp(){document.body.classList.add("portal-activo");login.classList.add("oculto");app.classList.remove("oculto");mensaje.textContent=""}
     function etiqueta(estado){if(estado==="aprobado")return '<span class="badge aprobado">APROBADO</span>';if(estado==="no_aprobado")return '<span class="badge no-aprobado">NO APROBADO</span>';return '<span class="badge no-iniciado">NO INICIADO</span>'}
 
+    function claveCurso(curso){
+      const valor=curso?.id||curso?.slug||curso?.clave_resultados||curso?.curso||curso?.nombre||"";
+      return String(valor).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+    }
+
+    function urlCursoCatalogo(curso){
+      const ruta=curso?.url||curso?.ruta||"";
+      if(!ruta)return "#";
+      try{return new URL(ruta,URL_CATALOGO_CURSOS).href}catch{return ruta}
+    }
+
+    async function cargarCatalogoCursos(){
+      try{
+        const respuesta=await fetch(URL_CATALOGO_CURSOS,{cache:"no-store"});
+        if(!respuesta.ok)throw new Error(`Catálogo HTTP ${respuesta.status}`);
+        const contenido=await respuesta.json();
+        const cursos=Array.isArray(contenido)?contenido:contenido.cursos;
+        return Array.isArray(cursos)?cursos.filter(c=>c&&c.activo!==false):[];
+      }catch(error){
+        console.warn("No fue posible leer cursos.json; se mostrarán los cursos enviados por el servidor.",error);
+        return [];
+      }
+    }
+
+    function combinarCursos(cursosServidor,cursosCatalogo){
+      const servidor=Array.isArray(cursosServidor)?cursosServidor:[];
+      const catalogo=Array.isArray(cursosCatalogo)?cursosCatalogo:[];
+      const usados=new Set();
+      const porClave=new Map();
+
+      servidor.forEach(curso=>{
+        const claves=[claveCurso(curso),claveCurso({nombre:curso.nombre})].filter(Boolean);
+        claves.forEach(clave=>porClave.set(clave,curso));
+      });
+
+      const combinados=catalogo.map((ficha,indice)=>{
+        const claves=[
+          claveCurso(ficha),
+          claveCurso({nombre:ficha.nombre}),
+          claveCurso({nombre:ficha.curso}),
+          claveCurso({nombre:ficha.clave_resultados})
+        ].filter(Boolean);
+        const datos=claves.map(clave=>porClave.get(clave)).find(Boolean)||null;
+        if(datos)usados.add(datos);
+        return {
+          estado:"no_iniciado",
+          intentos:0,
+          ultima_calificacion:null,
+          mejor_calificacion:null,
+          historial:[],
+          ...(datos||{}),
+          ...ficha,
+          nombre:ficha.nombre||datos?.nombre||"Curso sin nombre",
+          descripcion:ficha.descripcion??datos?.descripcion??"",
+          url:ficha.url||ficha.ruta?urlCursoCatalogo(ficha):(datos?.url||"#"),
+          orden:Number.isFinite(Number(ficha.orden))?Number(ficha.orden):1000+indice,
+          historial:Array.isArray(datos?.historial)?datos.historial:[]
+        };
+      });
+
+      servidor.forEach((curso,indice)=>{
+        if(usados.has(curso))return;
+        combinados.push({
+          ...curso,
+          orden:Number.isFinite(Number(curso.orden))?Number(curso.orden):2000+indice,
+          historial:Array.isArray(curso.historial)?curso.historial:[]
+        });
+      });
+
+      return combinados.sort((a,b)=>Number(a.orden||9999)-Number(b.orden||9999)||String(a.nombre).localeCompare(String(b.nombre),"es"));
+    }
+
     async function cargarCursos(){
-      const respuesta=await fetch("/api/portal/cursos",{credentials:"same-origin",cache:"no-store"});
+      const [respuesta,catalogo]=await Promise.all([
+        fetch("/api/portal/cursos",{credentials:"same-origin",cache:"no-store"}),
+        cargarCatalogoCursos()
+      ]);
       if(respuesta.status===401){mostrarLogin("Tu sesión terminó. Ingresa nuevamente.");return}
       if(!respuesta.ok)throw new Error("No fue posible cargar los cursos.");
       const datos=await respuesta.json();
+      datos.cursos=combinarCursos(datos.cursos,catalogo);
       mostrarApp();
       document.getElementById("nombrePerfil").textContent=datos.participante.nombre;
       document.getElementById("numeroPerfil").textContent=datos.participante.numero_empleado;
@@ -1216,13 +1293,15 @@
       document.getElementById("totalCursos").textContent=datos.cursos.length;
       const aprobados=datos.cursos.filter(c=>c.estado==="aprobado").length;
       document.getElementById("totalAprobados").textContent=aprobados;
-      const realizados=datos.cursos.filter(c=>c.ultima_calificacion!==null);
+      const realizados=datos.cursos.filter(c=>c.ultima_calificacion!==null&&c.ultima_calificacion!==undefined);
       const promedio=realizados.length?realizados.reduce((s,c)=>s+Number(c.ultima_calificacion||0),0)/realizados.length:0;
       document.getElementById("promedio").textContent=`${promedio.toFixed(1)}%`;
       if(!datos.cursos.length){lista.innerHTML='<div class="panel vacio">Aún no hay cursos activos.</div>';return}
       lista.innerHTML=datos.cursos.map((curso,indice)=>{
-        const historial=[...curso.historial].reverse().map(item=>`<tr><td>${escapar(item.intento||"—")}</td><td>${escapar(item.calificacion)} / ${escapar(item.calificacion_maxima)}</td><td>${item.aprobado?"Aprobado":"No aprobado"}</td><td>${fecha(item.fecha)}</td></tr>`).join("");
-        return `<article class="curso"><div class="curso-top"><div><h3>${escapar(curso.nombre)}</h3><p>${escapar(curso.descripcion||"")}</p></div>${etiqueta(curso.estado)}</div><div class="datos-curso"><div class="dato"><strong>${curso.intentos}</strong><span>Intentos</span></div><div class="dato"><strong>${curso.ultima_calificacion===null?"—":curso.ultima_calificacion+"%"}</strong><span>Última calificación</span></div><div class="dato"><strong>${curso.mejor_calificacion===null?"—":curso.mejor_calificacion+"%"}</strong><span>Mejor calificación</span></div></div><div class="acciones"><a class="btn abrir" href="${escapar(curso.url)}">${curso.intentos?"Repetir curso":"Comenzar curso"}</a>${curso.intentos?`<button class="historial-btn" type="button" data-historial="${indice}">Ver historial</button>`:""}</div>${curso.intentos?`<div id="historial-${indice}" class="historial oculto"><table><thead><tr><th>Intento</th><th>Calificación</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${historial}</tbody></table></div>`:""}</article>`;
+        const historial=[...(Array.isArray(curso.historial)?curso.historial:[])].reverse().map(item=>`<tr><td>${escapar(item.intento||"—")}</td><td>${escapar(item.calificacion)} / ${escapar(item.calificacion_maxima)}</td><td>${item.aprobado?"Aprobado":"No aprobado"}</td><td>${fecha(item.fecha)}</td></tr>`).join("");
+        const url=curso.url&&curso.url!=="#"?escapar(curso.url):"#";
+        const boton=url==="#"?'<span class="btn abrir" aria-disabled="true" style="opacity:.55;cursor:not-allowed">Ruta pendiente</span>':`<a class="btn abrir" href="${url}">${curso.intentos?"Repetir curso":"Comenzar curso"}</a>`;
+        return `<article class="curso"><div class="curso-top"><div><h3>${escapar(curso.nombre)}</h3><p>${escapar(curso.descripcion||"")}</p></div>${etiqueta(curso.estado)}</div><div class="datos-curso"><div class="dato"><strong>${curso.intentos||0}</strong><span>Intentos</span></div><div class="dato"><strong>${curso.ultima_calificacion===null||curso.ultima_calificacion===undefined?"—":curso.ultima_calificacion+"%"}</strong><span>Última calificación</span></div><div class="dato"><strong>${curso.mejor_calificacion===null||curso.mejor_calificacion===undefined?"—":curso.mejor_calificacion+"%"}</strong><span>Mejor calificación</span></div></div><div class="acciones">${boton}${curso.intentos?`<button class="historial-btn" type="button" data-historial="${indice}">Ver historial</button>`:""}</div>${curso.intentos?`<div id="historial-${indice}" class="historial oculto"><table><thead><tr><th>Intento</th><th>Calificación</th><th>Estado</th><th>Fecha</th></tr></thead><tbody>${historial}</tbody></table></div>`:""}</article>`;
       }).join("");
       document.querySelectorAll("[data-historial]").forEach(b=>b.addEventListener("click",()=>{const id=b.dataset.historial;const h=document.getElementById(`historial-${id}`);h.classList.toggle("oculto");b.textContent=h.classList.contains("oculto")?"Ver historial":"Ocultar historial"}));
     }
