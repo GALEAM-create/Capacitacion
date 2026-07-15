@@ -51,7 +51,7 @@
 <div class="sesion visible" id="sesion"><div class="sesion-card"><h2 id="sesionTitulo">Validando sesión</h2><p id="sesionTexto">Estamos identificando al participante que inició sesión.</p><button class="volver" id="volver" hidden>Volver al inicio</button></div></div>
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
- const API_URL=location.origin,CURSO_SLUG='atencion-cliente',MIN=8,EVAL=9,RESULTADO=10,MODO_VISTA_PREVIA=true;
+ const API_URL=location.origin,CURSO_SLUG='atencion-cliente',MIN=8,EVAL=9,RESULTADO=10,MODO_VISTA_PREVIA=false;
  const pantallas=[...document.querySelectorAll('.pantalla')],paso=document.querySelector('#paso'),total=document.querySelector('#total'),etiqueta=document.querySelector('#etiqueta'),barra=document.querySelector('#barra'),anterior=document.querySelector('#anterior'),siguiente=document.querySelector('#siguiente');
  const form=document.querySelector('#evaluacion'),contestadas=document.querySelector('#contestadas'),aviso=document.querySelector('#aviso'),guardado=document.querySelector('#guardado'),sesion=document.querySelector('#sesion');
  let actual=0,participante=null,sesionLista=false,guardando=false,cambiando=false;const vistos=new Set();
