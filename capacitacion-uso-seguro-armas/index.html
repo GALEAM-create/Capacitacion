@@ -1,0 +1,2958 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uso Seguro de Armas de Fuego | Galeam Capacitación</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --azul-marino: #04080d;
+      --azul-profundo: #07111a;
+      --azul-medio: #0b1721;
+      --azul-tarjeta: rgba(10, 23, 34, 0.86);
+      --blanco: #ffffff;
+      --texto-suave: rgba(255, 255, 255, 0.74);
+      --texto-tenue: rgba(255, 255, 255, 0.48);
+      --rojo-galeam: #c92032;
+      --amarillo-galeam: #f1c735;
+      --verde-acierto: #6fb21c;
+      --rojo-error: #ef5968;
+      --borde: rgba(255, 255, 255, 0.15);
+      --sombra: 0 22px 54px rgba(0, 0, 0, 0.34);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      overflow: hidden;
+      color: var(--blanco);
+      background: var(--azul-marino);
+      font-family: "Montserrat", Arial, Helvetica, sans-serif;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+      font: inherit;
+    }
+
+    .app-capacitacion {
+      width: 100%;
+      height: 100dvh;
+      min-height: 620px;
+      position: relative;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      overflow: hidden;
+      background: var(--azul-marino);
+    }
+
+
+
+    .video-ambiental {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.20;
+      filter: grayscale(0.62) contrast(1.06) brightness(0.50);
+      pointer-events: none;
+    }
+
+    .capa-ambiental {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at 84% 18%, rgba(241, 199, 53, 0.10), transparent 28%),
+        radial-gradient(ellipse at 15% 85%, rgba(15, 48, 70, 0.34), transparent 35%),
+        linear-gradient(135deg, rgba(2, 6, 10, 0.90) 0%, rgba(4, 10, 15, 0.76) 54%, rgba(2, 6, 10, 0.94) 100%);
+    }
+
+
+
+    .encabezado {
+      width: 100%;
+      min-height: 82px;
+      position: relative;
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 14px 7%;
+      background: rgba(4, 8, 13, 0.90);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(12px);
+    }
+
+    .marca {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      min-width: max-content;
+      color: var(--blanco);
+      background: transparent;
+      text-align: left;
+    }
+
+    .marca img {
+      width: 104px;
+      height: auto;
+      display: block;
+    }
+
+    .marca-texto {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding-left: 15px;
+      border-left: 1px solid rgba(255, 255, 255, 0.24);
+    }
+
+    .marca-texto strong {
+      color: var(--blanco);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.4px;
+    }
+
+    .marca-texto span {
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 10px;
+      letter-spacing: 0.7px;
+      text-transform: uppercase;
+    }
+
+    .progreso-global {
+      width: 188px;
+      padding-left: 18px;
+      border-left: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .progreso-global p {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, 0.62);
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+    }
+
+    .progreso-global strong {
+      color: var(--blanco);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .linea-progreso {
+      width: 100%;
+      height: 3px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .linea-progreso span {
+      display: block;
+      width: 16.67%;
+      height: 100%;
+      background: var(--amarillo-galeam);
+      transition: width 0.45s ease;
+    }
+
+
+
+    .pantallas {
+      min-height: 0;
+      position: relative;
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .pantalla {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow-x: hidden;
+      overflow-y: auto;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(70px);
+      transition:
+        opacity 0.48s ease,
+        transform 0.62s cubic-bezier(0.22, 1, 0.36, 1);
+      scrollbar-width: thin;
+      scrollbar-color: rgba(255, 255, 255, 0.28) transparent;
+    }
+
+    .pantalla::-webkit-scrollbar { width: 7px; }
+    .pantalla::-webkit-scrollbar-track { background: transparent; }
+    .pantalla::-webkit-scrollbar-thumb {
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.24);
+    }
+
+    .pantalla.activa {
+      z-index: 5;
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    .pantalla.sale-izquierda {
+      z-index: 6;
+      opacity: 0;
+      transform: translateX(-70px);
+    }
+
+    .pantalla.sale-derecha {
+      z-index: 6;
+      opacity: 0;
+      transform: translateX(70px);
+    }
+
+    .pantalla.entra-izquierda { transform: translateX(-70px); }
+    .pantalla.entra-derecha { transform: translateX(70px); }
+
+
+    .botones {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 13px;
+      align-items: center;
+    }
+
+    .boton-principal,
+    .boton-secundario {
+      min-height: 50px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 22px;
+      color: var(--blanco);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      transition: 0.25s ease;
+    }
+
+    .boton-principal {
+      background: transparent;
+      border: 1px solid var(--amarillo-galeam);
+    }
+
+    .boton-principal:hover {
+      color: var(--azul-marino);
+      background: var(--amarillo-galeam);
+      transform: translateY(-2px);
+    }
+
+    .boton-secundario {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.58);
+    }
+
+    .boton-secundario:hover {
+      color: var(--azul-marino);
+      background: var(--blanco);
+      transform: translateY(-2px);
+    }
+
+
+    .pantalla-portada {
+      color: var(--blanco);
+      background: var(--azul-marino);
+    }
+
+    .hero {
+      min-height: 100%;
+      position: relative;
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background:
+        linear-gradient(90deg, rgba(4, 8, 13, 0.90) 0%, rgba(4, 8, 13, 0.72) 47%, rgba(4, 8, 13, 0.30) 100%),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.10) 0%, rgba(0, 0, 0, 0.36) 100%);
+    }
+
+    .hero-video {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.66;
+      filter: grayscale(0.24) contrast(1.02) brightness(0.80);
+    }
+
+    .hero-trama {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      opacity: 0.14;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(90deg, black 0%, transparent 84%);
+    }
+
+    .hero-linea {
+      position: absolute;
+      top: 0;
+      right: 15%;
+      z-index: 2;
+      width: 1px;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.10);
+    }
+
+    .hero-marca-agua {
+      position: absolute;
+      right: -50px;
+      bottom: -40px;
+      z-index: 2;
+      color: rgba(255, 255, 255, 0.035);
+      font-size: clamp(130px, 17vw, 280px);
+      font-weight: 900;
+      letter-spacing: -14px;
+      line-height: 0.8;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .hero-contenido {
+      width: min(760px, 86%);
+      position: relative;
+      z-index: 3;
+      margin-left: 10%;
+      padding: 95px 0 84px;
+    }
+
+    .eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--blanco);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 42px;
+      height: 3px;
+      background: var(--amarillo-galeam);
+    }
+
+    h1 {
+      max-width: 720px;
+      margin-bottom: 25px;
+      color: var(--blanco);
+      font-size: clamp(42px, 5.3vw, 76px);
+      font-weight: 900;
+      line-height: 0.98;
+      letter-spacing: -2.8px;
+      text-transform: uppercase;
+    }
+
+    .hero-descripcion {
+      max-width: 600px;
+      margin-bottom: 34px;
+      color: rgba(255, 255, 255, 0.88);
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.8;
+    }
+
+
+
+    .pantalla-programa,
+    .pantalla-seguridad,
+    .pantalla-actividad,
+    .pantalla-prevencion,
+    .pantalla-inicio {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      padding: 60px 8% 46px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: rgba(4, 8, 13, 0.64);
+    }
+
+    .pantalla-programa::before,
+    .pantalla-seguridad::before,
+    .pantalla-actividad::before,
+    .pantalla-prevencion::before,
+    .pantalla-inicio::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .pantalla-programa::before {
+      background:
+        radial-gradient(circle at 80% 14%, rgba(241, 199, 53, 0.10), transparent 26%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.65), rgba(5, 14, 21, 0.26));
+    }
+
+    .pantalla-seguridad::before {
+      background:
+        radial-gradient(circle at 18% 14%, rgba(241, 199, 53, 0.08), transparent 22%),
+        linear-gradient(135deg, rgba(4, 8, 13, 0.66), rgba(8, 19, 28, 0.32));
+    }
+
+    .pantalla-actividad::before {
+      background:
+        radial-gradient(circle at 82% 22%, rgba(241, 199, 53, 0.12), transparent 26%),
+        linear-gradient(135deg, rgba(2, 6, 10, 0.70), rgba(6, 15, 22, 0.22));
+    }
+
+    .pantalla-prevencion::before {
+      background:
+        radial-gradient(circle at 20% 80%, rgba(13, 53, 76, 0.26), transparent 30%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.68), rgba(9, 19, 29, 0.28));
+    }
+
+    .pantalla-inicio::before {
+      background:
+        radial-gradient(ellipse at 86% 18%, rgba(241, 199, 53, 0.13), transparent 31%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.70) 0%, rgba(9, 19, 29, 0.34) 57%, rgba(3, 7, 11, 0.74) 100%);
+    }
+
+    .programa-contenedor,
+    .modulo-contenedor,
+    .actividad-contenedor,
+    .inicio-contenedor {
+      width: min(1190px, 100%);
+      position: relative;
+      z-index: 1;
+      margin: 0 auto;
+    }
+
+    .programa-titulo,
+    .modulo-encabezado,
+    .actividad-encabezado {
+      max-width: 810px;
+      margin-bottom: 30px;
+    }
+
+    .programa-titulo .eyebrow,
+    .modulo-encabezado .eyebrow,
+    .actividad-encabezado .eyebrow {
+      margin-bottom: 18px;
+    }
+
+    .programa-titulo h2,
+    .modulo-encabezado h2,
+    .actividad-encabezado h2 {
+      color: var(--blanco);
+      font-size: clamp(31px, 4vw, 54px);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.02;
+      text-transform: uppercase;
+    }
+
+    .programa-titulo p,
+    .modulo-encabezado > p,
+    .actividad-encabezado > p {
+      max-width: 720px;
+      margin-top: 18px;
+      color: var(--texto-suave);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.75;
+    }
+
+
+    .tarjetas-programa {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      overflow: hidden;
+      background: rgba(7, 15, 23, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: var(--sombra);
+      backdrop-filter: blur(10px);
+    }
+
+    .tarjeta {
+      min-height: 254px;
+      position: relative;
+      padding: 34px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.018);
+      border-right: 1px solid rgba(255, 255, 255, 0.13);
+    }
+
+    .tarjeta:last-child { border-right: none; }
+
+    .tarjeta::before {
+      content: "";
+      width: 40px;
+      height: 4px;
+      position: absolute;
+      top: 0;
+      left: 34px;
+      background: var(--rojo-galeam);
+    }
+
+    .tarjeta-numero {
+      margin-bottom: 26px;
+      color: rgba(255, 255, 255, 0.44);
+      font-size: 14px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+    }
+
+    .tarjeta h3 {
+      margin-bottom: 13px;
+      color: var(--blanco);
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .tarjeta p {
+      max-width: 440px;
+      color: var(--texto-suave);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.75;
+    }
+
+
+
+    .modulo-grid {
+      display: grid;
+      grid-template-columns: 0.86fr 1.14fr;
+      align-items: stretch;
+      gap: 30px;
+    }
+
+    .modulo-panel-frase {
+      min-height: 365px;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      padding: 38px;
+      overflow: hidden;
+      background:
+        linear-gradient(135deg, rgba(4, 8, 13, 0.98), rgba(16, 26, 36, 0.90)),
+        radial-gradient(circle at 82% 16%, rgba(241, 199, 53, 0.22), transparent 34%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: var(--sombra);
+    }
+
+    .modulo-panel-frase::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.11;
+      background-image:
+        linear-gradient(rgba(255, 255, 255, 0.30) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.30) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: linear-gradient(130deg, black 0%, transparent 80%);
+    }
+
+    .modulo-panel-frase::after {
+      content: "GALEAM";
+      position: absolute;
+      right: -26px;
+      bottom: 0;
+      color: rgba(255, 255, 255, 0.07);
+      font-size: 74px;
+      font-weight: 900;
+      letter-spacing: -5px;
+      line-height: 0.8;
+    }
+
+    .modulo-panel-frase p {
+      max-width: 335px;
+      position: relative;
+      z-index: 1;
+      color: var(--blanco);
+      font-size: clamp(26px, 3.2vw, 38px);
+      font-weight: 900;
+      line-height: 1.08;
+      text-transform: uppercase;
+    }
+
+    .modulo-panel-frase p span { color: var(--amarillo-galeam); }
+
+    .modulo-panel-frase {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .modulo-panel-contenido {
+      min-height: 365px;
+      padding: 34px;
+      background: rgba(7, 15, 23, 0.66);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      box-shadow: var(--sombra);
+      backdrop-filter: blur(10px);
+    }
+
+    .modulo-panel-contenido h3 {
+      margin-bottom: 18px;
+      color: var(--blanco);
+      font-size: clamp(22px, 2.3vw, 32px);
+      font-weight: 900;
+      letter-spacing: -1.1px;
+      line-height: 1.08;
+      text-transform: uppercase;
+    }
+
+    .modulo-panel-contenido > p {
+      margin-bottom: 24px;
+      color: var(--texto-suave);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.8;
+    }
+
+    .lista-beneficios {
+      list-style: none;
+      display: grid;
+      gap: 13px;
+    }
+
+    .lista-beneficios li {
+      display: flex;
+      align-items: flex-start;
+      gap: 13px;
+      color: rgba(255, 255, 255, 0.91);
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.52;
+    }
+
+    .lista-beneficios li::before {
+      content: "✓";
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      color: var(--blanco);
+      background: var(--rojo-galeam);
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .nota-modulo {
+      margin-top: 22px;
+      padding-top: 18px;
+      color: var(--texto-tenue);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 11px;
+      font-weight: 600;
+      line-height: 1.65;
+    }
+
+    .panel-etiqueta {
+      position: relative;
+      z-index: 1;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      color: var(--amarillo-galeam);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+
+    .panel-etiqueta::before {
+      content: "";
+      width: 24px;
+      height: 2px;
+      background: var(--rojo-galeam);
+    }
+
+    .panel-apoyo {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: grid;
+      gap: 9px;
+      padding-top: 19px;
+      color: rgba(255, 255, 255, 0.62);
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      line-height: 1.45;
+      text-transform: uppercase;
+    }
+
+    .panel-apoyo span {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-apoyo span::before {
+      content: "•";
+      color: var(--amarillo-galeam);
+      font-size: 14px;
+      line-height: 0;
+    }
+
+    .modulo-panel-contenido .subtitulo-modulo {
+      margin: 0 0 14px;
+      color: var(--amarillo-galeam);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* =========================
+       PANTALLA 05 · ACTIVIDAD BLUEPRINT
+    ========================== */
+
+    .actividad-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .imagen-interactiva {
+      position: relative;
+      min-height: 0;
+      aspect-ratio: 4 / 3;
+      overflow: hidden;
+      background: #082641;
+      border: 1px solid rgba(174, 224, 255, 0.26);
+      box-shadow: var(--sombra);
+    }
+
+    .imagen-interactiva::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(rgba(194, 232, 255, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(194, 232, 255, 0.12) 1px, transparent 1px),
+        linear-gradient(rgba(194, 232, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(194, 232, 255, 0.045) 1px, transparent 1px);
+      background-size: 90px 90px, 90px 90px, 18px 18px, 18px 18px;
+      mix-blend-mode: screen;
+    }
+
+    .imagen-interactiva::after {
+      content: "PLANO TÉCNICO · RECONOCIMIENTO VISUAL";
+      position: absolute;
+      left: 24px;
+      bottom: 20px;
+      z-index: 2;
+      color: rgba(210, 239, 255, 0.52);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .arma-blueprint-imagen {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 0;
+      display: block;
+      object-fit: contain;
+      object-position: center;
+    }
+
+    .hotspot {
+      width: 38px;
+      height: 38px;
+      position: absolute;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 3px solid rgba(255, 255, 255, 0.96);
+      border-radius: 50%;
+      color: var(--azul-marino);
+      background: var(--amarillo-galeam);
+      box-shadow:
+        0 0 0 8px rgba(241, 199, 53, 0.18),
+        0 0 24px rgba(241, 199, 53, 0.35);
+      font-size: 15px;
+      font-weight: 900;
+      transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+      animation: pulsoBlueprint 1.9s ease-in-out infinite;
+    }
+
+    .hotspot:hover {
+      transform: scale(1.10);
+      box-shadow:
+        0 0 0 12px rgba(241, 199, 53, 0.24),
+        0 0 30px rgba(241, 199, 53, 0.48);
+    }
+
+    .hotspot.acertado {
+      color: #092641;
+      background: #ffffff;
+      box-shadow:
+        0 0 0 8px rgba(255, 255, 255, 0.18),
+        0 0 25px rgba(255, 255, 255, 0.32);
+      animation: none;
+      pointer-events: none;
+    }
+
+    .hotspot.seguro { left: 76.5%; top: 35.5%; }
+    .hotspot.disparador { left: 49.0%; top: 49.5%; }
+    .hotspot.empuñadura { left: 68.8%; top: 60.5%; }
+    .hotspot.cargador { left: 69.2%; top: 84.6%; }
+
+    @keyframes pulsoBlueprint {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.06); }
+    }
+
+    .actividad-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      padding: 26px;
+      background:
+        linear-gradient(180deg, rgba(8, 38, 65, 0.98), rgba(4, 18, 31, 0.98));
+      border: 1px solid rgba(174, 224, 255, 0.25);
+      box-shadow: var(--sombra);
+    }
+
+    .actividad-puntos {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(204, 236, 255, 0.20);
+    }
+
+    .actividad-puntos span {
+      color: rgba(214, 239, 255, 0.60);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.9px;
+      text-transform: uppercase;
+    }
+
+    .actividad-puntos strong {
+      color: var(--amarillo-galeam);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .pregunta-actividad {
+      color: var(--blanco);
+      font-size: 18px;
+      font-weight: 900;
+      line-height: 1.3;
+      text-transform: uppercase;
+    }
+
+    .ayuda-actividad {
+      color: rgba(221, 241, 255, 0.75);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.7;
+    }
+
+    .estado-actividad {
+      min-height: 110px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px;
+      color: rgba(221, 241, 255, 0.78);
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(198, 232, 255, 0.18);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.6;
+    }
+
+    .estado-actividad::before {
+      content: "i";
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 auto;
+      color: #092641;
+      background: var(--amarillo-galeam);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .estado-actividad.correcto {
+      color: rgba(255, 255, 255, 0.96);
+      border-color: rgba(241, 199, 53, 0.62);
+      background: rgba(241, 199, 53, 0.10);
+    }
+
+    .estado-actividad.correcto::before {
+      content: "✓";
+      color: #092641;
+      background: var(--amarillo-galeam);
+    }
+
+    .estado-actividad.error {
+      color: rgba(255, 255, 255, 0.96);
+      border-color: rgba(239, 89, 104, 0.55);
+      background: rgba(239, 89, 104, 0.10);
+    }
+
+    .estado-actividad.error::before {
+      content: "!";
+      color: var(--blanco);
+      background: var(--rojo-error);
+    }
+
+    .progreso-actividad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin-top: auto;
+    }
+
+    .progreso-actividad span {
+      height: 5px;
+      background: rgba(206, 236, 255, 0.20);
+    }
+
+    .progreso-actividad span.completo {
+      background: var(--amarillo-galeam);
+    }
+
+    .leyenda-actividad {
+      color: rgba(214, 239, 255, 0.54);
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1.6;
+    }
+
+    /* =========================
+       PANTALLA 06 · PREVIO AL REGISTRO
+    ========================== */
+
+    .pantalla-inicio {
+      display: flex;
+      align-items: center;
+    }
+
+    .inicio-contenedor { width: min(980px, 100%); }
+
+    .inicio-contenedor .eyebrow { margin-bottom: 20px; }
+
+    .inicio-contenedor h2 {
+      max-width: 760px;
+      margin-bottom: 19px;
+      color: var(--blanco);
+      font-size: clamp(38px, 5vw, 66px);
+      font-weight: 900;
+      letter-spacing: -2.6px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    .inicio-contenedor > p {
+      max-width: 655px;
+      color: var(--texto-suave);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.8;
+    }
+
+    .pasos-inicio {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin: 36px 0;
+    }
+
+    .paso {
+      min-height: 145px;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      backdrop-filter: blur(8px);
+    }
+
+    .paso-numero {
+      display: block;
+      margin-bottom: 18px;
+      color: var(--amarillo-galeam);
+      font-size: 13px;
+      font-weight: 900;
+      letter-spacing: 1px;
+    }
+
+    .paso h3 {
+      margin-bottom: 8px;
+      color: var(--blanco);
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    .paso p {
+      color: rgba(255, 255, 255, 0.65);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.65;
+    }
+
+    .aviso-registro {
+      display: none;
+      max-width: 560px;
+      margin-top: 20px;
+      padding: 15px 18px;
+      color: #171717;
+      background: var(--amarillo-galeam);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.55;
+      animation: aparecerAviso 0.30s ease both;
+    }
+
+    .aviso-registro.visible { display: block; }
+
+    .pie-inicio {
+      margin-top: 40px;
+      padding-top: 18px;
+      color: var(--texto-tenue);
+      border-top: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .pie-inicio strong { color: rgba(255, 255, 255, 0.86); }
+
+    @keyframes aparecerAviso {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =========================
+       NAVEGACIÓN FIJA INFERIOR
+    ========================== */
+
+    .barra-navegacion-global {
+      position: relative;
+      z-index: 40;
+      padding: 16px 7px 18px;
+      background: rgba(4, 8, 13, 0.92);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .barra-navegacion-global.oculta {
+      display: none;
+    }
+
+    .controles-globales {
+      width: min(1190px, 86%);
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .boton-control-global {
+      min-width: 155px;
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 11px;
+      padding: 0 20px;
+      color: var(--blanco);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.34);
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      transition: 0.25s ease;
+    }
+
+    .boton-control-global:hover:not(:disabled) {
+      color: var(--azul-marino);
+      background: var(--blanco);
+      border-color: var(--blanco);
+    }
+
+    .boton-control-global.siguiente { border-color: var(--amarillo-galeam); }
+
+    .boton-control-global.siguiente:hover:not(:disabled) {
+      color: var(--azul-marino);
+      background: var(--amarillo-galeam);
+      border-color: var(--amarillo-galeam);
+    }
+
+    .boton-control-global.oculto {
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .boton-control-global:disabled {
+      cursor: not-allowed;
+      color: rgba(255, 255, 255, 0.34);
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================== */
+
+    @media (max-width: 1000px) {
+      .modulo-grid,
+      .actividad-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .modulo-panel-frase { min-height: 250px; }
+      .actividad-panel { min-height: 250px; }
+      .pasos-inicio { grid-template-columns: 1fr; }
+      .paso { min-height: auto; }
+    }
+
+    @media (max-width: 720px) {
+      .app-capacitacion { min-height: 100dvh; }
+
+      .encabezado {
+        min-height: 70px;
+        padding: 12px 6%;
+      }
+
+      .marca-texto { display: none; }
+      .marca img { width: 92px; }
+
+      .progreso-global {
+        width: 135px;
+        padding-left: 12px;
+      }
+
+      .progreso-global p { font-size: 8px; }
+
+      .pantalla-programa,
+      .pantalla-seguridad,
+      .pantalla-actividad,
+      .pantalla-prevencion,
+      .pantalla-inicio {
+        padding: 42px 6% 32px;
+      }
+
+      .hero-contenido {
+        width: 88%;
+        margin-left: 6%;
+        padding: 66px 0 72px;
+      }
+
+      h1 {
+        font-size: clamp(39px, 12vw, 59px);
+        letter-spacing: -1.8px;
+      }
+
+      .hero-descripcion { font-size: 14px; }
+      .hero-linea { right: 7%; }
+      .hero-marca-agua {
+        right: -40px;
+        bottom: -5px;
+        font-size: 120px;
+      }
+
+      .programa-titulo,
+      .modulo-encabezado,
+      .actividad-encabezado { margin-bottom: 25px; }
+
+      .tarjetas-programa { grid-template-columns: 1fr; }
+
+      .tarjeta {
+        min-height: auto;
+        padding: 28px;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+      }
+
+      .tarjeta:last-child { border-bottom: none; }
+      .tarjeta::before { left: 28px; }
+
+      .modulo-panel-frase,
+      .modulo-panel-contenido { padding: 27px; }
+
+      .imagen-interactiva,
+      .arma-svg { min-height: 335px; }
+
+      .hotspot {
+        width: 35px;
+        height: 35px;
+        border-width: 2px;
+        font-size: 14px;
+      }
+
+      .actividad-panel { padding: 22px; }
+
+      .pasos-inicio { margin: 30px 0; }
+      .pie-inicio { margin-top: 34px; }
+
+      .barra-navegacion-global { padding: 13px 6% 16px; }
+      .controles-globales { width: 100%; }
+
+      .boton-control-global {
+        min-width: 0;
+        flex: 1;
+        padding: 0 12px;
+        font-size: 9px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .pantalla,
+      .linea-progreso span,
+      .boton-principal,
+      .boton-secundario,
+      .boton-control-global,
+      .hotspot {
+        transition: none;
+      }
+    }
+  
+    /* =========================
+       MÓDULO 02 · FORMATO LIMPIO
+    ========================== */
+
+    .prevencion-simple {
+      width: min(980px, 100%);
+      position: relative;
+      z-index: 1;
+      margin: 0 auto;
+      padding: 42px 0 96px;
+    }
+
+    .prevencion-simple .eyebrow {
+      margin-bottom: 20px;
+    }
+
+    .prevencion-simple h2 {
+      max-width: 900px;
+      margin-bottom: 24px;
+      color: var(--blanco);
+      font-size: clamp(40px, 5.7vw, 76px);
+      font-weight: 900;
+      letter-spacing: -2.8px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    .prevencion-introduccion {
+      max-width: 850px;
+      color: var(--texto-suave);
+      font-size: 17px;
+      font-weight: 500;
+      line-height: 1.75;
+    }
+
+    .prevencion-separador {
+      width: 100%;
+      height: 1px;
+      margin: 40px 0 34px;
+      background: linear-gradient(
+        90deg,
+        var(--amarillo-galeam) 0%,
+        var(--amarillo-galeam) 68px,
+        rgba(255, 255, 255, 0.18) 68px,
+        rgba(255, 255, 255, 0.18) 100%
+      );
+    }
+
+    .prevencion-cuerpo {
+      max-width: 900px;
+    }
+
+    .prevencion-cuerpo > p {
+      margin-bottom: 24px;
+      color: rgba(255, 255, 255, 0.86);
+      font-size: 15px;
+      font-weight: 500;
+      line-height: 1.82;
+    }
+
+    .lista-prevencion-simple {
+      list-style: none;
+      display: grid;
+      gap: 15px;
+      margin: 8px 0 32px;
+    }
+
+    .lista-prevencion-simple li {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      color: rgba(255, 255, 255, 0.92);
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .lista-prevencion-simple li::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      flex-shrink: 0;
+      margin-top: 7px;
+      background: var(--rojo-galeam);
+    }
+
+    .prevencion-cierre {
+      max-width: 900px;
+      padding-left: 18px;
+      color: var(--amarillo-galeam);
+      border-left: 3px solid var(--amarillo-galeam);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.72;
+    }
+
+    @media (max-width: 720px) {
+      .prevencion-simple {
+        padding: 28px 0 84px;
+      }
+
+      .prevencion-simple h2 {
+        font-size: clamp(38px, 12vw, 58px);
+        letter-spacing: -1.8px;
+      }
+
+      .prevencion-introduccion,
+      .prevencion-cuerpo > p,
+      .prevencion-cierre {
+        font-size: 14px;
+      }
+
+      .lista-prevencion-simple li {
+        font-size: 13px;
+      }
+
+      .prevencion-separador {
+        margin: 30px 0 27px;
+      }
+    }
+
+  
+    /* =========================
+       PARTÍCULAS AMBIENTALES
+       Pantallas 02 a 06
+    ========================== */
+
+    .polvo-ambiental {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      opacity: 0.74;
+    }
+
+    .polvo-ambiental .particula-polvo {
+      width: var(--tamano);
+      height: var(--tamano);
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      display: block;
+      border-radius: 50%;
+      background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.96) 0%,
+        var(--color-particula) 38%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      box-shadow:
+        0 0 calc(var(--tamano) * 2.8) var(--brillo-particula),
+        0 0 calc(var(--tamano) * 5.6) rgba(255, 255, 255, 0.05);
+      filter: blur(0.25px);
+      opacity: var(--opacidad);
+      transform: translate3d(0, 0, 0) scale(0.94);
+      animation:
+        flotarPolvo var(--duracion) ease-in-out var(--retraso) infinite alternate,
+        destelloPolvo var(--duracion-destello) ease-in-out var(--retraso-destello) infinite;
+      will-change: transform, opacity, box-shadow, filter;
+    }
+
+    .polvo-ambiental .particula-polvo.grano {
+      filter: blur(1.2px);
+      opacity: calc(var(--opacidad) * 0.78);
+    }
+
+    .polvo-ambiental .particula-polvo.destello {
+      box-shadow:
+        0 0 calc(var(--tamano) * 3.4) var(--brillo-particula),
+        0 0 calc(var(--tamano) * 9) rgba(241, 199, 53, 0.16);
+    }
+
+    @keyframes flotarPolvo {
+      0% {
+        transform: translate3d(0, 0, 0) scale(0.92);
+      }
+
+      50% {
+        transform: translate3d(calc(var(--desplazamiento-x) * 0.45), calc(var(--desplazamiento-y) * 0.52), 0) scale(1.02);
+      }
+
+      100% {
+        transform: translate3d(var(--desplazamiento-x), var(--desplazamiento-y), 0) scale(1.12);
+      }
+    }
+
+    @keyframes destelloPolvo {
+      0%, 100% {
+        opacity: calc(var(--opacidad) * 0.48);
+        filter: blur(1px);
+      }
+
+      18% {
+        opacity: calc(var(--opacidad) * 0.76);
+      }
+
+      38% {
+        opacity: calc(var(--opacidad) * 1.08);
+        filter: blur(0.18px);
+      }
+
+      50% {
+        opacity: calc(var(--opacidad) * 1.28);
+        filter: blur(0px);
+      }
+
+      62% {
+        opacity: calc(var(--opacidad) * 0.86);
+        filter: blur(0.55px);
+      }
+
+      82% {
+        opacity: calc(var(--opacidad) * 1.05);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .polvo-ambiental .particula-polvo {
+        animation: none;
+      }
+    }
+
+
+    /* =========================
+       REGISTRO, EVALUACIÓN Y RESULTADO
+    ========================== */
+
+    .pantalla-registro,
+    .pantalla-evaluacion,
+    .pantalla-resultado {
+      position: absolute;
+      inset: 0;
+      min-height: 0;
+      padding: 60px 8% 46px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background: rgba(4, 8, 13, 0.64);
+    }
+
+    .pantalla-registro::before,
+    .pantalla-evaluacion::before,
+    .pantalla-resultado::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .pantalla-registro::before {
+      background:
+        radial-gradient(circle at 84% 18%, rgba(241, 199, 53, 0.13), transparent 28%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.76), rgba(9, 19, 29, 0.36));
+    }
+
+    .pantalla-evaluacion::before {
+      background:
+        radial-gradient(circle at 14% 15%, rgba(201, 32, 50, 0.10), transparent 28%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.78), rgba(9, 19, 29, 0.34));
+    }
+
+    .pantalla-resultado::before {
+      background:
+        radial-gradient(circle at 82% 18%, rgba(111, 178, 28, 0.18), transparent 28%),
+        linear-gradient(135deg, rgba(3, 7, 11, 0.78), rgba(9, 19, 29, 0.34));
+    }
+
+    .registro-contenedor,
+    .evaluacion-contenedor,
+    .resultado-contenedor {
+      width: min(980px, 100%);
+      position: relative;
+      z-index: 1;
+      margin: 0 auto;
+    }
+
+    .registro-contenedor h2,
+    .evaluacion-contenedor h2,
+    .resultado-contenedor h2 {
+      max-width: 800px;
+      margin-bottom: 18px;
+      color: var(--blanco);
+      font-size: clamp(34px, 4.7vw, 62px);
+      font-weight: 900;
+      letter-spacing: -2.3px;
+      line-height: 0.99;
+      text-transform: uppercase;
+    }
+
+    .registro-contenedor > p,
+    .evaluacion-contenedor > p,
+    .resultado-contenedor > p {
+      max-width: 720px;
+      color: var(--texto-suave);
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.75;
+    }
+
+    .formulario-registro {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+      padding: 30px;
+      background: rgba(7, 15, 23, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: var(--sombra);
+      backdrop-filter: blur(10px);
+    }
+
+    .campo-registro {
+      display: grid;
+      gap: 9px;
+    }
+
+    .campo-registro.ancho-completo {
+      grid-column: 1 / -1;
+    }
+
+    .campo-registro label {
+      color: rgba(255, 255, 255, 0.74);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.95px;
+      text-transform: uppercase;
+    }
+
+    .campo-registro input,
+    .campo-registro select {
+      width: 100%;
+      min-height: 52px;
+      padding: 0 15px;
+      outline: none;
+      color: var(--blanco);
+      background: rgba(255, 255, 255, 0.055);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      border-radius: 0;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      transition: border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .campo-registro input::placeholder {
+      color: rgba(255, 255, 255, 0.34);
+    }
+
+    .campo-registro select option {
+      color: #101820;
+      background: #ffffff;
+    }
+
+    .campo-registro input:focus,
+    .campo-registro select:focus {
+      border-color: var(--amarillo-galeam);
+      background: rgba(241, 199, 53, 0.06);
+    }
+
+    .campo-registro input.invalido,
+    .campo-registro select.invalido {
+      border-color: var(--rojo-error);
+    }
+
+    .aviso-formulario,
+    .aviso-evaluacion,
+    .estado-guardado {
+      display: none;
+      margin-top: 18px;
+      padding: 14px 16px;
+      color: var(--blanco);
+      background: rgba(239, 89, 104, 0.12);
+      border: 1px solid rgba(239, 89, 104, 0.48);
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+
+    .aviso-formulario.visible,
+    .aviso-evaluacion.visible,
+    .estado-guardado.visible {
+      display: block;
+    }
+
+    .estado-guardado.cargando {
+      color: var(--azul-marino);
+      background: rgba(241, 199, 53, 0.95);
+      border-color: var(--amarillo-galeam);
+    }
+
+    .estado-guardado.error {
+      background: rgba(239, 89, 104, 0.12);
+      border-color: rgba(239, 89, 104, 0.48);
+    }
+
+    .evaluacion-resumen {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 32px 0 18px;
+      padding: 16px 18px;
+      background: rgba(255, 255, 255, 0.045);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .evaluacion-resumen span {
+      color: rgba(255, 255, 255, 0.68);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .evaluacion-resumen strong {
+      color: var(--amarillo-galeam);
+      font-size: 17px;
+      font-weight: 900;
+    }
+
+    .lista-preguntas {
+      display: grid;
+      gap: 16px;
+    }
+
+    .pregunta-evaluacion {
+      padding: 24px;
+      background: rgba(7, 15, 23, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.16);
+    }
+
+    .pregunta-evaluacion.incompleta {
+      border-color: rgba(239, 89, 104, 0.72);
+    }
+
+    .pregunta-numero {
+      display: inline-flex;
+      margin-bottom: 13px;
+      color: var(--amarillo-galeam);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .pregunta-evaluacion h3 {
+      margin-bottom: 18px;
+      color: var(--blanco);
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.45;
+    }
+
+    .opciones-evaluacion {
+      display: grid;
+      gap: 10px;
+    }
+
+    .opcion-evaluacion {
+      position: relative;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      min-height: 46px;
+      padding: 13px 14px;
+      color: rgba(255, 255, 255, 0.82);
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.5;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .opcion-evaluacion:hover {
+      border-color: rgba(241, 199, 53, 0.58);
+      background: rgba(241, 199, 53, 0.06);
+    }
+
+    .opcion-evaluacion input {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+      margin-top: 1px;
+      accent-color: var(--amarillo-galeam);
+      cursor: pointer;
+    }
+
+    .resultado-tarjeta {
+      margin-top: 34px;
+      padding: 38px;
+      text-align: center;
+      background: rgba(7, 15, 23, 0.76);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      box-shadow: var(--sombra);
+      backdrop-filter: blur(10px);
+    }
+
+    .resultado-icono {
+      width: 66px;
+      height: 66px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      color: var(--azul-marino);
+      background: var(--verde-acierto);
+      border-radius: 50%;
+      font-size: 31px;
+      font-weight: 900;
+    }
+
+    .resultado-icono.no-aprobado {
+      color: var(--blanco);
+      background: var(--rojo-error);
+    }
+
+    .resultado-tarjeta h3 {
+      margin-bottom: 10px;
+      color: var(--blanco);
+      font-size: clamp(24px, 3vw, 36px);
+      font-weight: 900;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+    }
+
+    .resultado-tarjeta p {
+      max-width: 650px;
+      margin: 0 auto;
+      color: var(--texto-suave);
+      font-size: 13px;
+      font-weight: 500;
+      line-height: 1.75;
+    }
+
+    .resultado-calificacion {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 7px;
+      margin: 22px 0 19px;
+      color: var(--amarillo-galeam);
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -2px;
+    }
+
+    .resultado-calificacion small {
+      color: rgba(255, 255, 255, 0.56);
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .resultado-datos {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      margin-top: 28px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.13);
+    }
+
+    .resultado-datos div {
+      padding: 16px 14px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .resultado-datos span {
+      display: block;
+      margin-bottom: 7px;
+      color: rgba(255, 255, 255, 0.50);
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.85px;
+      text-transform: uppercase;
+    }
+
+    .resultado-datos strong {
+      display: block;
+      overflow: hidden;
+      color: var(--blanco);
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1.45;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 720px) {
+      .pantalla-registro,
+      .pantalla-evaluacion,
+      .pantalla-resultado {
+        padding: 42px 6% 32px;
+      }
+
+      .formulario-registro {
+        grid-template-columns: 1fr;
+        padding: 22px;
+      }
+
+      .campo-registro.ancho-completo {
+        grid-column: auto;
+      }
+
+      .pregunta-evaluacion,
+      .resultado-tarjeta {
+        padding: 22px;
+      }
+
+      .resultado-datos {
+        grid-template-columns: 1fr;
+      }
+
+      .evaluacion-resumen {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+
+  </style>
+</head>
+
+<body>
+  <div class="app-capacitacion">
+
+    <video class="video-ambiental" autoplay muted loop playsinline aria-hidden="true">
+      <source src="assetsfondo-seguridad.mp4" type="video/mp4">
+    </video>
+
+    <div class="capa-ambiental"></div>
+
+    <header class="encabezado">
+      <button type="button" class="marca" data-ir-a="0" aria-label="Volver al inicio">
+        <img
+          src="https://static.wixstatic.com/media/cf373a_aff5bf69cbb04013830662885a011774~mv2.png/v1/fill/w_178,h_115,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Galeam_logo-color.png"
+          alt="Galeam"
+        >
+
+        <span class="marca-texto">
+          <strong>Capacitación</strong>
+          <span>Plataforma institucional</span>
+        </span>
+      </button>
+
+      <div class="progreso-global" aria-label="Progreso de capacitación">
+        <p>
+          <span id="etiquetaProgreso">Introducción</span>
+          <strong><span id="pasoActual">01</span> / 09</strong>
+        </p>
+
+        <div class="linea-progreso">
+          <span id="barraProgreso"></span>
+        </div>
+      </div>
+    </header>
+
+    <main class="pantallas">
+
+      <!-- PANTALLA 01 · PORTADA -->
+      <section class="pantalla pantalla-portada activa" data-pantalla="0" aria-hidden="false">
+        <div class="hero">
+          <video class="hero-video" autoplay muted loop playsinline>
+            <source src="assetsfondo-seguridad.mp4" type="video/mp4">
+            Tu navegador no puede reproducir el video.
+          </video>
+
+          <div class="hero-trama"></div>
+          <div class="hero-linea"></div>
+          <div class="hero-marca-agua">GALEAM</div>
+
+          <div class="hero-contenido">
+            <p class="eyebrow">Capacitación institucional</p>
+
+            <h1>
+              Uso seguro de<br>
+              armas de fuego
+            </h1>
+
+            <p class="hero-descripcion">
+              Formación orientada a reforzar el uso responsable del equipo,
+              la prevención de incidentes y el cumplimiento de los protocolos
+              establecidos durante el servicio.
+            </p>
+
+            <div class="botones">
+              <button type="button" class="boton-principal" data-ir-a="1">
+                Iniciar capacitación <span>→</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 02 · VISTA GENERAL DE MÓDULOS -->
+      <section class="pantalla pantalla-programa" data-pantalla="1" aria-hidden="true">
+        <div class="polvo-ambiental" aria-hidden="true"></div>
+        <div class="programa-contenedor">
+          <div class="programa-titulo">
+            <p class="eyebrow">Antes de comenzar</p>
+
+            <h2>
+              Una capacitación diseñada para prevenir.
+            </h2>
+
+            <p>
+              Revisa los dos temas esenciales del módulo antes de continuar con la actividad interactiva,
+              el registro y la evaluación final.
+            </p>
+          </div>
+
+          <div class="tarjetas-programa">
+            <article class="tarjeta">
+              <div class="tarjeta-numero">01 / SEGURIDAD</div>
+              <h3>Uso responsable y seguridad</h3>
+              <p>
+                Reglas esenciales para la portación, el manejo responsable y la prevención de incidentes.
+              </p>
+            </article>
+
+            <article class="tarjeta">
+              <div class="tarjeta-numero">02 / PREVENCIÓN</div>
+              <h3>Prevención, control y reporte</h3>
+              <p>
+                Resguardo del equipo, control emocional, identificación de riesgos y comunicación de anomalías.
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 03 · MÓDULO DE SEGURIDAD -->
+      <section class="pantalla pantalla-seguridad" data-pantalla="2" aria-hidden="true">
+        <div class="polvo-ambiental" aria-hidden="true"></div>
+        <div class="modulo-contenedor">
+          <div class="modulo-encabezado">
+            <p class="eyebrow">Módulo 01 / Seguridad</p>
+            <h2>El uso responsable comienza antes de utilizar el equipo.</h2>
+            <p>
+              Un arma de fuego debe considerarse un equipo de alta responsabilidad.
+              Su portación y manejo exigen atención, disciplina y apego permanente a
+              los protocolos establecidos.
+            </p>
+          </div>
+
+          <div class="modulo-grid">
+            <div class="modulo-panel-frase">
+              <span class="panel-etiqueta">Principio clave</span>
+
+              <p>
+                La seguridad se construye con <span>atención, control y responsabilidad.</span>
+              </p>
+
+              <div class="panel-apoyo">
+                <span>Atención al entorno</span>
+                <span>Control del equipo</span>
+                <span>Respeto al protocolo</span>
+              </div>
+            </div>
+
+            <div class="modulo-panel-contenido">
+              <p class="subtitulo-modulo">Reglas esenciales de seguridad</p>
+
+              <h3>Prevenir un incidente depende de decisiones responsables.</h3>
+
+              <p>
+                Durante el servicio, la prevención comienza al evitar acciones imprudentes,
+                mantener el control del equipo y actuar siempre con conciencia de las
+                consecuencias.
+              </p>
+
+              <ul class="lista-beneficios">
+                <li>Considera siempre el arma como si estuviera cargada.</li>
+                <li>Mantén el dedo fuera del disparador hasta que exista una necesidad legítima y autorizada.</li>
+                <li>Conserva el equipo orientado hacia una dirección segura.</li>
+                <li>No apuntes a personas, objetos o zonas sin una razón operativa justificada.</li>
+                <li>No permitas que personas sin capacitación o autorización tengan acceso al equipo.</li>
+                <li>No juegues, bromees ni manipules el arma de manera innecesaria.</li>
+              </ul>
+
+              <p class="nota-modulo">
+                La seguridad no es un paso aislado: protege tu integridad, la de tus compañeros y la de las personas a tu alrededor.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 04 · PREVENCIÓN, CONTROL Y REPORTE -->
+      <section class="pantalla pantalla-prevencion" data-pantalla="3" aria-hidden="true">
+        <div class="polvo-ambiental" aria-hidden="true"></div>
+        <div class="prevencion-simple">
+          <p class="eyebrow">Módulo 02 / Prevención</p>
+
+          <h2>Prevención, control y reporte.</h2>
+
+          <p class="prevencion-introduccion">
+            El manejo responsable del equipo no termina con conocer las reglas.
+            También requiere mantener la calma, reconocer los riesgos del entorno
+            y tomar decisiones apegadas a los protocolos de la empresa.
+          </p>
+
+          <div class="prevencion-separador"></div>
+
+          <div class="prevencion-cuerpo">
+            <p>
+              Antes, durante y después del servicio, evita actuar por impulso.
+              Mantén la atención en tu entorno, prioriza la seguridad de las
+              personas y comunica cualquier situación que pueda representar un riesgo.
+            </p>
+
+            <ul class="lista-prevencion-simple">
+              <li>Revisa que el equipo se encuentre bajo resguardo y en condiciones adecuadas.</li>
+              <li>Reporta de inmediato cualquier anomalía, daño, pérdida o situación irregular.</li>
+              <li>Mantén el equipo fuera del alcance de personas no autorizadas.</li>
+              <li>Evita manipular el equipo cuando no sea necesario para tu función.</li>
+              <li>Sigue en todo momento las indicaciones de tu superior y los protocolos internos.</li>
+            </ul>
+
+            <p class="prevencion-cierre">
+              Mantener la calma, prevenir riesgos y reportar de inmediato forma parte del manejo responsable del equipo.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 05 · ACTIVIDAD INTERACTIVA -->
+      <section class="pantalla pantalla-actividad" data-pantalla="4" aria-hidden="true">
+        <div class="polvo-ambiental" aria-hidden="true"></div>
+        <div class="actividad-contenedor">
+          <div class="actividad-encabezado">
+            <p class="eyebrow">Actividad interactiva</p>
+            <h2>Identifica la parte correcta.</h2>
+            <p>
+              Selecciona el punto correspondiente a cada nombre. Esta actividad es de reconocimiento visual y no sustituye la capacitación práctica autorizada.
+            </p>
+          </div>
+
+          <div class="actividad-layout">
+            <div class="imagen-interactiva" aria-label="Ilustración interactiva de reconocimiento visual">
+              <img
+                class="arma-blueprint-imagen"
+                src="plano_tecnico_pistola.png"
+                alt="Plano técnico de referencia para la actividad de reconocimiento visual"
+              >
+
+              <button type="button" class="hotspot seguro" data-parte="seguro" aria-label="Zona interactiva"></button>
+              <button type="button" class="hotspot disparador" data-parte="disparador" aria-label="Zona interactiva"></button>
+              <button type="button" class="hotspot empuñadura" data-parte="empuñadura" aria-label="Zona interactiva"></button>
+              <button type="button" class="hotspot cargador" data-parte="cargador" aria-label="Zona interactiva"></button>
+            </div>
+
+            <aside class="actividad-panel" aria-live="polite">
+              <div class="actividad-puntos">
+                <span>Progreso</span>
+                <strong><span id="puntosActividad">0</span> / 4</strong>
+              </div>
+
+              <p class="pregunta-actividad" id="preguntaActividad">Pulsa en: Seguro</p>
+
+              <p class="ayuda-actividad">
+                Observa el plano técnico y selecciona el punto que corresponda a la pregunta actual.
+              </p>
+
+              <div class="estado-actividad" id="estadoActividad">
+                Inicia identificando la primera parte señalada. Cada respuesta correcta desbloqueará la siguiente.
+              </div>
+
+              <div class="progreso-actividad" aria-label="Progreso de actividad">
+                <span></span>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+
+              <p class="leyenda-actividad">
+                Al completar 4 de 4 puntos, podrás continuar con la siguiente etapa.
+              </p>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- PANTALLA 06 · PREVIO AL REGISTRO -->
+      <section class="pantalla pantalla-inicio" data-pantalla="5" aria-hidden="true">
+        <div class="polvo-ambiental" aria-hidden="true"></div>
+        <div class="inicio-contenedor">
+          <p class="eyebrow">Siguiente etapa</p>
+
+          <h2>
+            Listo para comenzar.
+          </h2>
+
+          <p>
+            A continuación se solicitarán tus datos de identificación. Después podrás continuar con la evaluación final para registrar tu resultado.
+          </p>
+
+          <div class="pasos-inicio">
+            <article class="paso">
+              <span class="paso-numero">01</span>
+              <h3>Registro</h3>
+              <p>Captura nombre, número de empleado y servicio asignado.</p>
+            </article>
+
+            <article class="paso">
+              <span class="paso-numero">02</span>
+              <h3>Evaluación</h3>
+              <p>Responde las preguntas para validar la comprensión del tema.</p>
+            </article>
+
+            <article class="paso">
+              <span class="paso-numero">03</span>
+              <h3>Resultado</h3>
+              <p>Consulta tu resultado final y el registro de cumplimiento.</p>
+            </article>
+          </div>
+
+          <div class="aviso-registro" id="avisoRegistro">
+            La siguiente etapa será integrar aquí el formulario real de registro del participante.
+          </div>
+
+          <p class="pie-inicio">
+            <strong>Galeam</strong> · Capacitación institucional · © 2026
+          </p>
+        </div>
+      </section>
+
+      <!-- PANTALLA 07 · REGISTRO DEL PARTICIPANTE -->
+      <section class="pantalla pantalla-registro" data-pantalla="6" aria-hidden="true">
+        <div class="registro-contenedor">
+          <p class="eyebrow">Registro del participante</p>
+          <h2>Confirma tus datos antes de la evaluación.</h2>
+          <p>
+            Esta información se utilizará únicamente para identificar tu resultado dentro de la plataforma de capacitación.
+          </p>
+
+          <form class="formulario-registro" id="formularioRegistro" novalidate>
+            <div class="campo-registro ancho-completo">
+              <label for="nombreParticipante">Nombre completo</label>
+              <input
+                id="nombreParticipante"
+                name="nombre"
+                type="text"
+                autocomplete="name"
+                maxlength="120"
+                placeholder="Escribe tu nombre completo"
+                required
+              >
+            </div>
+
+            <div class="campo-registro">
+              <label for="numeroEmpleado">Número de empleado</label>
+              <input
+                id="numeroEmpleado"
+                name="numero_empleado"
+                type="text"
+                inputmode="numeric"
+                maxlength="30"
+                placeholder="Ejemplo: 12345"
+                required
+              >
+            </div>
+
+            <div class="campo-registro">
+              <label for="servicioParticipante">Servicio asignado</label>
+              <input
+                id="servicioParticipante"
+                name="servicio"
+                type="text"
+                maxlength="120"
+                placeholder="Ejemplo: Corporativo / Servicio"
+                required
+              >
+            </div>
+          </form>
+
+          <div class="aviso-formulario" id="avisoFormulario" role="alert">
+            Completa nombre, número de empleado y servicio para continuar.
+          </div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 08 · EVALUACIÓN FINAL -->
+      <section class="pantalla pantalla-evaluacion" data-pantalla="7" aria-hidden="true">
+        <div class="evaluacion-contenedor">
+          <p class="eyebrow">Evaluación final</p>
+          <h2>Valida los conocimientos esenciales.</h2>
+          <p>
+            Selecciona una respuesta por pregunta. La calificación mínima aprobatoria es de 8.0.
+          </p>
+
+          <div class="evaluacion-resumen">
+            <span>Respuestas contestadas</span>
+            <strong><span id="respuestasContestadas">0</span> / 10</strong>
+          </div>
+
+          <form class="lista-preguntas" id="formularioEvaluacion" novalidate>
+            <article class="pregunta-evaluacion" data-pregunta="1">
+              <span class="pregunta-numero">Pregunta 01</span>
+              <h3>¿Cómo debe considerarse siempre un arma de fuego durante el servicio?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta1" value="a"> Como si estuviera descargada hasta comprobarlo.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta1" value="b"> Como si estuviera cargada.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta1" value="c"> Como un equipo que puede manipularse libremente.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="2">
+              <span class="pregunta-numero">Pregunta 02</span>
+              <h3>¿Dónde debe mantenerse el dedo cuando no existe una necesidad legítima y autorizada?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta2" value="a"> Dentro del guardamonte, cerca del disparador.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta2" value="b"> Sobre el disparador para estar preparado.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta2" value="c"> Fuera del disparador.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="3">
+              <span class="pregunta-numero">Pregunta 03</span>
+              <h3>La orientación del equipo debe mantenerse:</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta3" value="a"> Hacia una dirección segura.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta3" value="b"> Hacia donde haya más espacio.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta3" value="c"> Hacia el suelo en todos los casos.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="4">
+              <span class="pregunta-numero">Pregunta 04</span>
+              <h3>¿Quién puede tener acceso al equipo?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta4" value="a"> Cualquier compañero que esté presente.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta4" value="b"> Únicamente personal con capacitación y autorización.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta4" value="c"> Personas de confianza dentro del servicio.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="5">
+              <span class="pregunta-numero">Pregunta 05</span>
+              <h3>¿Qué se debe hacer cuando no es necesario manipular el equipo para la función?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta5" value="a"> Evitar manipularlo innecesariamente.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta5" value="b"> Practicar movimientos para familiarizarse.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta5" value="c"> Mostrarlo a otros para confirmar que funciona.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="6">
+              <span class="pregunta-numero">Pregunta 06</span>
+              <h3>Ante una anomalía, daño, pérdida o situación irregular relacionada con el equipo, se debe:</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta6" value="a"> Esperar al cambio de turno para comentarlo.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta6" value="b"> Reportarlo de inmediato.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta6" value="c"> Resolverlo sin avisar para evitar problemas.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="7">
+              <span class="pregunta-numero">Pregunta 07</span>
+              <h3>Ante una situación de tensión, la conducta esperada es:</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta7" value="a"> Actuar por impulso para responder rápido.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta7" value="b"> Mantener la calma y apegarse a los protocolos.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta7" value="c"> Pedir a otra persona que tome cualquier decisión.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="8">
+              <span class="pregunta-numero">Pregunta 08</span>
+              <h3>¿Qué forma parte del manejo responsable antes, durante y después del servicio?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta8" value="a"> Mantener el equipo bajo resguardo y en condiciones adecuadas.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta8" value="b"> Dejar el equipo disponible para cualquier relevo.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta8" value="c"> Revisarlo solo si se presenta una emergencia.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="9">
+              <span class="pregunta-numero">Pregunta 09</span>
+              <h3>¿Cuándo es válido apuntar el equipo a personas, objetos o zonas?</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta9" value="a"> Cuando se desea llamar la atención.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta9" value="b"> Cuando no exista una razón operativa justificada.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta9" value="c"> Nunca sin una razón operativa justificada.</label>
+              </div>
+            </article>
+
+            <article class="pregunta-evaluacion" data-pregunta="10">
+              <span class="pregunta-numero">Pregunta 10</span>
+              <h3>Las indicaciones del superior y los protocolos internos deben:</h3>
+              <div class="opciones-evaluacion">
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta10" value="a"> Seguirse en todo momento.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta10" value="b"> Considerarse solo cuando haya supervisión.</label>
+                <label class="opcion-evaluacion"><input type="radio" name="pregunta10" value="c"> Aplicarse únicamente en servicios de alto riesgo.</label>
+              </div>
+            </article>
+          </form>
+
+          <div class="aviso-evaluacion" id="avisoEvaluacion" role="alert">
+            Responde las preguntas pendientes antes de finalizar la evaluación.
+          </div>
+
+          <div class="estado-guardado" id="estadoGuardado" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <!-- PANTALLA 09 · RESULTADO -->
+      <section class="pantalla pantalla-resultado" data-pantalla="8" aria-hidden="true">
+        <div class="resultado-contenedor">
+          <p class="eyebrow">Resultado registrado</p>
+          <h2>Evaluación finalizada.</h2>
+
+          <div class="resultado-tarjeta">
+            <div class="resultado-icono" id="resultadoIcono">✓</div>
+            <h3 id="resultadoTitulo">Resultado guardado</h3>
+            <p id="resultadoMensaje">
+              Tu evaluación se registró correctamente en la plataforma.
+            </p>
+
+            <div class="resultado-calificacion">
+              <span id="resultadoCalificacion">0.0</span>
+              <small>/ 10</small>
+            </div>
+
+            <div class="resultado-datos">
+              <div>
+                <span>Participante</span>
+                <strong id="resultadoNombre">—</strong>
+              </div>
+              <div>
+                <span>Servicio</span>
+                <strong id="resultadoServicio">—</strong>
+              </div>
+              <div>
+                <span>Estatus</span>
+                <strong id="resultadoEstatus">—</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <div class="barra-navegacion-global" aria-label="Navegación de capacitación">
+      <div class="controles-globales">
+        <button type="button" class="boton-control-global oculto" id="botonAnteriorGlobal">
+          ← Anterior
+        </button>
+
+        <button type="button" class="boton-control-global siguiente" id="botonSiguienteGlobal">
+          Iniciar capacitación →
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const API_URL = "https://capacitacion-production-3120.up.railway.app";
+      const NOMBRE_CURSO = "Uso Seguro de Armas de Fuego";
+      const CALIFICACION_MINIMA = 8;
+
+      const pantallas = [...document.querySelectorAll(".pantalla")];
+      const botonesNavegacion = document.querySelectorAll("[data-ir-a]");
+      const pasoActual = document.getElementById("pasoActual");
+      const etiquetaProgreso = document.getElementById("etiquetaProgreso");
+      const barraProgreso = document.getElementById("barraProgreso");
+      const botonAnteriorGlobal = document.getElementById("botonAnteriorGlobal");
+      const botonSiguienteGlobal = document.getElementById("botonSiguienteGlobal");
+      const barraNavegacionGlobal = document.querySelector(".barra-navegacion-global");
+
+      const formularioRegistro = document.getElementById("formularioRegistro");
+      const nombreParticipante = document.getElementById("nombreParticipante");
+      const numeroEmpleado = document.getElementById("numeroEmpleado");
+      const servicioParticipante = document.getElementById("servicioParticipante");
+      const avisoFormulario = document.getElementById("avisoFormulario");
+
+      const formularioEvaluacion = document.getElementById("formularioEvaluacion");
+      const respuestasContestadas = document.getElementById("respuestasContestadas");
+      const avisoEvaluacion = document.getElementById("avisoEvaluacion");
+      const estadoGuardado = document.getElementById("estadoGuardado");
+
+      const resultadoIcono = document.getElementById("resultadoIcono");
+      const resultadoTitulo = document.getElementById("resultadoTitulo");
+      const resultadoMensaje = document.getElementById("resultadoMensaje");
+      const resultadoCalificacion = document.getElementById("resultadoCalificacion");
+      const resultadoNombre = document.getElementById("resultadoNombre");
+      const resultadoServicio = document.getElementById("resultadoServicio");
+      const resultadoEstatus = document.getElementById("resultadoEstatus");
+
+      // Partículas ambientales: solo aparecen en las pantallas internas.
+      const capasPolvo = [
+        ...document.querySelectorAll(
+          ".pantalla-programa .polvo-ambiental, " +
+          ".pantalla-seguridad .polvo-ambiental, " +
+          ".pantalla-prevencion .polvo-ambiental, " +
+          ".pantalla-actividad .polvo-ambiental, " +
+          ".pantalla-inicio .polvo-ambiental"
+        )
+      ];
+
+      const coloresPolvo = [
+        {
+          color: "rgba(255, 255, 255, 0.72)",
+          brillo: "rgba(255, 255, 255, 0.18)"
+        },
+        {
+          color: "rgba(241, 199, 53, 0.78)",
+          brillo: "rgba(241, 199, 53, 0.20)"
+        },
+        {
+          color: "rgba(149, 205, 235, 0.60)",
+          brillo: "rgba(72, 158, 206, 0.18)"
+        }
+      ];
+
+      const cantidadPolvo = window.matchMedia("(max-width: 720px)").matches ? 18 : 34;
+
+      capasPolvo.forEach((capa, indiceCapa) => {
+        for (let indice = 0; indice < cantidadPolvo; indice += 1) {
+          const particula = document.createElement("span");
+          const paleta = coloresPolvo[
+            (indice + indiceCapa) % coloresPolvo.length
+          ];
+
+          const tamano = 1.4 + Math.random() * 3.8;
+          const duracion = 8 + Math.random() * 9;
+          const retraso = -(Math.random() * duracion);
+          const duracionDestello = 2.6 + Math.random() * 4.8;
+          const retrasoDestello = -(Math.random() * duracionDestello);
+          const desplazamientoX = -26 + Math.random() * 52;
+          const desplazamientoY = -34 + Math.random() * 68;
+
+          particula.className = "particula-polvo";
+
+          if (indice % 6 === 0) {
+            particula.classList.add("grano");
+          }
+
+          if (indice % 4 === 0) {
+            particula.classList.add("destello");
+          }
+
+          particula.style.setProperty("--tamano", `${tamano.toFixed(2)}px`);
+          particula.style.setProperty("--x", `${(Math.random() * 100).toFixed(2)}%`);
+          particula.style.setProperty("--y", `${(Math.random() * 100).toFixed(2)}%`);
+          particula.style.setProperty("--duracion", `${duracion.toFixed(2)}s`);
+          particula.style.setProperty("--retraso", `${retraso.toFixed(2)}s`);
+          particula.style.setProperty("--duracion-destello", `${duracionDestello.toFixed(2)}s`);
+          particula.style.setProperty("--retraso-destello", `${retrasoDestello.toFixed(2)}s`);
+          particula.style.setProperty("--desplazamiento-x", `${desplazamientoX.toFixed(1)}px`);
+          particula.style.setProperty("--desplazamiento-y", `${desplazamientoY.toFixed(1)}px`);
+          particula.style.setProperty(
+            "--opacidad",
+            `${(0.16 + Math.random() * 0.34).toFixed(2)}`
+          );
+          particula.style.setProperty("--color-particula", paleta.color);
+          particula.style.setProperty("--brillo-particula", paleta.brillo);
+
+          capa.appendChild(particula);
+        }
+      });
+
+      const puntosActividad = document.getElementById("puntosActividad");
+      const preguntaActividad = document.getElementById("preguntaActividad");
+      const estadoActividad = document.getElementById("estadoActividad");
+      const hotspots = [...document.querySelectorAll(".hotspot")];
+      const pasosActividad = [...document.querySelectorAll(".progreso-actividad span")];
+
+      let pantallaActual = 0;
+      let animacionEnCurso = false;
+      let indiceActividad = 0;
+      let datosParticipante = null;
+      let guardandoResultado = false;
+
+      const etiquetas = [
+        "Introducción",
+        "Introducción",
+        "Módulo 01",
+        "Módulo 02",
+        "Actividad",
+        "Preparación",
+        "Registro",
+        "Evaluación",
+        "Resultado"
+      ];
+
+      const textosSiguiente = [
+        "Iniciar capacitación →",
+        "Siguiente →",
+        "Módulo 02 →",
+        "Actividad →",
+        "Completa la actividad",
+        "Continuar al registro →",
+        "Continuar a evaluación →",
+        "Finalizar y guardar →",
+        "Resultado guardado"
+      ];
+
+      const actividad = [
+        {
+          id: "seguro",
+          nombre: "seguro",
+          mensaje: "Correcto. El seguro es un elemento de control identificable en el equipo."
+        },
+        {
+          id: "disparador",
+          nombre: "disparador",
+          mensaje: "Correcto. Mantén el dedo fuera del disparador hasta que exista una necesidad legítima y autorizada."
+        },
+        {
+          id: "empuñadura",
+          nombre: "empuñadura",
+          mensaje: "Correcto. La empuñadura es una parte básica de reconocimiento visual del equipo."
+        },
+        {
+          id: "cargador",
+          nombre: "cargador",
+          mensaje: "Actividad completada. El reconocimiento visual ayuda a identificar componentes básicos y refuerza el uso responsable del equipo."
+        }
+      ];
+
+      const respuestasCorrectas = {
+        pregunta1: "b",
+        pregunta2: "c",
+        pregunta3: "a",
+        pregunta4: "b",
+        pregunta5: "a",
+        pregunta6: "b",
+        pregunta7: "b",
+        pregunta8: "a",
+        pregunta9: "c",
+        pregunta10: "a"
+      };
+
+      function actividadCompletada() {
+        return indiceActividad >= actividad.length;
+      }
+
+      function actualizarActividad() {
+        puntosActividad.textContent = Math.min(indiceActividad, actividad.length);
+
+        pasosActividad.forEach((paso, indice) => {
+          paso.classList.toggle("completo", indice < indiceActividad);
+        });
+
+        if (actividadCompletada()) {
+          preguntaActividad.textContent = "Actividad completada";
+          estadoActividad.textContent = actividad[actividad.length - 1].mensaje;
+          estadoActividad.className = "estado-actividad correcto";
+          return;
+        }
+
+        preguntaActividad.textContent = `Pulsa en: ${actividad[indiceActividad].nombre.charAt(0).toUpperCase() + actividad[indiceActividad].nombre.slice(1)}`;
+      }
+
+      function actualizarProgreso(indice) {
+        const paso = String(indice + 1).padStart(2, "0");
+        const porcentaje = ((indice + 1) / pantallas.length) * 100;
+
+        pasoActual.textContent = paso;
+        etiquetaProgreso.textContent = etiquetas[indice];
+        barraProgreso.style.width = `${porcentaje}%`;
+
+        botonAnteriorGlobal.classList.toggle("oculto", indice === 0);
+        barraNavegacionGlobal.classList.toggle("oculta", indice === 0);
+
+        const bloqueaPorActividad = indice === 4 && !actividadCompletada();
+        const esResultadoFinal = indice === pantallas.length - 1;
+
+        botonSiguienteGlobal.disabled = bloqueaPorActividad || guardandoResultado;
+        botonSiguienteGlobal.classList.toggle("oculto", esResultadoFinal);
+        botonSiguienteGlobal.textContent = bloqueaPorActividad
+          ? "Completa la actividad"
+          : textosSiguiente[indice];
+      }
+
+      function cambiarPantalla(destino) {
+        if (
+          animacionEnCurso ||
+          destino === pantallaActual ||
+          destino < 0 ||
+          destino >= pantallas.length
+        ) {
+          return;
+        }
+
+        animacionEnCurso = true;
+
+        const actual = pantallas[pantallaActual];
+        const siguiente = pantallas[destino];
+        const avanza = destino > pantallaActual;
+        const claseSalida = avanza ? "sale-izquierda" : "sale-derecha";
+        const claseEntrada = avanza ? "entra-derecha" : "entra-izquierda";
+
+        siguiente.scrollTop = 0;
+        siguiente.classList.remove(
+          "sale-izquierda",
+          "sale-derecha",
+          "entra-izquierda",
+          "entra-derecha"
+        );
+
+        siguiente.classList.add(claseEntrada);
+        siguiente.setAttribute("aria-hidden", "false");
+
+        requestAnimationFrame(() => {
+          siguiente.classList.add("activa");
+
+          requestAnimationFrame(() => {
+            siguiente.classList.remove(claseEntrada);
+          });
+        });
+
+        actual.classList.remove("activa");
+        actual.classList.add(claseSalida);
+
+        setTimeout(() => {
+          actual.classList.remove(claseSalida);
+          actual.setAttribute("aria-hidden", "true");
+          pantallaActual = destino;
+          actualizarProgreso(pantallaActual);
+          animacionEnCurso = false;
+        }, 650);
+      }
+
+      function validarRegistro() {
+        const campos = [nombreParticipante, numeroEmpleado, servicioParticipante];
+        let esValido = true;
+
+        campos.forEach(campo => {
+          const vacio = !campo.value.trim();
+          campo.classList.toggle("invalido", vacio);
+          if (vacio) esValido = false;
+        });
+
+        avisoFormulario.classList.toggle("visible", !esValido);
+
+        if (!esValido) {
+          const primerCampoInvalido = campos.find(campo => !campo.value.trim());
+          primerCampoInvalido?.focus();
+          return false;
+        }
+
+        datosParticipante = {
+          nombre: nombreParticipante.value.trim(),
+          numero_empleado: numeroEmpleado.value.trim(),
+          servicio: servicioParticipante.value.trim()
+        };
+
+        return true;
+      }
+
+      function actualizarContadorRespuestas() {
+        const respondidas = Object.keys(respuestasCorrectas).filter(nombre => {
+          return formularioEvaluacion.querySelector(`input[name="${nombre}"]:checked`);
+        }).length;
+
+        respuestasContestadas.textContent = respondidas;
+        return respondidas;
+      }
+
+      function obtenerResultadoEvaluacion() {
+        let correctas = 0;
+        let incompletas = [];
+
+        Object.keys(respuestasCorrectas).forEach((nombrePregunta, indice) => {
+          const seleccionada = formularioEvaluacion.querySelector(
+            `input[name="${nombrePregunta}"]:checked`
+          );
+          const tarjeta = formularioEvaluacion.querySelector(
+            `[data-pregunta="${indice + 1}"]`
+          );
+
+          tarjeta.classList.remove("incompleta");
+
+          if (!seleccionada) {
+            incompletas.push(indice + 1);
+            tarjeta.classList.add("incompleta");
+            return;
+          }
+
+          if (seleccionada.value === respuestasCorrectas[nombrePregunta]) {
+            correctas += 1;
+          }
+        });
+
+        return {
+          correctas,
+          incompletas,
+          calificacion: Number((correctas / Object.keys(respuestasCorrectas).length * 10).toFixed(1))
+        };
+      }
+
+      function mostrarEstadoGuardado(mensaje, tipo) {
+        estadoGuardado.textContent = mensaje;
+        estadoGuardado.className = `estado-guardado visible ${tipo || ""}`.trim();
+      }
+
+      function mostrarResultado(resultado) {
+        const aprobado = resultado.calificacion >= CALIFICACION_MINIMA;
+
+        resultadoIcono.textContent = aprobado ? "✓" : "!";
+        resultadoIcono.classList.toggle("no-aprobado", !aprobado);
+
+        resultadoTitulo.textContent = aprobado
+          ? "Capacitación aprobada"
+          : "Capacitación no aprobada";
+
+        resultadoMensaje.textContent = aprobado
+          ? "Tu resultado fue registrado correctamente. Continúa aplicando los protocolos de seguridad establecidos."
+          : "Tu resultado fue registrado correctamente. Revisa nuevamente el contenido y consulta con tu superior para reforzar los temas necesarios.";
+
+        resultadoCalificacion.textContent = resultado.calificacion.toFixed(1);
+        resultadoNombre.textContent = datosParticipante.nombre;
+        resultadoServicio.textContent = datosParticipante.servicio;
+        resultadoEstatus.textContent = aprobado ? "Aprobado" : "No aprobado";
+      }
+
+      async function guardarResultado() {
+        const resultado = obtenerResultadoEvaluacion();
+
+        if (resultado.incompletas.length > 0) {
+          avisoEvaluacion.classList.add("visible");
+          const primeraPendiente = formularioEvaluacion.querySelector(
+            `[data-pregunta="${resultado.incompletas[0]}"]`
+          );
+          primeraPendiente?.scrollIntoView({ behavior: "smooth", block: "center" });
+          return;
+        }
+
+        avisoEvaluacion.classList.remove("visible");
+
+        if (!datosParticipante && !validarRegistro()) {
+          cambiarPantalla(6);
+          return;
+        }
+
+        guardandoResultado = true;
+        actualizarProgreso(pantallaActual);
+        mostrarEstadoGuardado("Guardando resultado en la plataforma...", "cargando");
+
+        try {
+          const respuesta = await fetch(`${API_URL}/api/resultados`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              nombre: datosParticipante.nombre,
+              numero_empleado: datosParticipante.numero_empleado,
+              servicio: datosParticipante.servicio,
+              curso: NOMBRE_CURSO,
+              calificacion: resultado.calificacion,
+              aprobado: resultado.calificacion >= CALIFICACION_MINIMA
+            })
+          });
+
+          const datosRespuesta = await respuesta.json().catch(() => ({}));
+
+          if (!respuesta.ok) {
+            throw new Error(
+              datosRespuesta.mensaje || "No fue posible guardar el resultado."
+            );
+          }
+
+          estadoGuardado.className = "estado-guardado";
+          mostrarResultado(resultado);
+          cambiarPantalla(8);
+        } catch (error) {
+          mostrarEstadoGuardado(
+            `No se pudo guardar el resultado. Verifica tu conexión e inténtalo nuevamente. Detalle: ${error.message}`,
+            "error"
+          );
+        } finally {
+          guardandoResultado = false;
+          actualizarProgreso(pantallaActual);
+        }
+      }
+
+      hotspots.forEach(hotspot => {
+        hotspot.addEventListener("click", () => {
+          if (actividadCompletada()) return;
+
+          const respuesta = hotspot.dataset.parte;
+          const esperada = actividad[indiceActividad];
+
+          if (respuesta === esperada.id) {
+            hotspot.classList.add("acertado");
+            estadoActividad.textContent = esperada.mensaje;
+            estadoActividad.className = "estado-actividad correcto";
+            indiceActividad += 1;
+            actualizarActividad();
+            actualizarProgreso(pantallaActual);
+          } else {
+            estadoActividad.textContent = "Aún no. Observa la ilustración y busca la parte indicada en la pregunta actual.";
+            estadoActividad.className = "estado-actividad error";
+          }
+        });
+      });
+
+      botonesNavegacion.forEach(boton => {
+        boton.addEventListener("click", () => {
+          cambiarPantalla(Number(boton.dataset.irA));
+        });
+      });
+
+      botonAnteriorGlobal.addEventListener("click", () => {
+        if (!guardandoResultado) {
+          cambiarPantalla(pantallaActual - 1);
+        }
+      });
+
+      botonSiguienteGlobal.addEventListener("click", async () => {
+        if (guardandoResultado) return;
+
+        if (pantallaActual === 4 && !actividadCompletada()) return;
+
+        if (pantallaActual === 6) {
+          if (validarRegistro()) {
+            cambiarPantalla(7);
+          }
+          return;
+        }
+
+        if (pantallaActual === 7) {
+          await guardarResultado();
+          return;
+        }
+
+        if (pantallaActual < pantallas.length - 1) {
+          cambiarPantalla(pantallaActual + 1);
+        }
+      });
+
+      formularioRegistro.addEventListener("submit", evento => {
+        evento.preventDefault();
+        if (validarRegistro()) {
+          cambiarPantalla(7);
+        }
+      });
+
+      [nombreParticipante, numeroEmpleado, servicioParticipante].forEach(campo => {
+        campo.addEventListener("input", () => {
+          campo.classList.remove("invalido");
+          if (
+            nombreParticipante.value.trim() &&
+            numeroEmpleado.value.trim() &&
+            servicioParticipante.value.trim()
+          ) {
+            avisoFormulario.classList.remove("visible");
+          }
+        });
+      });
+
+      formularioEvaluacion.addEventListener("change", () => {
+        actualizarContadorRespuestas();
+        avisoEvaluacion.classList.remove("visible");
+        formularioEvaluacion
+          .querySelectorAll(".pregunta-evaluacion.incompleta")
+          .forEach(tarjeta => tarjeta.classList.remove("incompleta"));
+      });
+
+      actualizarActividad();
+      actualizarContadorRespuestas();
+      actualizarProgreso(pantallaActual);
+    });
+  </script>
+
+</body>
+</html>
