@@ -23,6 +23,13 @@ const ES_PRODUCCION =
   process.env.NODE_ENV === "production" ||
   Boolean(process.env.RAILWAY_ENVIRONMENT);
 
+// El curso de armas queda disponible únicamente para el servicio REUNION.
+// El número de empleado no interviene en esta validación.
+const NOMBRE_CURSO_RESTRINGIDO =
+  "USO SEGURO DE ARMAS DE FUEGO";
+const SERVICIO_CURSO_RESTRINGIDO =
+  "REUNION";
+
 const ARCHIVO_CATALOGO_CURSOS = path.join(
   __dirname,
   "cursos.json"
@@ -163,6 +170,33 @@ function normalizarNombre(valor) {
     .replace(/[^A-Z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function esCursoUsoSeguroArmas(curso) {
+  const nombreCurso =
+    curso && typeof curso === "object"
+      ? curso.nombre
+      : curso;
+
+  return (
+    normalizarNombre(nombreCurso) ===
+    NOMBRE_CURSO_RESTRINGIDO
+  );
+}
+
+function participantePuedeAccederCurso(
+  participante,
+  curso
+) {
+  if (!esCursoUsoSeguroArmas(curso)) {
+    return true;
+  }
+
+  return (
+    normalizarNombre(
+      participante?.servicio
+    ) === SERVICIO_CURSO_RESTRINGIDO
+  );
 }
 
 function validarTexto(valor, nombreCampo, longitudMaxima) {
@@ -2330,8 +2364,16 @@ app.get(
         .push(resultado);
     }
 
+    const cursosPermitidos =
+      cursos.filter(curso =>
+        participantePuedeAccederCurso(
+          req.participante,
+          curso
+        )
+      );
+
     const respuesta =
-      cursos.map(curso => {
+      cursosPermitidos.map(curso => {
         const historial =
           porCurso.get(
             curso.nombre.toLowerCase()
@@ -2487,6 +2529,19 @@ app.use(
           .status(404)
           .send(
             "Curso no encontrado."
+          );
+      }
+
+      if (
+        !participantePuedeAccederCurso(
+          req.participante,
+          curso
+        )
+      ) {
+        return res
+          .status(403)
+          .send(
+            "Este curso está disponible únicamente para el servicio REUNION."
           );
       }
 
@@ -2670,6 +2725,20 @@ app.post(
           .json({
             mensaje:
               "El curso no está disponible."
+          });
+      }
+
+      if (
+        !participantePuedeAccederCurso(
+          req.participante,
+          filas[0]
+        )
+      ) {
+        return res
+          .status(403)
+          .json({
+            mensaje:
+              "Este curso está disponible únicamente para el servicio REUNION."
           });
       }
 
