@@ -115,9 +115,11 @@
     }
 
     .marca img {
-      width: 104px;
+      width: 148px;
+      max-width: 34vw;
       height: auto;
       display: block;
+      object-fit: contain;
     }
 
     .marca-texto {
@@ -176,7 +178,7 @@
 
     .linea-progreso span {
       display: block;
-      width: 16.67%;
+      width: 12.5%;
       height: 100%;
       background: var(--amarillo-galeam);
       transition: width 0.45s ease;
@@ -992,7 +994,7 @@
     }
 
     /* =========================
-       PANTALLA 06 · PREVIO AL REGISTRO
+       PANTALLA 06 · PREVIO A LA EVALUACIÓN
     ========================== */
 
     .pantalla-inicio {
@@ -1190,7 +1192,7 @@
       }
 
       .marca-texto { display: none; }
-      .marca img { width: 92px; }
+      .marca img { width: 126px; }
 
       .progreso-global {
         width: 135px;
@@ -1917,7 +1919,7 @@
     <header class="encabezado">
       <button type="button" class="marca" data-ir-a="0" aria-label="Volver al inicio">
         <img
-          src="https://static.wixstatic.com/media/cf373a_aff5bf69cbb04013830662885a011774~mv2.png/v1/fill/w_178,h_115,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/Galeam_logo-color.png"
+          src="data:image/png;base64,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"
           alt="Galeam"
         >
 
@@ -1930,7 +1932,7 @@
       <div class="progreso-global" aria-label="Progreso de capacitación">
         <p>
           <span id="etiquetaProgreso">Introducción</span>
-          <strong><span id="pasoActual">01</span> / 09</strong>
+          <strong><span id="pasoActual">01</span> / 08</strong>
         </p>
 
         <div class="linea-progreso">
@@ -1988,8 +1990,8 @@
             </h2>
 
             <p>
-              Revisa los dos temas esenciales del módulo antes de continuar con la actividad interactiva,
-              el registro y la evaluación final.
+              Revisa los dos temas esenciales del módulo antes de continuar con la actividad interactiva
+              y la evaluación final.
             </p>
           </div>
 
@@ -2177,14 +2179,14 @@
           </h2>
 
           <p>
-            A continuación se solicitarán tus datos de identificación. Después podrás continuar con la evaluación final para registrar tu resultado.
+            Tus datos ya fueron validados al iniciar sesión en el portal. A continuación podrás continuar directamente con la evaluación final.
           </p>
 
           <div class="pasos-inicio">
             <article class="paso">
               <span class="paso-numero">01</span>
-              <h3>Registro</h3>
-              <p>Captura nombre, número de empleado y servicio asignado.</p>
+              <h3>Identificación</h3>
+              <p>Tu nombre, número de empleado y servicio se tomarán automáticamente de la sesión del portal.</p>
             </article>
 
             <article class="paso">
@@ -2201,7 +2203,7 @@
           </div>
 
           <div class="aviso-registro" id="avisoRegistro">
-            La siguiente etapa será integrar aquí el formulario real de registro del participante.
+            Tu sesión del portal se utilizará para registrar el resultado de forma segura.
           </div>
 
           <p class="pie-inicio">
@@ -2210,63 +2212,9 @@
         </div>
       </section>
 
-      <!-- PANTALLA 07 · REGISTRO DEL PARTICIPANTE -->
-      <section class="pantalla pantalla-registro" data-pantalla="6" aria-hidden="true">
-        <div class="registro-contenedor">
-          <p class="eyebrow">Registro del participante</p>
-          <h2>Confirma tus datos antes de la evaluación.</h2>
-          <p>
-            Esta información se utilizará únicamente para identificar tu resultado dentro de la plataforma de capacitación.
-          </p>
+      <!-- PANTALLA 07 · EVALUACIÓN FINAL -->
 
-          <form class="formulario-registro" id="formularioRegistro" novalidate>
-            <div class="campo-registro ancho-completo">
-              <label for="nombreParticipante">Nombre completo</label>
-              <input
-                id="nombreParticipante"
-                name="nombre"
-                type="text"
-                autocomplete="name"
-                maxlength="120"
-                placeholder="Escribe tu nombre completo"
-                required
-              >
-            </div>
-
-            <div class="campo-registro">
-              <label for="numeroEmpleado">Número de empleado</label>
-              <input
-                id="numeroEmpleado"
-                name="numero_empleado"
-                type="text"
-                inputmode="numeric"
-                maxlength="30"
-                placeholder="Ejemplo: 12345"
-                required
-              >
-            </div>
-
-            <div class="campo-registro">
-              <label for="servicioParticipante">Servicio asignado</label>
-              <input
-                id="servicioParticipante"
-                name="servicio"
-                type="text"
-                maxlength="120"
-                placeholder="Ejemplo: Corporativo / Servicio"
-                required
-              >
-            </div>
-          </form>
-
-          <div class="aviso-formulario" id="avisoFormulario" role="alert">
-            Completa nombre, número de empleado y servicio para continuar.
-          </div>
-        </div>
-      </section>
-
-      <!-- PANTALLA 08 · EVALUACIÓN FINAL -->
-      <section class="pantalla pantalla-evaluacion" data-pantalla="7" aria-hidden="true">
+      <section class="pantalla pantalla-evaluacion" data-pantalla="6" aria-hidden="true">
         <div class="evaluacion-contenedor">
           <p class="eyebrow">Evaluación final</p>
           <h2>Valida los conocimientos esenciales.</h2>
@@ -2389,8 +2337,8 @@
         </div>
       </section>
 
-      <!-- PANTALLA 09 · RESULTADO -->
-      <section class="pantalla pantalla-resultado" data-pantalla="8" aria-hidden="true">
+      <!-- PANTALLA 08 · RESULTADO -->
+      <section class="pantalla pantalla-resultado" data-pantalla="7" aria-hidden="true">
         <div class="resultado-contenedor">
           <p class="eyebrow">Resultado registrado</p>
           <h2>Evaluación finalizada.</h2>
@@ -2444,7 +2392,7 @@
   <script>
     document.addEventListener("DOMContentLoaded", () => {
       const API_URL = "https://capacitacion-production-3120.up.railway.app";
-      const NOMBRE_CURSO = "Uso Seguro de Armas de Fuego";
+      const CURSO_SLUG = "uso-seguro-armas";
       const CALIFICACION_MINIMA = 8;
 
       const pantallas = [...document.querySelectorAll(".pantalla")];
@@ -2455,12 +2403,6 @@
       const botonAnteriorGlobal = document.getElementById("botonAnteriorGlobal");
       const botonSiguienteGlobal = document.getElementById("botonSiguienteGlobal");
       const barraNavegacionGlobal = document.querySelector(".barra-navegacion-global");
-
-      const formularioRegistro = document.getElementById("formularioRegistro");
-      const nombreParticipante = document.getElementById("nombreParticipante");
-      const numeroEmpleado = document.getElementById("numeroEmpleado");
-      const servicioParticipante = document.getElementById("servicioParticipante");
-      const avisoFormulario = document.getElementById("avisoFormulario");
 
       const formularioEvaluacion = document.getElementById("formularioEvaluacion");
       const respuestasContestadas = document.getElementById("respuestasContestadas");
@@ -2567,7 +2509,6 @@
         "Módulo 02",
         "Actividad",
         "Preparación",
-        "Registro",
         "Evaluación",
         "Resultado"
       ];
@@ -2578,7 +2519,6 @@
         "Módulo 02 →",
         "Actividad →",
         "Completa la actividad",
-        "Continuar al registro →",
         "Continuar a evaluación →",
         "Finalizar y guardar →",
         "Resultado guardado"
@@ -2711,31 +2651,43 @@
         }, 650);
       }
 
-      function validarRegistro() {
-        const campos = [nombreParticipante, numeroEmpleado, servicioParticipante];
-        let esValido = true;
 
-        campos.forEach(campo => {
-          const vacio = !campo.value.trim();
-          campo.classList.toggle("invalido", vacio);
-          if (vacio) esValido = false;
+      async function cargarDatosSesion() {
+        const respuesta = await fetch(`${API_URL}/api/portal/session`, {
+          method: "GET",
+          headers: {
+            "Accept": "application/json"
+          },
+          credentials: "include",
+          cache: "no-store"
         });
 
-        avisoFormulario.classList.toggle("visible", !esValido);
+        const datos = await respuesta.json().catch(() => ({}));
 
-        if (!esValido) {
-          const primerCampoInvalido = campos.find(campo => !campo.value.trim());
-          primerCampoInvalido?.focus();
-          return false;
+        if (!respuesta.ok || !datos.autenticado || !datos.participante) {
+          throw new Error(
+            datos.mensaje ||
+            "No fue posible recuperar tu sesión del portal. Inicia sesión nuevamente."
+          );
         }
 
         datosParticipante = {
-          nombre: nombreParticipante.value.trim(),
-          numero_empleado: numeroEmpleado.value.trim(),
-          servicio: servicioParticipante.value.trim()
+          nombre: String(datos.participante.nombre || "").trim(),
+          numero_empleado: String(datos.participante.numero_empleado || "").trim(),
+          servicio: String(datos.participante.servicio || "").trim()
         };
 
-        return true;
+        if (
+          !datosParticipante.nombre ||
+          !datosParticipante.numero_empleado ||
+          !datosParticipante.servicio
+        ) {
+          throw new Error(
+            "Tu perfil no contiene todos los datos necesarios para registrar la evaluación."
+          );
+        }
+
+        return datosParticipante;
       }
 
       function actualizarContadorRespuestas() {
@@ -2818,9 +2770,13 @@
 
         avisoEvaluacion.classList.remove("visible");
 
-        if (!datosParticipante && !validarRegistro()) {
-          cambiarPantalla(6);
-          return;
+        if (!datosParticipante) {
+          try {
+            await cargarDatosSesion();
+          } catch (error) {
+            mostrarEstadoGuardado(error.message, "error");
+            return;
+          }
         }
 
         guardandoResultado = true;
@@ -2828,18 +2784,17 @@
         mostrarEstadoGuardado("Guardando resultado en la plataforma...", "cargando");
 
         try {
-          const respuesta = await fetch(`${API_URL}/api/resultados`, {
+          const respuesta = await fetch(`${API_URL}/api/portal/resultados`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
             },
+            credentials: "include",
             body: JSON.stringify({
-              nombre: datosParticipante.nombre,
-              numero_empleado: datosParticipante.numero_empleado,
-              servicio: datosParticipante.servicio,
-              curso: NOMBRE_CURSO,
+              curso_slug: CURSO_SLUG,
               calificacion: resultado.calificacion,
-              aprobado: resultado.calificacion >= CALIFICACION_MINIMA
+              calificacion_maxima: 10,
+              total_preguntas: Object.keys(respuestasCorrectas).length
             })
           });
 
@@ -2853,7 +2808,7 @@
 
           estadoGuardado.className = "estado-guardado";
           mostrarResultado(resultado);
-          cambiarPantalla(8);
+          cambiarPantalla(7);
         } catch (error) {
           mostrarEstadoGuardado(
             `No se pudo guardar el resultado. Verifica tu conexión e inténtalo nuevamente. Detalle: ${error.message}`,
@@ -2904,13 +2859,6 @@
         if (pantallaActual === 4 && !actividadCompletada()) return;
 
         if (pantallaActual === 6) {
-          if (validarRegistro()) {
-            cambiarPantalla(7);
-          }
-          return;
-        }
-
-        if (pantallaActual === 7) {
           await guardarResultado();
           return;
         }
@@ -2918,26 +2866,6 @@
         if (pantallaActual < pantallas.length - 1) {
           cambiarPantalla(pantallaActual + 1);
         }
-      });
-
-      formularioRegistro.addEventListener("submit", evento => {
-        evento.preventDefault();
-        if (validarRegistro()) {
-          cambiarPantalla(7);
-        }
-      });
-
-      [nombreParticipante, numeroEmpleado, servicioParticipante].forEach(campo => {
-        campo.addEventListener("input", () => {
-          campo.classList.remove("invalido");
-          if (
-            nombreParticipante.value.trim() &&
-            numeroEmpleado.value.trim() &&
-            servicioParticipante.value.trim()
-          ) {
-            avisoFormulario.classList.remove("visible");
-          }
-        });
       });
 
       formularioEvaluacion.addEventListener("change", () => {
@@ -2951,6 +2879,11 @@
       actualizarActividad();
       actualizarContadorRespuestas();
       actualizarProgreso(pantallaActual);
+
+      cargarDatosSesion().catch(error => {
+        window.alert(error.message);
+        window.location.href = `${API_URL}/portal`;
+      });
     });
   </script>
 
