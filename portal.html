@@ -1232,51 +1232,39 @@
     function combinarCursos(cursosServidor,cursosCatalogo){
       const servidor=Array.isArray(cursosServidor)?cursosServidor:[];
       const catalogo=Array.isArray(cursosCatalogo)?cursosCatalogo:[];
-      const usados=new Set();
-      const porClave=new Map();
+      const fichasPorClave=new Map();
 
-      servidor.forEach(curso=>{
-        const claves=[claveCurso(curso),claveCurso({nombre:curso.nombre})].filter(Boolean);
-        claves.forEach(clave=>porClave.set(clave,curso));
-      });
-
-      const combinados=catalogo.map((ficha,indice)=>{
+      catalogo.forEach(ficha=>{
         const claves=[
           claveCurso(ficha),
           claveCurso({nombre:ficha.nombre}),
           claveCurso({nombre:ficha.curso}),
           claveCurso({nombre:ficha.clave_resultados})
         ].filter(Boolean);
-        const datos=claves.map(clave=>porClave.get(clave)).find(Boolean)||null;
-        if(datos)usados.add(datos);
-        return {
-          estado:"no_iniciado",
-          intentos:0,
-          ultima_calificacion:null,
-          mejor_calificacion:null,
-          historial:[],
-          ...(datos||{}),
-          ...ficha,
-          nombre:ficha.nombre||datos?.nombre||"Curso sin nombre",
-          descripcion:ficha.descripcion??datos?.descripcion??"",
-          url:ficha.url||ficha.ruta?urlCursoCatalogo(ficha):(datos?.url||"#"),
-          orden:Number.isFinite(Number(ficha.orden))?Number(ficha.orden):1000+indice,
-          historial:Array.isArray(datos?.historial)?datos.historial:[]
-        };
+        claves.forEach(clave=>fichasPorClave.set(clave,ficha));
       });
 
-      servidor.forEach((curso,indice)=>{
-        if(usados.has(curso))return;
-        combinados.push({
+      const combinados=servidor.map((curso,indice)=>{
+        const claves=[
+          claveCurso(curso),
+          claveCurso({nombre:curso.nombre})
+        ].filter(Boolean);
+        const ficha=claves.map(clave=>fichasPorClave.get(clave)).find(Boolean)||null;
+        const ordenServidor=Number.isFinite(Number(curso.orden))?Number(curso.orden):2000+indice;
+        const ordenFicha=Number.isFinite(Number(ficha?.orden))?Number(ficha.orden):ordenServidor;
+
+        return {
           ...curso,
-          orden:Number.isFinite(Number(curso.orden))?Number(curso.orden):2000+indice,
+          nombre:ficha?.nombre||curso.nombre||"Curso sin nombre",
+          descripcion:ficha?.descripcion??curso.descripcion??"",
+          url:curso.url||(ficha?urlCursoCatalogo(ficha):"#"),
+          orden:ordenFicha,
           historial:Array.isArray(curso.historial)?curso.historial:[]
-        });
+        };
       });
 
       return combinados.sort((a,b)=>Number(a.orden||9999)-Number(b.orden||9999)||String(a.nombre).localeCompare(String(b.nombre),"es"));
     }
-
     async function cargarCursos(){
       const [respuesta,catalogo]=await Promise.all([
         fetch("/api/portal/cursos",{credentials:"same-origin",cache:"no-store"}),
