@@ -24,5 +24,18 @@
     "ruta": "carpeta-del-curso/",
     "activo": false,
     "orden": 99
-  }
+  },
+  
+  {
+  "id": "uso-seguro-armas",
+  "curso": "Uso Seguro de Armas de Fuego",
+  "nombre": "Uso Seguro de Armas de Fuego",
+  "descripcion": "Capacitación sobre el uso seguro, responsable y preventivo de armas de fuego.",
+  "ruta": "capacitacion-uso-seguro-armas/",
+  "archivo_html": "index.html",
+  "activo": true,
+  "orden": 30,
+  "calificacion_aprobatoria": 70,
+  "calificacion_maxima_origen": 100
+}
 ]
