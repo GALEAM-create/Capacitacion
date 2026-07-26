@@ -53,8 +53,8 @@
       z-index: -3;
       background:
         radial-gradient(circle at 80% 14%, rgba(231,185,54,.12), transparent 28%),
-        linear-gradient(115deg, rgba(3,8,13,.96), rgba(8,17,27,.78)),
-        url("assets/galeam-referencia.png") center/cover no-repeat;
+        radial-gradient(circle at 16% 78%, rgba(18,59,89,.28), transparent 32%),
+        linear-gradient(115deg, #03080d, #0b1723);
       filter: saturate(.75);
       transition: background 1s ease, filter 1s ease;
     }
@@ -95,16 +95,16 @@
 
     .brand-stage {
       position: relative;
-      width: 220px;
+      width: 230px;
       height: 76px;
     }
 
     .brand {
       position: absolute;
       inset: 0;
-      display: flex;
+      display: grid;
+      justify-items: start;
       align-items: center;
-      gap: 13px;
       transition: opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1);
     }
 
@@ -113,47 +113,15 @@
     .hoplon-theme .brand-galeam { opacity: 0; transform: translateY(-16px); }
     .hoplon-theme .brand-hoplon { opacity: 1; transform: translateY(0); }
 
-    .galeam-crop {
-      position: relative;
-      width: 62px;
-      height: 72px;
-      overflow: hidden;
-      flex: 0 0 auto;
+    .brand-logo {
+      display: block;
+      width: auto;
+      max-width: 220px;
+      height: 74px;
+      object-fit: contain;
+      object-position: left center;
+      filter: drop-shadow(0 7px 13px rgba(0,0,0,.32));
     }
-
-    .galeam-crop img {
-      position: absolute;
-      width: 750px;
-      max-width: none;
-      left: -42px;
-      top: -8px;
-    }
-
-    .hoplon-crop {
-      position: relative;
-      width: 42px;
-      height: 72px;
-      overflow: hidden;
-      flex: 0 0 auto;
-    }
-
-    .hoplon-crop img {
-      position: absolute;
-      width: 105px;
-      max-width: none;
-      left: -34px;
-      top: -3px;
-      filter: drop-shadow(0 6px 12px rgba(0,0,0,.3));
-    }
-
-    .brand-word {
-      font-family: Georgia, "Times New Roman", serif;
-      letter-spacing: .07em;
-      font-size: 25px;
-    }
-
-    .brand-galeam .brand-word { color: #e3262d; }
-    .brand-hoplon .brand-word { color: #fff; }
 
     main {
       min-height: 0;
@@ -500,13 +468,8 @@
         padding: max(10px, env(safe-area-inset-top)) 16px 8px;
       }
 
-      .brand-stage { width: 172px; height: 56px; }
-      .brand { gap: 8px; }
-      .galeam-crop { width: 50px; height: 54px; }
-      .hoplon-crop { width: 34px; height: 54px; }
-      .galeam-crop img { width: 600px; left: -32px; top: -5px; }
-      .hoplon-crop img { width: 84px; left: -27px; top: -2px; }
-      .brand-word { font-size: 19px; }
+      .brand-stage { width: 168px; height: 56px; }
+      .brand-logo { max-width: 160px; height: 54px; }
 
       .screen {
         place-items: start center;
@@ -574,16 +537,10 @@
     <header class="brandbar">
       <div class="brand-stage" aria-label="Identidad corporativa">
         <div class="brand brand-galeam">
-          <span class="galeam-crop" aria-hidden="true">
-            <img src="assets/galeam-referencia.png" alt="">
-          </span>
-          <span class="brand-word">GALEAM</span>
+          <img class="brand-logo" src="assets/galeam-logo.png" alt="Galeam">
         </div>
         <div class="brand brand-hoplon">
-          <span class="hoplon-crop" aria-hidden="true">
-            <img src="assets/hoplon-referencia.png" alt="">
-          </span>
-          <span class="brand-word">HOPLON</span>
+          <img class="brand-logo" src="assets/hoplon-logo.png" alt="Hoplon">
         </div>
       </div>
     </header>
