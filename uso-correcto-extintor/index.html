@@ -387,6 +387,31 @@
       box-shadow: inset 0 0 0 1px var(--accent);
     }
 
+    .save-status {
+      display: none;
+      margin-top: 17px;
+      padding: 13px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,.055);
+      font-weight: 700;
+      line-height: 1.45;
+    }
+
+    .save-status.visible { display: block; }
+    .save-status.loading {
+      color: #fff;
+      border-color: rgba(231,185,54,.5);
+      background: rgba(231,185,54,.1);
+    }
+
+    .save-status.error {
+      color: #fff;
+      border-color: rgba(239,37,45,.58);
+      background: rgba(239,37,45,.14);
+    }
+
     .score {
       margin: 0 0 14px;
       color: var(--accent-2);
@@ -663,6 +688,7 @@
             <button class="answer" data-value="b" type="button">Hacia el humo</button>
             <button class="answer" data-value="c" type="button">Hacia la base del fuego</button>
           </div>
+          <div class="save-status" id="saveStatus" role="status" aria-live="polite"></div>
         </article>
       </section>
 
@@ -705,11 +731,16 @@
       const scoreNode = document.getElementById("score");
       const resultTitle = document.getElementById("resultTitle");
       const resultMessage = document.getElementById("resultMessage");
+      const saveStatus = document.getElementById("saveStatus");
 
+      const API_URL = "https://capacitacion-production-3120.up.railway.app";
+      const COURSE_SLUG = "uso-correcto-extintor";
       const correctAnswers = { 5: "b", 6: "a", 7: "c" };
       const answers = {};
       let current = 0;
       let submitted = false;
+      let savingResult = false;
+      let participantData = null;
 
       function show(index) {
         if (index < 0 || index >= screens.length) return;
@@ -735,8 +766,12 @@
           return;
         }
         if (screens[current]?.dataset.screen === "quiz") {
-          next.disabled = !answers[current];
-          next.textContent = current === 7 ? "Ver resultado" : "Siguiente";
+          next.disabled = !answers[current] || savingResult;
+          next.textContent = savingResult
+            ? "Guardando..."
+            : current === 7
+              ? "Finalizar y guardar"
+              : "Siguiente";
           return;
         }
         next.disabled = false;
@@ -757,64 +792,107 @@
         return Math.round((correct / 3) * 100);
       }
 
-      function getStoredProfile() {
-        const keys = ["usuarioActual", "usuario", "empleado", "user", "perfilUsuario", "capacitacion_usuario"];
-        for (const key of keys) {
-          try {
-            const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
-            if (!raw) continue;
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed === "object") return parsed;
-          } catch (_) {}
+      function showSaveStatus(message, type = "") {
+        saveStatus.textContent = message;
+        saveStatus.className = `save-status visible ${type}`.trim();
+      }
+
+      async function loadSessionData() {
+        if (participantData) return participantData;
+
+        const response = await fetch(`${API_URL}/api/portal/session`, {
+          method: "GET",
+          headers: { "Accept": "application/json" },
+          credentials: "include",
+          cache: "no-store"
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok || !data.autenticado || !data.participante) {
+          throw new Error(
+            data.mensaje ||
+            "No fue posible recuperar tu sesión. Regresa al portal e inicia sesión nuevamente."
+          );
         }
-        return {};
+
+        participantData = {
+          nombre: String(data.participante.nombre || "").trim(),
+          numero_empleado: String(data.participante.numero_empleado || "").trim(),
+          servicio: String(data.participante.servicio || "").trim()
+        };
+
+        if (
+          !participantData.nombre ||
+          !participantData.numero_empleado ||
+          !participantData.servicio
+        ) {
+          throw new Error("Tu perfil no contiene todos los datos necesarios.");
+        }
+
+        return participantData;
       }
 
       async function submitResult(score) {
         if (submitted) return;
-        submitted = true;
-        const profile = getStoredProfile();
-        const incorrectas = Object.entries(correctAnswers)
-          .filter(([index, value]) => answers[index] !== value)
-          .map(([index]) => Number(index) - 4);
 
-        const payload = {
-          nombre: profile.nombre || profile.name || "",
-          numero_empleado: profile.numero_empleado || profile.numeroEmpleado || profile.empleado || "",
-          servicio: profile.servicio || "REUNION",
-          curso: "Uso correcto del extintor",
-          calificacion: score,
-          calificacion_maxima: 100,
-          total_preguntas: 3,
-          respuestas_incorrectas: incorrectas,
-          aprobado: score >= 70
-        };
+        await loadSessionData();
 
-        try {
-          const response = await fetch("/api/resultados", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          });
-          if (!response.ok) throw new Error("No se pudo guardar el resultado.");
-          sessionStorage.setItem("ultimoResultadoCurso", JSON.stringify(payload));
-        } catch (error) {
-          console.warn("Resultado pendiente de integración con el portal:", error.message);
-          sessionStorage.setItem("resultadoPendienteCurso", JSON.stringify(payload));
+        const response = await fetch(`${API_URL}/api/portal/resultados`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            curso_slug: COURSE_SLUG,
+            calificacion: score,
+            calificacion_maxima: 100,
+            total_preguntas: 3
+          })
+        });
+
+        const responseData = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(
+            responseData.mensaje || "No fue posible guardar el resultado."
+          );
         }
+
+        submitted = true;
       }
 
-      function showResult() {
+      async function saveAndShowResult() {
+        if (savingResult) return;
+
         const score = calculate();
-        scoreNode.textContent = score;
-        const passed = score >= 70;
-        resultTitle.textContent = passed ? "¡Capacitación aprobada!" : "Repasa e inténtalo nuevamente";
-        resultMessage.textContent = passed
-          ? "Has identificado las acciones básicas para utilizar un extintor de forma segura."
-          : "Necesitas responder correctamente las tres preguntas para aprobar.";
-        retry.classList.toggle("hidden", passed);
-        show(8);
-        submitResult(score);
+        savingResult = true;
+        updateNext();
+        showSaveStatus("Guardando tu resultado en la plataforma...", "loading");
+
+        try {
+          await submitResult(score);
+
+          scoreNode.textContent = score;
+          const passed = score >= 70;
+          resultTitle.textContent = passed
+            ? "¡Capacitación aprobada!"
+            : "Capacitación no aprobada";
+          resultMessage.textContent = passed
+            ? "Tu resultado fue registrado correctamente. Has identificado las acciones básicas para utilizar un extintor de forma segura."
+            : "Tu resultado fue registrado correctamente. Repasa el contenido e inténtalo nuevamente.";
+          retry.classList.toggle("hidden", passed);
+          saveStatus.className = "save-status";
+          show(8);
+        } catch (error) {
+          submitted = false;
+          showSaveStatus(
+            `No se pudo guardar la calificación. Verifica tu conexión e inténtalo nuevamente. Detalle: ${error.message}`,
+            "error"
+          );
+        } finally {
+          savingResult = false;
+          updateNext();
+        }
       }
 
       start.addEventListener("click", () => {
@@ -824,8 +902,8 @@
 
       prev.addEventListener("click", () => show(current - 1));
 
-      next.addEventListener("click", () => {
-        if (current === 7) showResult();
+      next.addEventListener("click", async () => {
+        if (current === 7) await saveAndShowResult();
         else show(current + 1);
       });
 
@@ -839,6 +917,7 @@
         Object.keys(answers).forEach(key => delete answers[key]);
         document.querySelectorAll(".answer.selected").forEach(item => item.classList.remove("selected"));
         submitted = false;
+        saveStatus.className = "save-status";
         show(5);
       });
 
