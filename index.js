@@ -23,8 +23,7 @@ const ES_PRODUCCION =
   process.env.NODE_ENV === "production" ||
   Boolean(process.env.RAILWAY_ENVIRONMENT);
 
-// El curso de armas queda disponible únicamente para el servicio REUNION.
-// El número de empleado no interviene en esta validación.
+
 const NOMBRE_CURSO_RESTRINGIDO =
   "USO SEGURO DE ARMAS DE FUEGO";
 const SERVICIO_CURSO_RESTRINGIDO =
