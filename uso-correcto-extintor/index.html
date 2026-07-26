@@ -95,16 +95,16 @@
 
     .brand-stage {
       position: relative;
-      width: 230px;
+      width: 280px;
       height: 76px;
     }
 
     .brand {
       position: absolute;
       inset: 0;
-      display: grid;
-      justify-items: start;
+      display: flex;
       align-items: center;
+      gap: 13px;
       transition: opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1);
     }
 
@@ -116,12 +116,24 @@
     .brand-logo {
       display: block;
       width: auto;
-      max-width: 220px;
       height: 74px;
+      flex: 0 0 auto;
       object-fit: contain;
       object-position: left center;
       filter: drop-shadow(0 7px 13px rgba(0,0,0,.32));
     }
+
+    .brand-name {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 27px;
+      line-height: 1;
+      letter-spacing: .075em;
+      white-space: nowrap;
+      text-shadow: 0 5px 14px rgba(0,0,0,.42);
+    }
+
+    .brand-galeam .brand-name { color: #e32930; }
+    .brand-hoplon .brand-name { color: #e5e8ff; }
 
     main {
       min-height: 0;
@@ -468,8 +480,10 @@
         padding: max(10px, env(safe-area-inset-top)) 16px 8px;
       }
 
-      .brand-stage { width: 168px; height: 56px; }
-      .brand-logo { max-width: 160px; height: 54px; }
+      .brand-stage { width: 205px; height: 56px; }
+      .brand { gap: 9px; }
+      .brand-logo { height: 54px; }
+      .brand-name { font-size: 20px; }
 
       .screen {
         place-items: start center;
@@ -538,9 +552,11 @@
       <div class="brand-stage" aria-label="Identidad corporativa">
         <div class="brand brand-galeam">
           <img class="brand-logo" src="assets/galeam-logo.png" alt="Galeam">
+          <span class="brand-name">GALEAM</span>
         </div>
         <div class="brand brand-hoplon">
           <img class="brand-logo" src="assets/hoplon-logo.png" alt="Hoplon">
+          <span class="brand-name">HOPLON</span>
         </div>
       </div>
     </header>
