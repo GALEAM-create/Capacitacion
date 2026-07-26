@@ -322,6 +322,37 @@
       width: 100%;
       height: 100%;
       border: 0;
+      object-fit: contain;
+      background: #05070c;
+    }
+
+    .video-controls {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 16px 0 4px;
+    }
+
+    .video-control {
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 10px;
+      background: rgba(255,255,255,.07);
+      color: #fff;
+      padding: 11px 17px;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .video-control.primary-control {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .video-control:active {
+      transform: scale(.97);
     }
 
     .video-note {
@@ -752,6 +783,12 @@
       const prev = document.getElementById("prevButton");
       const next = document.getElementById("nextButton");
       const start = document.getElementById("startButton");
+      let passVideo = document.getElementById("videoExtintor");
+      let passVideoSource = passVideo?.querySelector("source");
+      const passVideoWrap = passVideo?.closest(".video-wrap");
+      const passPlayPause = document.getElementById("videoPlayPause");
+      const passRestart = document.getElementById("videoRestart");
+      const PASS_VIDEO_SRC = "assets/extintor-pass.mp4";
       const videoConfirmed = document.getElementById("videoConfirmed");
       const retry = document.getElementById("retryButton");
       const finish = document.getElementById("finishButton");
@@ -769,12 +806,131 @@
       let savingResult = false;
       let participantData = null;
 
+      function updatePassButton() {
+        if (!passPlayPause) return;
+
+        passPlayPause.textContent =
+          passVideo && !passVideo.paused
+            ? "❚❚ Pausar"
+            : "▶ Reproducir";
+      }
+
+      function connectPassVideo() {
+        if (!passVideo) return;
+
+        passVideo.controls = false;
+        passVideo.playsInline = true;
+        passVideo.disablePictureInPicture = true;
+        passVideo.setAttribute("playsinline", "");
+        passVideo.setAttribute("webkit-playsinline", "");
+        passVideo.setAttribute(
+          "controlslist",
+          "nodownload nofullscreen noremoteplayback"
+        );
+
+        passVideo.addEventListener("play", updatePassButton);
+        passVideo.addEventListener("pause", updatePassButton);
+        passVideo.addEventListener("ended", updatePassButton);
+        updatePassButton();
+      }
+
+      function removePassVideo() {
+        if (!passVideo) return;
+
+        passVideo.pause();
+
+        if (
+          document.pictureInPictureElement === passVideo &&
+          document.exitPictureInPicture
+        ) {
+          document.exitPictureInPicture().catch(() => {});
+        }
+
+        if (
+          document.fullscreenElement === passVideo &&
+          document.exitFullscreen
+        ) {
+          document.exitFullscreen().catch(() => {});
+        }
+
+        if (passVideoSource) {
+          passVideoSource.removeAttribute("src");
+        }
+
+        passVideo.removeAttribute("src");
+        passVideo.load();
+        passVideo.remove();
+
+        passVideo = null;
+        passVideoSource = null;
+        updatePassButton();
+      }
+
+      function createPassVideo() {
+        if (passVideo || !passVideoWrap) return;
+
+        passVideo = document.createElement("video");
+        passVideo.id = "videoExtintor";
+        passVideo.preload = "metadata";
+        passVideo.playsInline = true;
+        passVideo.controls = false;
+        passVideo.disablePictureInPicture = true;
+        passVideo.setAttribute("playsinline", "");
+        passVideo.setAttribute("webkit-playsinline", "");
+        passVideo.setAttribute(
+          "controlslist",
+          "nodownload nofullscreen noremoteplayback"
+        );
+
+        passVideoSource = document.createElement("source");
+        passVideoSource.src = PASS_VIDEO_SRC;
+        passVideoSource.type = "video/mp4";
+
+        passVideo.appendChild(passVideoSource);
+        passVideoWrap.replaceChildren(passVideo);
+        connectPassVideo();
+        passVideo.load();
+      }
+
+      passPlayPause.addEventListener("click", () => {
+        if (!passVideo) createPassVideo();
+        if (!passVideo) return;
+
+        if (passVideo.paused) {
+          passVideo.play().catch(() => {});
+        } else {
+          passVideo.pause();
+        }
+      });
+
+      passRestart.addEventListener("click", () => {
+        if (!passVideo) createPassVideo();
+        if (!passVideo) return;
+
+        passVideo.currentTime = 0;
+        passVideo.play().catch(() => {});
+      });
+
+      connectPassVideo();
+
       function show(index) {
         if (index < 0 || index >= screens.length) return;
+
+        if (
+          screens[current]?.dataset.screen === "video" &&
+          index !== current
+        ) {
+          removePassVideo();
+        }
+
         screens[current].classList.remove("active");
         current = index;
         screens[current].classList.add("active");
         screens[current].scrollTop = 0;
+
+        if (screens[current]?.dataset.screen === "video") {
+          createPassVideo();
+        }
 
         const isCover = current === 0;
         const isResult = current === screens.length - 1;
