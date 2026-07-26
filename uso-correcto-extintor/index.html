@@ -636,21 +636,51 @@
       </section>
 
       <section class="screen" data-screen="video">
-        <article class="content-card video-card">
-          <h2>Observa el método PASS</h2>
-          <div class="video-wrap">
-            <video id="videoExtintor" controls playsinline preload="metadata">
-              <source src="assets/extintor-pass.mp4" type="video/mp4">
-              Tu navegador no puede reproducir este video.
-            </video>
-          </div>
-          <p class="video-note">Reproduce el video completo antes de continuar.</p>
-          <label class="video-confirm">
-            <input id="videoConfirmed" type="checkbox">
-            Confirmo que vi el video completo
-          </label>
-        </article>
-      </section>
+  <article class="content-card video-card">
+    <h2>Observa el método PASS</h2>
+
+    <div class="video-wrap">
+      <video
+        id="videoExtintor"
+        playsinline
+        webkit-playsinline
+        preload="metadata"
+        disablepictureinpicture
+        controlslist="nodownload nofullscreen noremoteplayback"
+      >
+        <source src="assets/extintor-pass.mp4" type="video/mp4">
+        Tu navegador no puede reproducir este video.
+      </video>
+    </div>
+
+    <div class="video-controls">
+      <button
+        class="video-control primary-control"
+        id="videoPlayPause"
+        type="button"
+      >
+        ▶ Reproducir
+      </button>
+
+      <button
+        class="video-control"
+        id="videoRestart"
+        type="button"
+      >
+        ↺ Reiniciar
+      </button>
+    </div>
+
+    <p class="video-note">
+      Reproduce el video completo antes de continuar.
+    </p>
+
+    <label class="video-confirm">
+      <input id="videoConfirmed" type="checkbox">
+      Confirmo que vi el video completo
+    </label>
+  </article>
+</section>
 
       <section class="screen" data-screen="quiz">
         <article class="quiz-card">
