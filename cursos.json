@@ -37,5 +37,17 @@
   "orden": 30,
   "calificacion_aprobatoria": 70,
   "calificacion_maxima_origen": 100
+},
+  
+  {
+  "id": "uso-correcto-del-extintor",
+  "titulo": "Uso correcto del extintor",
+  "descripcion": "Capacitación breve sobre el uso seguro de extintores ante fuegos incipientes.",
+  "serviciosPermitidos": ["REUNION"],
+  "archivo": "index.html",
+  "escala": 100,
+  "calificacionMinima": 70,
+  "activo": true
 }
+
 ]
