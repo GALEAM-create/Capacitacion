@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#090f18">
+  <title>Uso correcto del extintor | Galeam</title>
+  <style>
+    :root {
+      --bg: #090f18;
+      --bg-soft: #121d2b;
+      --panel: rgba(7, 14, 23, .82);
+      --text: #fff;
+      --muted: #dbe5ee;
+      --accent: #e7b936;
+      --accent-2: #f3d26f;
+      --danger: #ef252d;
+      --blue: #303b86;
+      --line: rgba(255,255,255,.16);
+      --shadow: 0 22px 70px rgba(0,0,0,.45);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      min-height: 100%;
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100svh;
+      overflow: hidden;
+      transition: background 1s ease;
+    }
+
+    body.hoplon-theme {
+      --bg: #10162d;
+      --bg-soft: #1a2350;
+      --panel: rgba(14, 20, 47, .86);
+      --accent: #ef252d;
+      --accent-2: #ff5960;
+      background: #10162d;
+    }
+
+    button { font: inherit; }
+
+    .background {
+      position: fixed;
+      inset: 0;
+      z-index: -3;
+      background:
+        radial-gradient(circle at 80% 14%, rgba(231,185,54,.12), transparent 28%),
+        linear-gradient(115deg, rgba(3,8,13,.96), rgba(8,17,27,.78)),
+        url("assets/galeam-referencia.png") center/cover no-repeat;
+      filter: saturate(.75);
+      transition: background 1s ease, filter 1s ease;
+    }
+
+    .hoplon-theme .background {
+      background:
+        radial-gradient(circle at 82% 18%, rgba(239,37,45,.18), transparent 30%),
+        radial-gradient(circle at 15% 80%, rgba(48,59,134,.36), transparent 34%),
+        linear-gradient(135deg, #090d1c 0%, #151d45 62%, #080c1a 100%);
+      filter: none;
+    }
+
+    .background::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: .17;
+      pointer-events: none;
+      background-image: radial-gradient(rgba(255,255,255,.65) .7px, transparent .7px);
+      background-size: 4px 4px;
+    }
+
+    .shell {
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+
+    .brandbar {
+      min-height: 104px;
+      padding: max(18px, env(safe-area-inset-top)) clamp(18px, 5vw, 72px) 14px;
+      display: flex;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      background: rgba(5,10,17,.42);
+      backdrop-filter: blur(12px);
+    }
+
+    .brand-stage {
+      position: relative;
+      width: 220px;
+      height: 76px;
+    }
+
+    .brand {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      transition: opacity .7s ease, transform .8s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .brand-galeam { opacity: 1; transform: translateY(0); }
+    .brand-hoplon { opacity: 0; transform: translateY(16px); pointer-events: none; }
+    .hoplon-theme .brand-galeam { opacity: 0; transform: translateY(-16px); }
+    .hoplon-theme .brand-hoplon { opacity: 1; transform: translateY(0); }
+
+    .galeam-crop {
+      position: relative;
+      width: 62px;
+      height: 72px;
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .galeam-crop img {
+      position: absolute;
+      width: 750px;
+      max-width: none;
+      left: -42px;
+      top: -8px;
+    }
+
+    .hoplon-crop {
+      position: relative;
+      width: 42px;
+      height: 72px;
+      overflow: hidden;
+      flex: 0 0 auto;
+    }
+
+    .hoplon-crop img {
+      position: absolute;
+      width: 105px;
+      max-width: none;
+      left: -34px;
+      top: -3px;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.3));
+    }
+
+    .brand-word {
+      font-family: Georgia, "Times New Roman", serif;
+      letter-spacing: .07em;
+      font-size: 25px;
+    }
+
+    .brand-galeam .brand-word { color: #e3262d; }
+    .brand-hoplon .brand-word { color: #fff; }
+
+    main {
+      min-height: 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: clamp(22px, 4vw, 62px);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(42px) scale(.985);
+      transition: opacity .48s ease, transform .55s ease, visibility 0s linear .55s;
+      overflow: auto;
+      overscroll-behavior: contain;
+    }
+
+    .screen.active {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0) scale(1);
+      transition-delay: 0s;
+    }
+
+    .hero, .content-card, .quiz-card, .result-card {
+      width: min(1080px, 100%);
+    }
+
+    .hero {
+      justify-self: start;
+      padding-left: clamp(0px, 2vw, 30px);
+    }
+
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--accent-2);
+      font-size: clamp(.82rem, 1.4vw, 1.05rem);
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, p { margin-top: 0; }
+
+    h1 {
+      max-width: 930px;
+      margin-bottom: 18px;
+      font-size: clamp(2.55rem, 7vw, 6.9rem);
+      line-height: .93;
+      letter-spacing: -.055em;
+      text-transform: uppercase;
+    }
+
+    .hero p {
+      max-width: 720px;
+      margin-bottom: 30px;
+      color: var(--muted);
+      font-size: clamp(1.1rem, 2.2vw, 1.65rem);
+      line-height: 1.45;
+    }
+
+    .primary, .secondary {
+      min-height: 54px;
+      padding: 14px 24px;
+      border-radius: 13px;
+      cursor: pointer;
+      font-weight: 800;
+      transition: transform .2s ease, background .2s ease, border-color .2s ease;
+    }
+
+    .primary {
+      color: #fff;
+      border: 2px solid var(--accent);
+      background: rgba(5,10,17,.55);
+      box-shadow: 0 0 0 0 rgba(239,37,45,0);
+    }
+
+    .primary:hover, .primary:focus-visible {
+      transform: translateY(-2px);
+      background: var(--accent);
+      color: #10131d;
+      outline: none;
+      box-shadow: 0 10px 30px rgba(239,37,45,.22);
+    }
+
+    .secondary {
+      color: #fff;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.06);
+    }
+
+    .content-card, .quiz-card, .result-card {
+      position: relative;
+      padding: clamp(25px, 5vw, 54px);
+      border: 1px solid var(--line);
+      border-radius: 26px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .step {
+      display: inline-grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 20px;
+      border-radius: 50%;
+      color: white;
+      background: var(--accent);
+      font-weight: 900;
+      font-size: 1.25rem;
+    }
+
+    .content-card h2, .quiz-card h2, .result-card h2 {
+      margin-bottom: 24px;
+      font-size: clamp(2rem, 4.7vw, 4.2rem);
+      line-height: 1.03;
+      letter-spacing: -.035em;
+    }
+
+    .key-list {
+      display: grid;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .key-list li {
+      position: relative;
+      padding: 16px 18px 16px 52px;
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 15px;
+      background: rgba(255,255,255,.055);
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.34rem);
+      line-height: 1.4;
+    }
+
+    .key-list li::before {
+      content: "✓";
+      position: absolute;
+      left: 18px;
+      top: 14px;
+      color: var(--accent-2);
+      font-weight: 900;
+    }
+
+    .alert {
+      margin-top: 18px;
+      padding: 15px 18px;
+      border-left: 4px solid var(--danger);
+      border-radius: 0 12px 12px 0;
+      color: #fff;
+      background: rgba(239,37,45,.12);
+      font-size: clamp(1rem, 1.8vw, 1.2rem);
+      font-weight: 750;
+    }
+
+    .video-card { padding: clamp(18px, 3vw, 32px); }
+
+    .video-card h2 {
+      margin-bottom: 15px;
+      font-size: clamp(1.7rem, 4vw, 3.1rem);
+    }
+
+    .video-wrap {
+      position: relative;
+      width: min(920px, 100%);
+      aspect-ratio: 16 / 9;
+      margin: 0 auto;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 18px;
+      background: #05070c;
+      box-shadow: 0 18px 42px rgba(0,0,0,.38);
+    }
+
+    .video-wrap iframe {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border: 0;
+    }
+
+    .video-note {
+      margin: 14px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: .95rem;
+    }
+
+    .video-confirm {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      align-items: center;
+      margin-top: 12px;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .video-confirm input {
+      width: 22px;
+      height: 22px;
+      accent-color: var(--danger);
+    }
+
+    .question-count {
+      margin-bottom: 9px;
+      color: var(--accent-2);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+    }
+
+    .answers {
+      display: grid;
+      gap: 12px;
+    }
+
+    .answer {
+      width: 100%;
+      min-height: 58px;
+      padding: 15px 18px;
+      color: #fff;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 14px;
+      background: rgba(255,255,255,.055);
+      cursor: pointer;
+      text-align: left;
+      font-size: clamp(1rem, 1.8vw, 1.18rem);
+      transition: border-color .2s ease, background .2s ease, transform .2s ease;
+    }
+
+    .answer:hover, .answer:focus-visible {
+      transform: translateX(3px);
+      border-color: var(--accent);
+      background: rgba(239,37,45,.12);
+      outline: none;
+    }
+
+    .answer.selected {
+      border-color: var(--accent);
+      background: rgba(239,37,45,.2);
+      box-shadow: inset 0 0 0 1px var(--accent);
+    }
+
+    .score {
+      margin: 0 0 14px;
+      color: var(--accent-2);
+      font-size: clamp(3.6rem, 10vw, 7.2rem);
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .result-card { text-align: center; }
+    .result-card p {
+      max-width: 650px;
+      margin: 0 auto 22px;
+      color: var(--muted);
+      font-size: clamp(1.05rem, 2vw, 1.25rem);
+      line-height: 1.5;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .footer-nav {
+      min-height: 74px;
+      padding: 10px clamp(18px, 5vw, 72px) max(10px, env(safe-area-inset-bottom));
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-top: 1px solid var(--line);
+      background: rgba(5,10,17,.6);
+      backdrop-filter: blur(12px);
+    }
+
+    .progress {
+      flex: 1;
+      max-width: 550px;
+      height: 7px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255,255,255,.12);
+    }
+
+    .progress span {
+      display: block;
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transition: width .45s ease;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .nav-buttons button {
+      min-width: 108px;
+      min-height: 44px;
+      padding: 10px 17px;
+      border-radius: 11px;
+      cursor: pointer;
+      font-weight: 850;
+    }
+
+    .nav-prev {
+      color: #fff;
+      border: 1px solid var(--line);
+      background: transparent;
+    }
+
+    .nav-next {
+      color: #fff;
+      border: 0;
+      background: var(--accent);
+    }
+
+    .nav-next:disabled {
+      opacity: .38;
+      cursor: not-allowed;
+    }
+
+    .hidden { display: none !important; }
+
+    @media (max-width: 700px) {
+      .brandbar {
+        min-height: 76px;
+        padding: max(10px, env(safe-area-inset-top)) 16px 8px;
+      }
+
+      .brand-stage { width: 172px; height: 56px; }
+      .brand { gap: 8px; }
+      .galeam-crop { width: 50px; height: 54px; }
+      .hoplon-crop { width: 34px; height: 54px; }
+      .galeam-crop img { width: 600px; left: -32px; top: -5px; }
+      .hoplon-crop img { width: 84px; left: -27px; top: -2px; }
+      .brand-word { font-size: 19px; }
+
+      .screen {
+        place-items: start center;
+        padding: 20px 15px;
+      }
+
+      .screen[data-screen="cover"] { place-items: center; }
+      .hero { padding: 0; }
+      h1 { font-size: clamp(2.4rem, 14vw, 4.1rem); }
+      .hero p { font-size: 1.06rem; }
+
+      .content-card, .quiz-card, .result-card {
+        padding: 22px 17px;
+        border-radius: 19px;
+      }
+
+      .content-card h2, .quiz-card h2, .result-card h2 {
+        margin-bottom: 18px;
+        font-size: clamp(1.75rem, 9vw, 2.6rem);
+      }
+
+      .key-list li {
+        padding: 13px 13px 13px 43px;
+        font-size: 1rem;
+      }
+
+      .key-list li::before { left: 14px; top: 12px; }
+      .video-card { padding: 14px; }
+      .video-wrap { border-radius: 12px; }
+      .video-note { font-size: .82rem; }
+
+      .footer-nav {
+        min-height: 66px;
+        padding: 8px 13px max(8px, env(safe-area-inset-bottom));
+      }
+
+      .progress { max-width: none; }
+      .nav-buttons button { min-width: 0; padding: 9px 13px; }
+    }
+
+    @media (max-height: 690px) and (min-width: 701px) {
+      .brandbar { min-height: 76px; padding-top: 8px; padding-bottom: 8px; }
+      .brand-stage { height: 58px; }
+      .galeam-crop, .hoplon-crop { height: 58px; }
+      .screen { padding-top: 18px; padding-bottom: 18px; }
+      .content-card, .quiz-card { padding-top: 24px; padding-bottom: 24px; }
+      .key-list { gap: 8px; }
+      .key-list li { padding-top: 11px; padding-bottom: 11px; }
+      .key-list li::before { top: 9px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+        animation-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="background" aria-hidden="true"></div>
+
+  <div class="shell">
+    <header class="brandbar">
+      <div class="brand-stage" aria-label="Identidad corporativa">
+        <div class="brand brand-galeam">
+          <span class="galeam-crop" aria-hidden="true">
+            <img src="assets/galeam-referencia.png" alt="">
+          </span>
+          <span class="brand-word">GALEAM</span>
+        </div>
+        <div class="brand brand-hoplon">
+          <span class="hoplon-crop" aria-hidden="true">
+            <img src="assets/hoplon-referencia.png" alt="">
+          </span>
+          <span class="brand-word">HOPLON</span>
+        </div>
+      </div>
+    </header>
+
+    <main id="course">
+      <section class="screen active" data-screen="cover">
+        <div class="hero">
+          <p class="eyebrow">Capacitación de seguridad</p>
+          <h1>Uso correcto del extintor</h1>
+          <p>Aprende cómo actuar de forma segura ante un fuego pequeño o incipiente.</p>
+          <button class="primary" id="startButton" type="button">Comenzar capacitación</button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="lesson">
+        <article class="content-card">
+          <span class="step">1</span>
+          <h2>¿Cuándo puedes intervenir?</h2>
+          <ul class="key-list">
+            <li>Utiliza un extintor únicamente ante un fuego pequeño o incipiente.</li>
+            <li>Mantén una ruta de escape libre detrás de ti.</li>
+            <li>Nunca combatas un fuego tú solo: avisa y solicita apoyo.</li>
+          </ul>
+          <div class="alert">Si el fuego crece o se propaga, evacúa y llama a los servicios de emergencia.</div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="lesson">
+        <article class="content-card">
+          <span class="step">2</span>
+          <h2>Revisa el extintor</h2>
+          <ul class="key-list">
+            <li>Confirma en la etiqueta que sea adecuado para la clase de fuego.</li>
+            <li>Comprueba que el manómetro indique presión adecuada.</li>
+            <li>Recuerda: los extintores de CO₂ normalmente no tienen manómetro.</li>
+          </ul>
+          <div class="alert">No utilices un extintor dañado, descargado o que no corresponda al riesgo.</div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="lesson">
+        <article class="content-card">
+          <span class="step">3</span>
+          <h2>Trabaja con seguridad</h2>
+          <ul class="key-list">
+            <li>Transpórtalo con cuidado y sin correr.</li>
+            <li>En exteriores, colócate a favor del viento.</li>
+            <li>Inicia aproximadamente a 3 metros y sigue las indicaciones de la etiqueta.</li>
+            <li>Después de apagarlo, vigila el área por si vuelve a encenderse.</li>
+          </ul>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="video">
+        <article class="content-card video-card">
+          <h2>Observa el método PASS</h2>
+          <div class="video-wrap">
+            <iframe
+              src="https://www.canva.com/design/DAHPk86SOMo/T6PBIxoU5UvGrjCs47kPFQ/watch?embed"
+              title="Video sobre el método PASS"
+              loading="lazy"
+              allow="autoplay; fullscreen"
+              allowfullscreen>
+            </iframe>
+          </div>
+          <p class="video-note">Reproduce el video completo antes de continuar.</p>
+          <label class="video-confirm">
+            <input id="videoConfirmed" type="checkbox">
+            Confirmo que vi el video completo
+          </label>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="quiz">
+        <article class="quiz-card">
+          <div class="question-count">Pregunta 1 de 3</div>
+          <h2>¿Qué debes hacer si el fuego crece o comienza a propagarse?</h2>
+          <div class="answers">
+            <button class="answer" data-value="a" type="button">Acercarte más para terminar rápidamente</button>
+            <button class="answer" data-value="b" type="button">Evacuar y solicitar ayuda de emergencia</button>
+            <button class="answer" data-value="c" type="button">Continuar hasta vaciar el extintor</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="quiz">
+        <article class="quiz-card">
+          <div class="question-count">Pregunta 2 de 3</div>
+          <h2>¿Qué debes comprobar antes de utilizar un extintor?</h2>
+          <div class="answers">
+            <button class="answer" data-value="a" type="button">Que sea el adecuado y tenga presión</button>
+            <button class="answer" data-value="b" type="button">Que sea el extintor más cercano, sin revisar la etiqueta</button>
+            <button class="answer" data-value="c" type="button">Únicamente que el cilindro sea rojo</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="quiz">
+        <article class="quiz-card">
+          <div class="question-count">Pregunta 3 de 3</div>
+          <h2>En el método PASS, ¿hacia dónde debes apuntar?</h2>
+          <div class="answers">
+            <button class="answer" data-value="a" type="button">Hacia la parte más alta de las llamas</button>
+            <button class="answer" data-value="b" type="button">Hacia el humo</button>
+            <button class="answer" data-value="c" type="button">Hacia la base del fuego</button>
+          </div>
+        </article>
+      </section>
+
+      <section class="screen" data-screen="result">
+        <article class="result-card">
+          <p class="eyebrow">Capacitación finalizada</p>
+          <div class="score" id="score">0</div>
+          <h2 id="resultTitle">Resultado</h2>
+          <p id="resultMessage"></p>
+          <div class="actions">
+            <button class="secondary hidden" id="retryButton" type="button">Intentar nuevamente</button>
+            <button class="primary" id="finishButton" type="button">Finalizar</button>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer-nav hidden" id="footerNav">
+      <div class="progress" aria-label="Progreso del curso">
+        <span id="progressBar"></span>
+      </div>
+      <div class="nav-buttons">
+        <button class="nav-prev" id="prevButton" type="button">Anterior</button>
+        <button class="nav-next" id="nextButton" type="button">Siguiente</button>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const screens = [...document.querySelectorAll(".screen")];
+      const footer = document.getElementById("footerNav");
+      const progress = document.getElementById("progressBar");
+      const prev = document.getElementById("prevButton");
+      const next = document.getElementById("nextButton");
+      const start = document.getElementById("startButton");
+      const videoConfirmed = document.getElementById("videoConfirmed");
+      const retry = document.getElementById("retryButton");
+      const finish = document.getElementById("finishButton");
+      const scoreNode = document.getElementById("score");
+      const resultTitle = document.getElementById("resultTitle");
+      const resultMessage = document.getElementById("resultMessage");
+
+      const correctAnswers = { 5: "b", 6: "a", 7: "c" };
+      const answers = {};
+      let current = 0;
+      let submitted = false;
+
+      function show(index) {
+        if (index < 0 || index >= screens.length) return;
+        screens[current].classList.remove("active");
+        current = index;
+        screens[current].classList.add("active");
+        screens[current].scrollTop = 0;
+
+        const isCover = current === 0;
+        const isResult = current === screens.length - 1;
+        footer.classList.toggle("hidden", isCover || isResult);
+        prev.classList.toggle("hidden", current === 1);
+
+        const progressValue = Math.max(0, ((current - 1) / (screens.length - 2)) * 100);
+        progress.style.width = `${progressValue}%`;
+        updateNext();
+      }
+
+      function updateNext() {
+        if (current === 4) {
+          next.disabled = !videoConfirmed.checked;
+          next.textContent = "Ir a evaluación";
+          return;
+        }
+        if (screens[current]?.dataset.screen === "quiz") {
+          next.disabled = !answers[current];
+          next.textContent = current === 7 ? "Ver resultado" : "Siguiente";
+          return;
+        }
+        next.disabled = false;
+        next.textContent = "Siguiente";
+      }
+
+      function selectAnswer(button) {
+        const group = button.closest(".answers");
+        group.querySelectorAll(".answer").forEach(item => item.classList.remove("selected"));
+        button.classList.add("selected");
+        answers[current] = button.dataset.value;
+        updateNext();
+      }
+
+      function calculate() {
+        const correct = Object.entries(correctAnswers)
+          .filter(([screenIndex, value]) => answers[screenIndex] === value).length;
+        return Math.round((correct / 3) * 100);
+      }
+
+      function getStoredProfile() {
+        const keys = ["usuarioActual", "usuario", "empleado", "user", "perfilUsuario", "capacitacion_usuario"];
+        for (const key of keys) {
+          try {
+            const raw = localStorage.getItem(key) || sessionStorage.getItem(key);
+            if (!raw) continue;
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === "object") return parsed;
+          } catch (_) {}
+        }
+        return {};
+      }
+
+      async function submitResult(score) {
+        if (submitted) return;
+        submitted = true;
+        const profile = getStoredProfile();
+        const incorrectas = Object.entries(correctAnswers)
+          .filter(([index, value]) => answers[index] !== value)
+          .map(([index]) => Number(index) - 4);
+
+        const payload = {
+          nombre: profile.nombre || profile.name || "",
+          numero_empleado: profile.numero_empleado || profile.numeroEmpleado || profile.empleado || "",
+          servicio: profile.servicio || "REUNION",
+          curso: "Uso correcto del extintor",
+          calificacion: score,
+          calificacion_maxima: 100,
+          total_preguntas: 3,
+          respuestas_incorrectas: incorrectas,
+          aprobado: score >= 70
+        };
+
+        try {
+          const response = await fetch("/api/resultados", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          if (!response.ok) throw new Error("No se pudo guardar el resultado.");
+          sessionStorage.setItem("ultimoResultadoCurso", JSON.stringify(payload));
+        } catch (error) {
+          console.warn("Resultado pendiente de integración con el portal:", error.message);
+          sessionStorage.setItem("resultadoPendienteCurso", JSON.stringify(payload));
+        }
+      }
+
+      function showResult() {
+        const score = calculate();
+        scoreNode.textContent = score;
+        const passed = score >= 70;
+        resultTitle.textContent = passed ? "¡Capacitación aprobada!" : "Repasa e inténtalo nuevamente";
+        resultMessage.textContent = passed
+          ? "Has identificado las acciones básicas para utilizar un extintor de forma segura."
+          : "Necesitas responder correctamente las tres preguntas para aprobar.";
+        retry.classList.toggle("hidden", passed);
+        show(8);
+        submitResult(score);
+      }
+
+      start.addEventListener("click", () => {
+        document.body.classList.add("hoplon-theme");
+        window.setTimeout(() => show(1), 620);
+      });
+
+      prev.addEventListener("click", () => show(current - 1));
+
+      next.addEventListener("click", () => {
+        if (current === 7) showResult();
+        else show(current + 1);
+      });
+
+      videoConfirmed.addEventListener("change", updateNext);
+
+      document.querySelectorAll(".answer").forEach(button => {
+        button.addEventListener("click", () => selectAnswer(button));
+      });
+
+      retry.addEventListener("click", () => {
+        Object.keys(answers).forEach(key => delete answers[key]);
+        document.querySelectorAll(".answer.selected").forEach(item => item.classList.remove("selected"));
+        submitted = false;
+        show(5);
+      });
+
+      finish.addEventListener("click", () => {
+        const portal = new URLSearchParams(location.search).get("return");
+        if (portal) location.href = portal;
+        else if (history.length > 1) history.back();
+        else location.href = "/";
+      });
+
+      show(0);
+    })();
+  </script>
+</body>
+</html>
