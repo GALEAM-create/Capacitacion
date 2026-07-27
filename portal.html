@@ -1070,9 +1070,194 @@
       ) !important;
     }
 
+    .bienvenida-carito {
+      position:fixed;
+      inset:0;
+      z-index:10000;
+      display:grid;
+      place-items:center;
+      padding:24px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 43%,rgba(255,220,235,.30),transparent 34%),
+        linear-gradient(145deg,rgba(16,12,22,.92),rgba(6,10,20,.94));
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      transition:opacity .55s ease,visibility 0s linear .55s;
+    }
+
+    .bienvenida-carito.activa {
+      opacity:1;
+      visibility:visible;
+      transition-delay:0s;
+    }
+
+    .bienvenida-carito.saliendo {
+      opacity:0;
+    }
+
+    .carito-tarjeta {
+      position:relative;
+      z-index:2;
+      width:min(620px,100%);
+      padding:clamp(34px,7vw,64px) clamp(24px,6vw,58px);
+      border:1px solid rgba(255,211,226,.62);
+      border-radius:32px;
+      overflow:hidden;
+      color:#fff;
+      text-align:center;
+      background:
+        radial-gradient(circle at top,rgba(255,255,255,.16),transparent 42%),
+        linear-gradient(145deg,rgba(84,31,63,.94),rgba(28,22,52,.96));
+      box-shadow:
+        0 30px 80px rgba(0,0,0,.54),
+        0 0 50px rgba(255,154,196,.18);
+      transform:translateY(22px) scale(.92);
+      opacity:0;
+    }
+
+    .bienvenida-carito.activa .carito-tarjeta {
+      animation:entradaCarito .85s cubic-bezier(.2,.78,.22,1) .08s forwards;
+    }
+
+    .carito-tarjeta::before,
+    .carito-tarjeta::after {
+      content:"❀";
+      position:absolute;
+      color:rgba(255,214,230,.22);
+      font-size:clamp(88px,22vw,170px);
+      line-height:1;
+    }
+
+    .carito-tarjeta::before {
+      top:-38px;
+      left:-30px;
+      transform:rotate(-18deg);
+    }
+
+    .carito-tarjeta::after {
+      right:-34px;
+      bottom:-50px;
+      transform:rotate(22deg);
+    }
+
+    .carito-flor {
+      position:relative;
+      z-index:2;
+      display:block;
+      margin-bottom:12px;
+      color:#ffd4e5;
+      font-size:clamp(2.4rem,8vw,4.2rem);
+      line-height:1;
+      filter:drop-shadow(0 7px 16px rgba(255,142,189,.28));
+      animation:florCarito 1.8s ease-in-out infinite alternate;
+    }
+
+    .carito-tarjeta h2 {
+      position:relative;
+      z-index:2;
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(2.35rem,8vw,5rem);
+      font-weight:600;
+      line-height:1.02;
+      letter-spacing:-.035em;
+      text-shadow:0 8px 28px rgba(0,0,0,.35);
+    }
+
+    .carito-tarjeta p {
+      position:relative;
+      z-index:2;
+      margin:18px 0 0;
+      color:#ffeaf2;
+      font-size:clamp(1rem,3vw,1.3rem);
+      letter-spacing:.025em;
+    }
+
+    .carito-petalos {
+      position:absolute;
+      inset:0;
+      z-index:1;
+      overflow:hidden;
+      pointer-events:none;
+    }
+
+    .carito-petalos span {
+      position:absolute;
+      top:-14%;
+      color:#ffd4e5;
+      font-size:clamp(18px,4vw,34px);
+      opacity:0;
+      animation:petaloCarito 4.7s linear infinite;
+      filter:drop-shadow(0 4px 7px rgba(0,0,0,.2));
+    }
+
+    .carito-petalos span:nth-child(1){left:4%;animation-delay:-.4s}
+    .carito-petalos span:nth-child(2){left:12%;animation-delay:-2.1s;animation-duration:5.2s}
+    .carito-petalos span:nth-child(3){left:22%;animation-delay:-1.2s;animation-duration:4.2s}
+    .carito-petalos span:nth-child(4){left:31%;animation-delay:-3.4s;animation-duration:5.5s}
+    .carito-petalos span:nth-child(5){left:42%;animation-delay:-2.7s}
+    .carito-petalos span:nth-child(6){left:52%;animation-delay:-.8s;animation-duration:5.3s}
+    .carito-petalos span:nth-child(7){left:61%;animation-delay:-3.8s;animation-duration:4.4s}
+    .carito-petalos span:nth-child(8){left:70%;animation-delay:-1.6s;animation-duration:5.1s}
+    .carito-petalos span:nth-child(9){left:79%;animation-delay:-2.9s}
+    .carito-petalos span:nth-child(10){left:88%;animation-delay:-.2s;animation-duration:5.4s}
+    .carito-petalos span:nth-child(11){left:95%;animation-delay:-3.1s;animation-duration:4.5s}
+    .carito-petalos span:nth-child(12){left:48%;animation-delay:-4.1s;animation-duration:5.7s}
+
+    @keyframes entradaCarito {
+      0%{opacity:0;transform:translateY(22px) scale(.92)}
+      65%{opacity:1;transform:translateY(-4px) scale(1.015)}
+      100%{opacity:1;transform:translateY(0) scale(1)}
+    }
+
+    @keyframes florCarito {
+      from{transform:rotate(-5deg) scale(.96)}
+      to{transform:rotate(5deg) scale(1.06)}
+    }
+
+    @keyframes petaloCarito {
+      0%{opacity:0;transform:translate3d(0,-10vh,0) rotate(0deg)}
+      12%{opacity:.86}
+      88%{opacity:.72}
+      100%{opacity:0;transform:translate3d(42px,118vh,0) rotate(430deg)}
+    }
+
+    @media (prefers-reduced-motion:reduce) {
+      .bienvenida-carito.activa .carito-tarjeta {
+        animation:none;
+        opacity:1;
+        transform:none;
+      }
+
+      .carito-flor,
+      .carito-petalos span {
+        animation:none;
+      }
+    }
+
   </style>
 </head>
 <body>
+  <section
+    id="bienvenidaCarito"
+    class="bienvenida-carito"
+    aria-hidden="true"
+    aria-live="polite"
+  >
+    <div class="carito-petalos" aria-hidden="true">
+      <span>❀</span><span>✿</span><span>❀</span><span>✿</span>
+      <span>❀</span><span>✿</span><span>❀</span><span>✿</span>
+      <span>❀</span><span>✿</span><span>❀</span><span>✿</span>
+    </div>
+    <div class="carito-tarjeta">
+      <span class="carito-flor" aria-hidden="true">❀</span>
+      <h2>¡Bienvenida, Carito!</h2>
+      <p>Qué gusto verte por aquí.</p>
+    </div>
+  </section>
+
   <div class="polvo" aria-hidden="true">
     <span></span>
     <span></span>
@@ -1197,13 +1382,34 @@
     const mensaje = document.getElementById("mensajeLogin");
     const btnLogin = document.getElementById("btnLogin");
     const lista = document.getElementById("listaCursos");
+    const bienvenidaCarito = document.getElementById("bienvenidaCarito");
     const URL_CATALOGO_CURSOS = new URL("cursos.json", document.baseURI);
+    let temporizadorCarito;
 
     function escapar(valor){return String(valor??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
     function fecha(valor){if(!valor)return "—";const f=new Date(valor);return isNaN(f)?"—":f.toLocaleString("es-MX",{day:"2-digit",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}
     function mostrarLogin(texto=""){document.body.classList.remove("portal-activo");app.classList.add("oculto");login.classList.remove("oculto");mensaje.textContent=texto}
     function mostrarApp(){document.body.classList.add("portal-activo");login.classList.add("oculto");app.classList.remove("oculto");mensaje.textContent=""}
     function etiqueta(estado){if(estado==="aprobado")return '<span class="badge aprobado">APROBADO</span>';if(estado==="no_aprobado")return '<span class="badge no-aprobado">NO APROBADO</span>';return '<span class="badge no-iniciado">NO INICIADO</span>'}
+
+    function mostrarBienvenidaCarito(participante){
+      const numero=String(participante?.numero_empleado||"").trim();
+      if(numero!=="1065"||!bienvenidaCarito)return;
+
+      window.clearTimeout(temporizadorCarito);
+      bienvenidaCarito.classList.remove("activa","saliendo");
+      void bienvenidaCarito.offsetWidth;
+      bienvenidaCarito.classList.add("activa");
+      bienvenidaCarito.setAttribute("aria-hidden","false");
+
+      temporizadorCarito=window.setTimeout(()=>{
+        bienvenidaCarito.classList.add("saliendo");
+        window.setTimeout(()=>{
+          bienvenidaCarito.classList.remove("activa","saliendo");
+          bienvenidaCarito.setAttribute("aria-hidden","true");
+        },600);
+      },5000);
+    }
 
     function claveCurso(curso){
       const valor=curso?.id||curso?.slug||curso?.clave_resultados||curso?.curso||curso?.nombre||"";
@@ -1275,6 +1481,7 @@
       const datos=await respuesta.json();
       datos.cursos=combinarCursos(datos.cursos,catalogo);
       mostrarApp();
+      mostrarBienvenidaCarito(datos.participante);
       document.getElementById("nombrePerfil").textContent=datos.participante.nombre;
       document.getElementById("numeroPerfil").textContent=datos.participante.numero_empleado;
       document.getElementById("servicioPerfil").textContent=datos.participante.servicio||"Sin asignar";
