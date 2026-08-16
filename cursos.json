@@ -44,23 +44,22 @@
     "descripcion": "Capacitación breve sobre el uso seguro de extintores ante fuegos incipientes.",
     "ruta": "uso-correcto-extintor/",
     "archivo_html": "index.html",
-    "serviciosPermitidos": [
-      "REUNION"
-    ],
+    "serviciosPermitidos": ["REUNION"],
     "activo": true,
     "orden": 40,
     "calificacion_aprobatoria": 70,
     "calificacion_maxima_origen": 100
-  }
+  },
   {
-  "id": "resolucion-de-conflictos",
-  "titulo": "Manejo de conflictos y comunicación asertiva",
-  "descripcion": "Capacitación para prevenir, desescalar y actuar profesionalmente ante situaciones de conflicto.",
-  "carpeta": "resolucion-de-conflictos",
-  "ruta": "resolucion-de-conflictos/index.html",
-  "duracion": "25 minutos",
-  "categoria": "Seguridad privada",
-  "activo": true,
-  "servicios": ["TODOS"]
-},
+    "id": "resolucion-de-conflictos",
+    "curso": "Manejo de conflictos y comunicación asertiva",
+    "nombre": "Manejo de conflictos y comunicación asertiva",
+    "descripcion": "Capacitación para prevenir, desescalar y actuar profesionalmente ante situaciones de conflicto.",
+    "ruta": "resolucion-de-conflictos/",
+    "archivo_html": "index.html",
+    "activo": true,
+    "orden": 50,
+    "calificacion_aprobatoria": 70,
+    "calificacion_maxima_origen": 100
+  }
 ]
