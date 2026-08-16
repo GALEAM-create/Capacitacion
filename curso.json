@@ -1,0 +1,11 @@
+{
+  "id": "resolucion-de-conflictos",
+  "titulo": "Manejo de conflictos y comunicación asertiva",
+  "descripcion": "Capacitación para prevenir, desescalar y actuar profesionalmente ante situaciones de conflicto.",
+  "carpeta": "resolucion-de-conflictos",
+  "ruta": "resolucion-de-conflictos/index.html",
+  "duracion": "25 minutos",
+  "categoria": "Seguridad privada",
+  "activo": true,
+  "servicios": ["TODOS"]
+}
