@@ -1189,6 +1189,118 @@
       letter-spacing: .55px;
     }
 
+    /* ===== BANNER CORPORATIVO DE SERVICIOS ===== */
+    .seccion-ejecutiva { display: block; }
+
+    .panel-servicios-banner {
+      position: relative;
+      overflow: hidden;
+      min-height: 232px;
+      padding: 23px 27px 25px;
+      color: #fff;
+      border-color: rgba(255,255,255,.08);
+      background:
+        linear-gradient(100deg, rgba(7,27,43,.98) 0%, rgba(16,55,79,.94) 58%, rgba(23,76,103,.88) 100%),
+        url("casco-marca-agua.png") right -32px center / 245px auto no-repeat;
+      box-shadow: 0 14px 34px rgba(8,28,44,.16);
+    }
+
+    .panel-servicios-banner::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, transparent 55%, rgba(201,163,78,.10));
+    }
+
+    .panel-servicios-banner > * { position: relative; z-index: 1; }
+    .banner-encabezado { margin-bottom: 15px; }
+    .banner-encabezado h2 { padding-left: 0; color: #fff; font: 700 19px/1.2 Arial, Helvetica, sans-serif; letter-spacing: .2px; }
+    .banner-encabezado h2::before { display: none; }
+    .banner-encabezado > span { color: rgba(255,255,255,.68); }
+
+    .banner-kicker {
+      display: block;
+      margin-bottom: 5px;
+      color: #e3c673 !important;
+      font: 700 9px/1.2 Arial, Helvetica, sans-serif !important;
+      text-transform: uppercase;
+      letter-spacing: 1.5px !important;
+    }
+
+    .panel-servicios-banner .resumen-visual {
+      grid-template-columns: 145px minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    .panel-servicios-banner .grafica-bloque { gap: 7px; }
+    .panel-servicios-banner .grafica-pastel { width: 126px; box-shadow: 0 12px 26px rgba(0,0,0,.24); }
+    .panel-servicios-banner .grafica-pastel::after { inset: 23px; background: #102f45; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+    .panel-servicios-banner .grafica-centro strong { color: #fff; font-size: 23px; }
+    .panel-servicios-banner .grafica-centro span { color: rgba(255,255,255,.62); }
+    .panel-servicios-banner .grafica-leyenda { gap: 5px 10px; color: rgba(255,255,255,.72); font-family: Arial, Helvetica, sans-serif; }
+
+    .panel-servicios-banner .lista-servicios {
+      display: grid;
+      grid-auto-flow: column;
+      grid-auto-columns: minmax(178px, 210px);
+      gap: 10px;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      padding: 2px 3px 10px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(227,198,115,.60) rgba(255,255,255,.10);
+    }
+
+    .panel-servicios-banner .servicio-item[data-servicio] {
+      min-height: 100px;
+      margin: 0;
+      padding: 13px 14px;
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 9px;
+      background: rgba(255,255,255,.075);
+      backdrop-filter: blur(5px);
+      transition: transform .16s ease, background .16s ease, border-color .16s ease;
+    }
+
+    .panel-servicios-banner .servicio-item[data-servicio]:hover {
+      transform: translateY(-2px);
+      border-color: rgba(227,198,115,.52);
+      background: rgba(255,255,255,.13);
+    }
+
+    .panel-servicios-banner .servicio-info {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: start;
+      gap: 8px;
+      margin-bottom: 12px;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .panel-servicios-banner .servicio-info strong {
+      color: #fff;
+      font: 700 11px/1.35 Arial, Helvetica, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: .45px;
+    }
+
+    .panel-servicios-banner .servicio-porcentaje {
+      color: #e3c673;
+      font: 700 20px/1 Arial, Helvetica, sans-serif;
+    }
+
+    .panel-servicios-banner .servicio-detalle {
+      display: block;
+      margin-bottom: 9px;
+      color: rgba(255,255,255,.66);
+      font: 400 10px/1.3 Arial, Helvetica, sans-serif;
+    }
+
+    .panel-servicios-banner .barra-progreso { height: 4px; background: rgba(255,255,255,.13); }
+    .panel-servicios-banner .barra-progreso-interna { background: linear-gradient(90deg, #c9a34e, #e3c673); }
+    .panel-servicios-banner .sin-datos { color: rgba(255,255,255,.70); }
+
     /* ===== ACCESSIBILITY ===== */
     button:focus-visible,
     input:focus-visible,
@@ -1382,10 +1494,13 @@
 
     <section class="seccion-ejecutiva">
 
-      <article class="panel">
-        <div class="panel-encabezado">
-          <h2>Avance por servicio</h2>
-          <span>Porcentaje de aprobación</span>
+      <article class="panel panel-servicios-banner">
+        <div class="panel-encabezado banner-encabezado">
+          <div>
+            <span class="banner-kicker">Panorama de capacitación</span>
+            <h2>Desempeño por servicio</h2>
+          </div>
+          <span>Selecciona un servicio para ver el detalle</span>
         </div>
 
         <div class="resumen-visual">
@@ -1404,17 +1519,6 @@
           <div id="resumenServicios" class="lista-servicios">
             <p class="sin-datos">Cargando avance por servicio...</p>
           </div>
-        </div>
-      </article>
-
-      <article class="panel">
-        <div class="panel-encabezado">
-          <h2>Alertas estratégicas</h2>
-          <span>Seguimiento operativo</span>
-        </div>
-
-        <div id="alertasEstrategicas">
-          <p class="sin-datos">Analizando resultados...</p>
         </div>
       </article>
 
@@ -1944,7 +2048,6 @@
 
       actualizarGrafica(aprobados, noAprobados, cumplimiento);
       actualizarResumenServicios(grupos);
-      actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio, grupos);
     }
 
     function actualizarGrafica(aprobados, noAprobados, cumplimiento) {
@@ -1996,8 +2099,10 @@
           <div class="servicio-item" data-servicio="${escaparHtml(nombre)}" title="Filtrar este servicio">
             <div class="servicio-info">
               <strong>${escaparHtml(nombre)}</strong>
-              <span>${datos.aprobados}/${datos.total} aprobados · ${porcentaje}%</span>
+              <span class="servicio-porcentaje">${porcentaje}%</span>
             </div>
+
+            <span class="servicio-detalle">${datos.aprobados}/${datos.total} aprobados</span>
 
             <div class="barra-progreso">
               <div
@@ -2016,84 +2121,6 @@
           document.querySelector(".panel-tabla").scrollIntoView({ behavior: "smooth", block: "start" });
         });
       });
-    }
-
-    function actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio, grupos = gruposOriginales) {
-      const contenedor = document.getElementById("alertasEstrategicas");
-
-      if (!grupos.length) {
-        contenedor.innerHTML = `
-          <p class="sin-datos">No hay alertas mientras no existan registros.</p>
-        `;
-        return;
-      }
-
-      const calificacionesBajas = grupos.filter(
-        grupo => obtenerPorcentajeCalificacion(grupo.ultimo) < 70
-      );
-
-      const conReintentos = grupos.filter(
-        grupo => grupo.historial.length > 1
-      );
-
-      let alertas = "";
-
-      if (noAprobados > 0) {
-        alertas += `
-          <div class="alerta-resumen alerta-roja">
-            <p class="alerta-titulo">${noAprobados} caso(s) requieren seguimiento</p>
-            <p class="alerta-texto">
-              Corresponden al estatus de su último intento. Se recomienda
-              programar refuerzo o reinscripción.
-            </p>
-          </div>
-        `;
-      } else {
-        alertas += `
-          <div class="alerta-resumen alerta-verde">
-            <p class="alerta-titulo">Sin casos pendientes de aprobación</p>
-            <p class="alerta-texto">
-              Todos los registros persona / curso están acreditados en su último intento.
-            </p>
-          </div>
-        `;
-      }
-
-      if (calificacionesBajas.length > 0) {
-        alertas += `
-          <div class="alerta-resumen alerta-ambar">
-            <p class="alerta-titulo">${calificacionesBajas.length} último(s) resultado(s) inferior(es) a 70%</p>
-            <p class="alerta-texto">
-              Conviene revisar el historial y las respuestas incorrectas de estos colaboradores.
-            </p>
-          </div>
-        `;
-      }
-
-      if (conReintentos.length > 0) {
-        alertas += `
-          <div class="alerta-resumen alerta-ambar">
-            <p class="alerta-titulo">${conReintentos.length} persona(s) han realizado más de un intento</p>
-            <p class="alerta-texto">
-              El botón “Ver historial” permite comparar sus calificaciones y errores por intento.
-            </p>
-          </div>
-        `;
-      }
-
-      if (cumplimiento >= 90 && promedio >= 85) {
-        alertas += `
-          <div class="alerta-resumen alerta-verde">
-            <p class="alerta-titulo">Indicadores de desempeño favorables</p>
-            <p class="alerta-texto">
-              El cumplimiento general es de ${cumplimiento}% y el promedio normalizado
-              registrado es de ${promedio.toFixed(1)}%.
-            </p>
-          </div>
-        `;
-      }
-
-      contenedor.innerHTML = alertas;
     }
 
     function aplicarFiltros() {
