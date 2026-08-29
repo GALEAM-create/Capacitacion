@@ -1187,6 +1187,77 @@
       letter-spacing: .55px;
     }
 
+    /* ===== TABLA EN CRISTAL OSCURO ===== */
+    .panel-tabla {
+      color: #fff;
+      background: rgba(7, 24, 37, .46);
+      border-color: rgba(255,255,255,.18);
+      box-shadow: 0 22px 55px rgba(0,0,0,.22);
+      backdrop-filter: blur(15px) saturate(125%);
+      -webkit-backdrop-filter: blur(15px) saturate(125%);
+    }
+
+    .panel-tabla > .panel-encabezado {
+      background: rgba(4, 18, 29, .22);
+      border-bottom-color: rgba(255,255,255,.13);
+    }
+
+    .panel-tabla .panel-encabezado h2,
+    .panel-tabla .panel-encabezado span {
+      color: #fff;
+    }
+
+    .panel-tabla .panel-encabezado span { opacity: .72; }
+
+    .panel-tabla .controles {
+      background: rgba(6, 23, 36, .38);
+      border-bottom-color: rgba(255,255,255,.13);
+    }
+
+    .panel-tabla .campo-control {
+      color: #fff;
+      background: rgba(255,255,255,.09);
+      border-color: rgba(255,255,255,.28);
+    }
+
+    .panel-tabla .campo-control::placeholder { color: rgba(255,255,255,.66); }
+    .panel-tabla select.campo-control option { color: #102638; background: #fff; }
+
+    .panel-tabla table { background: transparent; }
+    .panel-tabla th {
+      color: rgba(255,255,255,.92);
+      background: rgba(12, 43, 62, .88);
+      border-bottom-color: rgba(255,255,255,.16);
+    }
+
+    .panel-tabla td {
+      color: rgba(255,255,255,.88);
+      border-bottom-color: rgba(255,255,255,.12);
+    }
+
+    .panel-tabla .celda-nombre,
+    .panel-tabla .curso,
+    .panel-tabla .calificacion {
+      color: #fff;
+    }
+
+    .panel-tabla tbody tr:hover:not(.fila-historial) {
+      background: rgba(255,255,255,.075);
+    }
+
+    .panel-tabla .boton-historial {
+      color: #fff;
+      background: rgba(255,255,255,.08);
+      border-color: rgba(255,255,255,.28);
+    }
+
+    .panel-tabla .boton-historial:hover { background: rgba(255,255,255,.16); }
+
+    .panel-tabla .fila-historial td { background: rgba(3, 16, 27, .58); }
+    .panel-tabla .historial-titulo { color: #fff; }
+    .panel-tabla .tabla-historial { background: rgba(2, 14, 24, .30); }
+    .panel-tabla .tabla-historial td { color: rgba(255,255,255,.86); }
+
     /* ===== BANNER CORPORATIVO DE SERVICIOS ===== */
     .seccion-ejecutiva { display: block; }
 
