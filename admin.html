@@ -496,6 +496,8 @@
 
     .tarjeta.aprobados::after { background: var(--green); opacity: 1; }
     .tarjeta.pendientes::after { background: var(--red); opacity: 1; }
+    .tarjeta.pendientes { cursor: pointer; }
+    .tarjeta.pendientes:hover { background: #fffafb; }
     .tarjeta.cumplimiento::after { background: var(--accent); opacity: 1; }
 
     .tarjeta-etiqueta {
@@ -639,6 +641,59 @@
       font-size: 12px;
     }
 
+    .resumen-visual {
+      display: grid;
+      grid-template-columns: 210px minmax(0, 1fr);
+      gap: 26px;
+      align-items: center;
+    }
+
+    .grafica-bloque {
+      display: grid;
+      justify-items: center;
+      gap: 12px;
+    }
+
+    .grafica-pastel {
+      --aprobados: 0deg;
+      position: relative;
+      width: 176px;
+      aspect-ratio: 1;
+      border: 0;
+      border-radius: 50%;
+      cursor: pointer;
+      background: conic-gradient(var(--green) 0deg var(--aprobados), var(--red) var(--aprobados) 360deg);
+      box-shadow: inset 0 0 0 1px rgba(12,29,41,.08), 0 12px 24px rgba(12,29,41,.10);
+    }
+
+    .grafica-pastel::after {
+      content: "";
+      position: absolute;
+      inset: 31px;
+      border-radius: 50%;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px rgba(12,29,41,.07);
+    }
+
+    .grafica-centro {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: grid;
+      place-content: center;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .grafica-centro strong { color: var(--ink); font-size: 27px; line-height: 1; }
+    .grafica-centro span { margin-top: 5px; color: var(--muted); font-size: 9px; font-weight: 750; text-transform: uppercase; letter-spacing: .8px; }
+    .grafica-leyenda { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 14px; color: var(--muted); font-size: 10px; }
+    .grafica-leyenda button { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; color: inherit; background: transparent; cursor: pointer; }
+    .grafica-leyenda i { width: 9px; height: 9px; border-radius: 50%; }
+    .lista-servicios { min-width: 0; }
+    .servicio-item[data-servicio] { cursor: pointer; padding: 7px; margin-left: -7px; margin-right: -7px; border-radius: 6px; }
+    .servicio-item[data-servicio]:hover { background: #f5f8fa; }
+
     /* ===== ALERTS ===== */
     .alerta-resumen {
       position: relative;
@@ -696,7 +751,7 @@
     /* ===== FILTER TOOLBAR ===== */
     .controles {
       display: grid;
-      grid-template-columns: minmax(240px, 1.5fr) repeat(3, minmax(150px, .65fr)) auto auto;
+      grid-template-columns: minmax(220px, 1.35fr) repeat(4, minmax(135px, .62fr)) auto auto;
       gap: 9px;
       align-items: center;
       padding: 14px 16px;
@@ -1149,7 +1204,7 @@
       .tarjeta:nth-child(3) { border-right: 0; }
       .tarjeta:nth-child(-n+3) { border-bottom: 1px solid #e6ebee; }
       .seccion-ejecutiva { grid-template-columns: 1fr; }
-      .controles { grid-template-columns: minmax(220px, 1.4fr) repeat(3, minmax(140px, 1fr)); }
+      .controles { grid-template-columns: minmax(220px, 1.4fr) repeat(4, minmax(130px, 1fr)); }
       .controles .boton { width: 100%; }
     }
 
@@ -1189,6 +1244,7 @@
       .tarjeta:last-child { border-bottom: 0; }
       .tarjeta { min-height: 128px; }
       .panel { padding: 18px; }
+      .resumen-visual { grid-template-columns: 1fr; }
       .panel-encabezado { align-items: flex-start; flex-direction: column; gap: 6px; }
       .panel-tabla > .panel-encabezado { padding: 18px 16px 14px; }
       .panel-encabezado span { white-space: normal; }
@@ -1304,7 +1360,7 @@
         <p class="tarjeta-descripcion" id="descripcionAprobados">Sin información disponible.</p>
       </article>
 
-      <article class="tarjeta pendientes">
+      <article id="tarjetaNoAprobados" class="tarjeta pendientes" role="button" tabindex="0" title="Mostrar colaboradores no aprobados">
         <p class="tarjeta-etiqueta">Casos por atender</p>
         <p class="tarjeta-valor" id="totalNoAprobados">0</p>
         <p class="tarjeta-descripcion">Colaboradores que requieren seguimiento.</p>
@@ -1332,8 +1388,22 @@
           <span>Porcentaje de aprobación</span>
         </div>
 
-        <div id="resumenServicios">
-          <p class="sin-datos">Cargando avance por servicio...</p>
+        <div class="resumen-visual">
+          <div class="grafica-bloque">
+            <button id="graficaPastel" class="grafica-pastel" type="button" title="Mostrar personas no aprobadas">
+              <span class="grafica-centro">
+                <strong id="graficaPorcentaje">0%</strong>
+                <span>Aprobación</span>
+              </span>
+            </button>
+            <div class="grafica-leyenda">
+              <button id="leyendaAprobados" type="button"><i style="background:var(--green)"></i><span id="leyendaAprobadosTexto">0 aprobados</span></button>
+              <button id="leyendaReprobados" type="button"><i style="background:var(--red)"></i><span id="leyendaReprobadosTexto">0 reprobados</span></button>
+            </div>
+          </div>
+          <div id="resumenServicios" class="lista-servicios">
+            <p class="sin-datos">Cargando avance por servicio...</p>
+          </div>
         </div>
       </article>
 
@@ -1370,6 +1440,12 @@
           <option value="">Todos los servicios</option>
         </select>
 
+        <select id="filtroModalidad" class="campo-control">
+          <option value="">Todas las modalidades</option>
+          <option value="E-LEARNING">E-learning</option>
+          <option value="PRESENCIAL">Presencial</option>
+        </select>
+
         <select id="filtroCurso" class="campo-control">
           <option value="">Todos los cursos</option>
         </select>
@@ -1397,6 +1473,7 @@
               <th>Nombre</th>
               <th>Número empleado</th>
               <th>Servicio</th>
+              <th>Modalidad</th>
               <th>Curso</th>
               <th>Intentos</th>
               <th>Última calificación</th>
@@ -1408,7 +1485,7 @@
 
           <tbody id="tablaResultados">
             <tr>
-              <td colspan="9" class="estado-tabla">Cargando resultados...</td>
+              <td colspan="10" class="estado-tabla">Cargando resultados...</td>
             </tr>
           </tbody>
         </table>
@@ -1517,6 +1594,7 @@
     const tabla = document.getElementById("tablaResultados");
     const buscador = document.getElementById("buscador");
     const filtroServicio = document.getElementById("filtroServicio");
+    const filtroModalidad = document.getElementById("filtroModalidad");
     const filtroCurso = document.getElementById("filtroCurso");
     const filtroEstado = document.getElementById("filtroEstado");
     const pantallaLogin = document.getElementById("pantallaLogin");
@@ -1717,7 +1795,11 @@
         .trim()
         .toLowerCase();
 
-      return `${numeroEmpleado}__${curso}`;
+      const modalidad = String(resultado.modalidad || "E-LEARNING")
+        .trim()
+        .toUpperCase();
+
+      return `${numeroEmpleado}__${curso}__${modalidad}`;
     }
 
     function crearGrupos(resultados) {
@@ -1756,6 +1838,7 @@
             nombre: ultimo.nombre,
             numero_empleado: ultimo.numero_empleado,
             servicio: ultimo.servicio,
+            modalidad: String(ultimo.modalidad || "E-LEARNING").toUpperCase(),
             curso: ultimo.curso,
             historial,
             ultimo
@@ -1823,18 +1906,21 @@
       filtroCurso.value = cursoSeleccionado;
     }
 
-    function actualizarResumen() {
-      const total = gruposOriginales.length;
-      const totalIntentos = resultadosOriginales.length;
+    function actualizarResumen(grupos = gruposOriginales) {
+      const total = grupos.length;
+      const clavesContexto = new Set(grupos.map(grupo => grupo.clave));
+      const totalIntentos = resultadosOriginales.filter(resultado =>
+        clavesContexto.has(crearClaveGrupo(resultado))
+      ).length;
 
-      const aprobados = gruposOriginales.filter(
+      const aprobados = grupos.filter(
         grupo => Number(grupo.ultimo.aprobado) === 1
       ).length;
 
       const noAprobados = total - aprobados;
 
       const promedio = total
-        ? gruposOriginales.reduce(
+        ? grupos.reduce(
             (suma, grupo) => suma + obtenerPorcentajeCalificacion(grupo.ultimo),
             0
           ) / total
@@ -1856,14 +1942,25 @@
       document.getElementById("descripcionAprobados").textContent =
         `${aprobados} de ${total} registros persona / curso acreditados en su último intento.`;
 
-      actualizarResumenServicios();
-      actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio);
+      actualizarGrafica(aprobados, noAprobados, cumplimiento);
+      actualizarResumenServicios(grupos);
+      actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio, grupos);
     }
 
-    function actualizarResumenServicios() {
+    function actualizarGrafica(aprobados, noAprobados, cumplimiento) {
+      const grafica = document.getElementById("graficaPastel");
+      const grados = Math.max(0, Math.min(360, cumplimiento * 3.6));
+      grafica.style.setProperty("--aprobados", `${grados}deg`);
+      grafica.setAttribute("aria-label", `${aprobados} aprobados y ${noAprobados} no aprobados`);
+      document.getElementById("graficaPorcentaje").textContent = `${cumplimiento}%`;
+      document.getElementById("leyendaAprobadosTexto").textContent = `${aprobados} aprobado${aprobados === 1 ? "" : "s"}`;
+      document.getElementById("leyendaReprobadosTexto").textContent = `${noAprobados} reprobado${noAprobados === 1 ? "" : "s"}`;
+    }
+
+    function actualizarResumenServicios(grupos = gruposOriginales) {
       const contenedor = document.getElementById("resumenServicios");
 
-      if (!gruposOriginales.length) {
+      if (!grupos.length) {
         contenedor.innerHTML = `
           <p class="sin-datos">Aún no existen resultados para analizar.</p>
         `;
@@ -1872,7 +1969,7 @@
 
       const servicios = {};
 
-      gruposOriginales.forEach(grupo => {
+      grupos.forEach(grupo => {
         const servicio = grupo.servicio || "Sin servicio asignado";
 
         if (!servicios[servicio]) {
@@ -1896,7 +1993,7 @@
         const porcentaje = obtenerPorcentaje(datos.aprobados, datos.total);
 
         return `
-          <div class="servicio-item">
+          <div class="servicio-item" data-servicio="${escaparHtml(nombre)}" title="Filtrar este servicio">
             <div class="servicio-info">
               <strong>${escaparHtml(nombre)}</strong>
               <span>${datos.aprobados}/${datos.total} aprobados · ${porcentaje}%</span>
@@ -1911,23 +2008,31 @@
           </div>
         `;
       }).join("");
+
+      contenedor.querySelectorAll("[data-servicio]").forEach(elemento => {
+        elemento.addEventListener("click", () => {
+          filtroServicio.value = elemento.dataset.servicio;
+          aplicarFiltros();
+          document.querySelector(".panel-tabla").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+      });
     }
 
-    function actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio) {
+    function actualizarAlertas(aprobados, noAprobados, cumplimiento, promedio, grupos = gruposOriginales) {
       const contenedor = document.getElementById("alertasEstrategicas");
 
-      if (!gruposOriginales.length) {
+      if (!grupos.length) {
         contenedor.innerHTML = `
           <p class="sin-datos">No hay alertas mientras no existan registros.</p>
         `;
         return;
       }
 
-      const calificacionesBajas = gruposOriginales.filter(
+      const calificacionesBajas = grupos.filter(
         grupo => obtenerPorcentajeCalificacion(grupo.ultimo) < 70
       );
 
-      const conReintentos = gruposOriginales.filter(
+      const conReintentos = grupos.filter(
         grupo => grupo.historial.length > 1
       );
 
@@ -1994,10 +2099,29 @@
     function aplicarFiltros() {
       const textoBusqueda = buscador.value.trim().toLowerCase();
       const servicioSeleccionado = filtroServicio.value;
+      const modalidadSeleccionada = filtroModalidad.value;
       const cursoSeleccionado = filtroCurso.value;
       const estadoSeleccionado = filtroEstado.value;
 
-      gruposFiltrados = gruposOriginales.filter(grupo => {
+      const gruposContexto = gruposOriginales.filter(grupo => {
+        const coincideServicio =
+          !servicioSeleccionado ||
+          grupo.servicio === servicioSeleccionado;
+
+        const coincideModalidad =
+          !modalidadSeleccionada ||
+          grupo.modalidad === modalidadSeleccionada;
+
+        const coincideCurso =
+          !cursoSeleccionado ||
+          grupo.curso === cursoSeleccionado;
+
+        return coincideServicio && coincideModalidad && coincideCurso;
+      });
+
+      actualizarResumen(gruposContexto);
+
+      gruposFiltrados = gruposContexto.filter(grupo => {
         const nombre = String(grupo.nombre || "").toLowerCase();
         const numeroEmpleado = String(grupo.numero_empleado || "").toLowerCase();
 
@@ -2005,14 +2129,6 @@
           !textoBusqueda ||
           nombre.includes(textoBusqueda) ||
           numeroEmpleado.includes(textoBusqueda);
-
-        const coincideServicio =
-          !servicioSeleccionado ||
-          grupo.servicio === servicioSeleccionado;
-
-        const coincideCurso =
-          !cursoSeleccionado ||
-          grupo.curso === cursoSeleccionado;
 
         const aprobado = Number(grupo.ultimo.aprobado) === 1;
 
@@ -2023,8 +2139,6 @@
 
         return (
           coincideBusqueda &&
-          coincideServicio &&
-          coincideCurso &&
           coincideEstado
         );
       });
@@ -2163,7 +2277,7 @@
       if (!gruposFiltrados.length) {
         tabla.innerHTML = `
           <tr>
-            <td colspan="9" class="estado-tabla">
+            <td colspan="10" class="estado-tabla">
               No se encontraron resultados con los filtros seleccionados.
             </td>
           </tr>
@@ -2179,6 +2293,7 @@
               <td class="celda-nombre">${escaparHtml(grupo.nombre)}</td>
               <td>${escaparHtml(grupo.numero_empleado)}</td>
               <td>${escaparHtml(grupo.servicio || "Sin asignar")}</td>
+              <td><span class="badge">${escaparHtml(grupo.modalidad)}</span></td>
               <td class="curso">${escaparHtml(grupo.curso || "Sin curso")}</td>
               <td class="calificacion">${grupo.historial.length}</td>
               <td class="calificacion">${formatearCalificacion(ultimo)}</td>
@@ -2192,7 +2307,7 @@
             </tr>
             ${estaAbierto ? `
               <tr class="fila-historial">
-                <td colspan="9">${renderizarHistorial(grupo)}</td>
+                <td colspan="10">${renderizarHistorial(grupo)}</td>
               </tr>
             ` : ""}
           `;
@@ -2302,6 +2417,7 @@
         "Nombre",
         "Número de empleado",
         "Servicio",
+        "Modalidad",
         "Curso",
         "Intento",
         "Calificación",
@@ -2322,6 +2438,7 @@
           resultado.nombre,
           resultado.numero_empleado,
           resultado.servicio,
+          resultado.modalidad || "E-LEARNING",
           resultado.curso,
           resultado.intento_visible,
           resultado.calificacion,
@@ -2363,7 +2480,7 @@
 
       tabla.innerHTML = `
         <tr>
-          <td colspan="9" class="estado-tabla">
+          <td colspan="10" class="estado-tabla">
             Actualizando resultados...
           </td>
         </tr>
@@ -2392,7 +2509,6 @@
         gruposOriginales = crearGrupos(resultadosOriginales);
 
         llenarFiltros();
-        actualizarResumen();
         actualizarUltimaActualizacion();
         aplicarFiltros();
       } catch (error) {
@@ -2407,7 +2523,7 @@
 
         tabla.innerHTML = `
           <tr>
-            <td colspan="9" class="estado-tabla">
+            <td colspan="10" class="estado-tabla">
               No fue posible cargar los resultados. Contacta con el programador: el Fercho.
             </td>
           </tr>
@@ -2600,8 +2716,26 @@
     document.getElementById("btnActualizarResultados").addEventListener("click", cargarResultados);
     document.getElementById("btnExportarResultados").addEventListener("click", exportarExcel);
 
+    function filtrarPorEstado(estado) {
+      filtroEstado.value = estado;
+      aplicarFiltros();
+      document.querySelector(".panel-tabla").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    document.getElementById("graficaPastel").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
+    document.getElementById("leyendaAprobados").addEventListener("click", () => filtrarPorEstado("aprobado"));
+    document.getElementById("leyendaReprobados").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
+    document.getElementById("tarjetaNoAprobados").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
+    document.getElementById("tarjetaNoAprobados").addEventListener("keydown", evento => {
+      if (evento.key === "Enter" || evento.key === " ") {
+        evento.preventDefault();
+        filtrarPorEstado("no-aprobado");
+      }
+    });
+
     buscador.addEventListener("input", aplicarFiltros);
     filtroServicio.addEventListener("change", aplicarFiltros);
+    filtroModalidad.addEventListener("change", aplicarFiltros);
     filtroCurso.addEventListener("change", aplicarFiltros);
     filtroEstado.addEventListener("change", aplicarFiltros);
     formularioLogin.addEventListener("submit", iniciarSesion);
