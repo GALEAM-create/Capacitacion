@@ -41,7 +41,7 @@
     }
 
     html {
-      background: var(--canvas);
+      background: #071725;
     }
 
     body {
@@ -49,10 +49,8 @@
       padding: 24px;
       color: var(--ink);
       background:
-        linear-gradient(rgba(11, 24, 36, .025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(11, 24, 36, .025) 1px, transparent 1px),
-        var(--canvas);
-      background-size: 34px 34px;
+        linear-gradient(135deg, rgba(4, 16, 27, .92), rgba(9, 33, 50, .83)),
+        url("https://images.unsplash.com/photo-1590426327851-aca45781105c?auto=format&fit=crop&w=2200&q=78") center / cover fixed no-repeat;
       font-family: "Segoe UI Variable", "Segoe UI", Inter, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
@@ -1458,40 +1456,6 @@
       </div>
     </header>
 
-    <section class="tarjetas-resumen">
-
-      <article class="tarjeta">
-        <p class="tarjeta-etiqueta">Personal registrado</p>
-        <p class="tarjeta-valor" id="totalRegistros">0</p>
-        <p class="tarjeta-descripcion" id="descripcionRegistros">Registros de capacitación almacenados.</p>
-      </article>
-
-      <article class="tarjeta aprobados">
-        <p class="tarjeta-etiqueta">Personal aprobado</p>
-        <p class="tarjeta-valor" id="totalAprobados">0</p>
-        <p class="tarjeta-descripcion" id="descripcionAprobados">Sin información disponible.</p>
-      </article>
-
-      <article id="tarjetaNoAprobados" class="tarjeta pendientes" role="button" tabindex="0" title="Mostrar colaboradores no aprobados">
-        <p class="tarjeta-etiqueta">Casos por atender</p>
-        <p class="tarjeta-valor" id="totalNoAprobados">0</p>
-        <p class="tarjeta-descripcion">Colaboradores que requieren seguimiento.</p>
-      </article>
-
-      <article class="tarjeta cumplimiento">
-        <p class="tarjeta-etiqueta">Cumplimiento general</p>
-        <p class="tarjeta-valor" id="porcentajeCumplimiento">0%</p>
-        <p class="tarjeta-descripcion">Porcentaje de colaboradores aprobados.</p>
-      </article>
-
-      <article class="tarjeta">
-        <p class="tarjeta-etiqueta">Promedio general</p>
-        <p class="tarjeta-valor" id="promedioGeneral">0</p>
-        <p class="tarjeta-descripcion">Promedio de calificaciones registradas.</p>
-      </article>
-
-    </section>
-
     <section class="seccion-ejecutiva">
 
       <article class="panel panel-servicios-banner">
@@ -2012,39 +1976,12 @@
 
     function actualizarResumen(grupos = gruposOriginales) {
       const total = grupos.length;
-      const clavesContexto = new Set(grupos.map(grupo => grupo.clave));
-      const totalIntentos = resultadosOriginales.filter(resultado =>
-        clavesContexto.has(crearClaveGrupo(resultado))
-      ).length;
-
       const aprobados = grupos.filter(
         grupo => Number(grupo.ultimo.aprobado) === 1
       ).length;
 
       const noAprobados = total - aprobados;
-
-      const promedio = total
-        ? grupos.reduce(
-            (suma, grupo) => suma + obtenerPorcentajeCalificacion(grupo.ultimo),
-            0
-          ) / total
-        : 0;
-
       const cumplimiento = obtenerPorcentaje(aprobados, total);
-
-      document.getElementById("totalRegistros").textContent = total;
-      document.getElementById("totalAprobados").textContent = aprobados;
-      document.getElementById("totalNoAprobados").textContent = noAprobados;
-      document.getElementById("porcentajeCumplimiento").textContent =
-        `${cumplimiento}%`;
-      document.getElementById("promedioGeneral").textContent =
-        `${promedio.toFixed(1)}%`;
-
-      document.getElementById("descripcionRegistros").textContent =
-        `${totalIntentos} intento${totalIntentos === 1 ? "" : "s"} almacenado${totalIntentos === 1 ? "" : "s"} para ${total} persona${total === 1 ? "" : "s"} / curso.`;
-
-      document.getElementById("descripcionAprobados").textContent =
-        `${aprobados} de ${total} registros persona / curso acreditados en su último intento.`;
 
       actualizarGrafica(aprobados, noAprobados, cumplimiento);
       actualizarResumenServicios(grupos);
@@ -2752,13 +2689,6 @@
     document.getElementById("graficaPastel").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
     document.getElementById("leyendaAprobados").addEventListener("click", () => filtrarPorEstado("aprobado"));
     document.getElementById("leyendaReprobados").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
-    document.getElementById("tarjetaNoAprobados").addEventListener("click", () => filtrarPorEstado("no-aprobado"));
-    document.getElementById("tarjetaNoAprobados").addEventListener("keydown", evento => {
-      if (evento.key === "Enter" || evento.key === " ") {
-        evento.preventDefault();
-        filtrarPorEstado("no-aprobado");
-      }
-    });
 
     buscador.addEventListener("input", aplicarFiltros);
     filtroServicio.addEventListener("change", aplicarFiltros);
