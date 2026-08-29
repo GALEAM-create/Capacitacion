@@ -2379,6 +2379,7 @@ app.get(
           fecha
          FROM resultados_capacitacion
          WHERE numero_empleado = ?
+           AND modalidad = 'E-LEARNING'
          ORDER BY fecha ASC,
                   id ASC`,
         [
@@ -3002,6 +3003,7 @@ app.get(
           numero_empleado,
           servicio,
           curso,
+          modalidad,
           calificacion,
           calificacion_maxima,
           total_preguntas,
