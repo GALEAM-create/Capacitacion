@@ -8,6 +8,24 @@ const helmet = require("helmet");
 const { rateLimit } = require("express-rate-limit");
 const mysql = require("mysql2/promise");
 
+
+const NET_VET_SLUG = "consignas-walmart-net-vet";
+const NET_VET_NOMBRE = "Consignas específicas — Walmart NET y VET";
+const NET_VET_URL = "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-net-vet/#portada";
+const NET_VET_PREGUNTAS = [{"q": "¿En qué consiste un código rojo?", "options": ["Indica un asalto", "Indica que hay una emergencia por incendio en la unidad", "Indica que hay un asociado o cliente lesionado o existe una emergencia médica.", "Indica que un niño está perdido."], "answer": 1}, {"q": "¿Qué debe hacer el guardia al recibir el turno?", "options": ["Retirarse inmediatamente de su puesto", "Recibir las novedades y el equipo del turno, sin abandonar el puesto sin relevo", "Revisar únicamente el uniforme", "Esperar a que el supervisor le indique qué hacer"], "answer": 1}, {"q": "¿Qué está prohibido hacer con la información y datos personales de la compañía?", "options": ["Protegerlos", "Reportarlos a Seguridad Corporativa", "Tomar fotografías, grabar o difundir contenido en redes sociales sin autorización", "Mantenerlos confidenciales"], "answer": 2}, {"q": "Un asociado se presenta sin gafete. ¿Cuál es el procedimiento correcto?", "options": ["Permitirle el acceso sin identificación", "Prestarle el gafete de otro asociado", "Entregar un gafete provisional con chip contra INE o licencia vigente", "Solicitar únicamente su nombre"], "answer": 2}, {"q": "¿Qué documento NO se acepta para entregar un gafete provisional con chip?", "options": ["INE", "Licencia de conducir vigente", "Pasaporte", "Ninguno de los anteriores"], "answer": 2}, {"q": "¿Qué debe hacer el guardia si encuentra a un visitante sin acompañamiento?", "options": ["Permitirle continuar su recorrido", "Escoltarlo a recepción y notificar al asociado responsable", "Retirarlo inmediatamente del edificio", "Ignorarlo mientras no cometa una falta"], "answer": 1}, {"q": "¿Qué requisito debe cumplirse para el ingreso o salida de equipo o muestras de proveedor?", "options": ["Únicamente presentar identificación", "Contar con correo de autorización formal y orden de salida requisitada", "Tener autorización verbal del proveedor", "Registrar solamente el nombre del guardia"], "answer": 1}, {"q": "¿Cada cuánto tiempo debe realizarse el rondín completo en el interior de las oficinas Toreo?", "options": ["Cada 30 minutos", "Cada 45 minutos", "Cada 60 minutos", "Cada 2 horas"], "answer": 2}, {"q": "En caso de realizar trabajos de soldadura, ¿qué elementos son obligatorios?", "options": ["Casco azul y extintor de polvo químico", "Extintor CO₂ y vigía con casco rojo", "Únicamente guantes de seguridad", "Casco blanco y extintor de agua"], "answer": 1}, {"q": "Ante un siniestro como fuego, amenaza, sismo o intrusión, ¿qué debe hacer el guardia?", "options": ["Esperar a que llegue el supervisor", "Resolver la situación por cuenta propia", "Reportar inmediatamente al Centro de Monitoreo (Zona Cero) y al CAE Emergencias", "Informar únicamente a recepción"], "answer": 2}];
+function servicioNetVet(servicio) {
+  const valor=String(servicio||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toUpperCase();
+  return ["WALMART NET","WALMART VET","NET","VET","WALMART NET Y VET","WALMART VET Y NET"].includes(valor);
+}
+function calificarNetVet(respuestas) {
+  if(!Array.isArray(respuestas)||respuestas.length!==10||respuestas.some(r=>r!==null&&(!Number.isInteger(r)||r<0||r>3))){
+    const error=new Error("Envía las diez respuestas con opciones de 0 a 3 o null si no se respondió.");error.codigo=400;throw error;
+  }
+  const errores=[];
+  NET_VET_PREGUNTAS.forEach((p,i)=>{if(respuestas[i]!==p.answer)errores.push({numero:i+1,pregunta:p.q,respuesta_usuario:respuestas[i]===null?"Sin respuesta":p.options[respuestas[i]],respuesta_correcta:p.options[p.answer]})});
+  return {calificacion:(10-errores.length)*10,errores};
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -193,6 +211,7 @@ function participantePuedeAccederCurso(
   participante,
   curso
 ) {
+  if(curso?.slug===NET_VET_SLUG||curso?.nombre===NET_VET_NOMBRE)return servicioNetVet(participante?.servicio);
   if (!esCursoUsoSeguroArmas(curso)) {
     return true;
   }
@@ -2367,6 +2386,8 @@ app.get(
                   nombre ASC`
       );
 
+    if(!cursos.some(c=>c.slug===NET_VET_SLUG||c.nombre===NET_VET_NOMBRE))cursos.push({id:NET_VET_SLUG,slug:NET_VET_SLUG,nombre:NET_VET_NOMBRE,descripcion:"Consignas operativas para Walmart NET y VET.",orden:70});
+
     const [resultados] =
       await pool.query(
         `SELECT
@@ -2447,10 +2468,7 @@ app.get(
           slug: curso.slug,
           descripcion:
             curso.descripcion,
-          url:
-            `/curso/${encodeURIComponent(
-              curso.slug
-            )}/`,
+          url:curso.slug===NET_VET_SLUG?NET_VET_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -2738,6 +2756,19 @@ app.use(
   }
 );
 
+
+// Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
+app.post("/api/portal/net-vet/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
+  try{
+    if(!servicioNetVet(req.participante.servicio))return res.status(403).json({mensaje:"Evaluación disponible solo para Walmart NET y VET."});
+    if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve a ingresar con la cuenta que inició el examen."});
+    const modalidad=normalizarModalidad(req.body.modalidad);
+    const nota=calificarNetVet(req.body.respuestas);
+    const resultado=await guardarResultado({nombre:req.participante.nombre,numeroEmpleado:req.participante.numero_empleado,servicio:req.participante.servicio,curso:NET_VET_NOMBRE,calificacionRecibida:nota.calificacion,calificacionMaximaRecibida:100,totalPreguntasRecibido:10,erroresRecibidos:nota.errores,modalidadRecibida:modalidad,calificacionAprobatoria:80});
+    return res.status(201).json({mensaje:"Calificación guardada correctamente.",...resultado});
+  }catch(error){console.error("Error al guardar NET y VET:",error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."})}
+});
+
 app.post(
   "/api/portal/resultados",
   requerirParticipante,
@@ -2749,6 +2780,8 @@ app.post(
         "curso",
         150
       );
+
+      if(slug===NET_VET_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación NET y VET."});
 
       const [filas] =
         await pool.query(
@@ -2920,6 +2953,8 @@ app.post(
         "curso",
         150
       );
+
+      if(curso===NET_VET_NOMBRE)return res.status(401).json({mensaje:"NET y VET requiere una sesión y el envío de respuestas desde su evaluación."});
 
       const [configuracionesCurso] =
         await pool.query(
