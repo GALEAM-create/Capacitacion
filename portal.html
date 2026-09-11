@@ -1435,10 +1435,16 @@
       }
     }
 
-    function combinarCursos(cursosServidor,cursosCatalogo){
+    function servicioPermitido(curso,servicio){
+      const normalizar=valor=>String(valor||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toUpperCase();
+      return Array.isArray(curso.serviciosPermitidos)&&curso.serviciosPermitidos.some(valor=>normalizar(valor)===normalizar(servicio));
+    }
+
+    function combinarCursos(cursosServidor,cursosCatalogo,participante){
       const servidor=Array.isArray(cursosServidor)?cursosServidor:[];
       const catalogo=Array.isArray(cursosCatalogo)?cursosCatalogo:[];
       const fichasPorClave=new Map();
+      const fichasUsadas=new Set();
 
       catalogo.forEach(ficha=>{
         const claves=[
@@ -1456,6 +1462,8 @@
           claveCurso({nombre:curso.nombre})
         ].filter(Boolean);
         const ficha=claves.map(clave=>fichasPorClave.get(clave)).find(Boolean)||null;
+        if(ficha)fichasUsadas.add(ficha);
+        if(ficha?.enlace_externo===true&&!servicioPermitido(ficha,participante?.servicio))return null;
         const ordenServidor=Number.isFinite(Number(curso.orden))?Number(curso.orden):2000+indice;
         const ordenFicha=Number.isFinite(Number(ficha?.orden))?Number(ficha.orden):ordenServidor;
 
@@ -1463,10 +1471,25 @@
           ...curso,
           nombre:ficha?.nombre||curso.nombre||"Curso sin nombre",
           descripcion:ficha?.descripcion??curso.descripcion??"",
-          url:curso.url||(ficha?urlCursoCatalogo(ficha):"#"),
+          url:ficha?.enlace_externo===true?urlCursoCatalogo(ficha):(curso.url||(ficha?urlCursoCatalogo(ficha):"#")),
           orden:ordenFicha,
           historial:Array.isArray(curso.historial)?curso.historial:[]
         };
+      }).filter(Boolean);
+
+      // Solo los enlaces externos explícitos pueden aparecer sin una ficha del servidor.
+      catalogo.forEach(ficha=>{
+        if(ficha.activo===false||ficha.enlace_externo!==true||fichasUsadas.has(ficha)||!servicioPermitido(ficha,participante?.servicio))return;
+        combinados.push({
+          ...ficha,
+          nombre:ficha.nombre||ficha.curso,
+          url:urlCursoCatalogo(ficha),
+          estado:"no_iniciado",
+          intentos:0,
+          ultima_calificacion:null,
+          mejor_calificacion:null,
+          historial:[]
+        });
       });
 
       return combinados.sort((a,b)=>Number(a.orden||9999)-Number(b.orden||9999)||String(a.nombre).localeCompare(String(b.nombre),"es"));
@@ -1479,7 +1502,7 @@
       if(respuesta.status===401){mostrarLogin("Tu sesión terminó. Ingresa nuevamente.");return}
       if(!respuesta.ok)throw new Error("No fue posible cargar los cursos.");
       const datos=await respuesta.json();
-      datos.cursos=combinarCursos(datos.cursos,catalogo);
+      datos.cursos=combinarCursos(datos.cursos,catalogo,datos.participante);
       mostrarApp();
       mostrarBienvenidaCarito(datos.participante);
       document.getElementById("nombrePerfil").textContent=datos.participante.nombre;
