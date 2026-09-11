@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mi Capacitación | Galeam</title>
-  <style nonce="__CSP_NONCE__">
+  <style nonce="rwnGXKMCfM5TNzm0ZXJQWXGm">
 
     :root {
       --noche:#050b12;
@@ -1375,7 +1375,7 @@
     </section>
   </main>
 
-  <script nonce="__CSP_NONCE__">
+  <script nonce="rwnGXKMCfM5TNzm0ZXJQWXGm">
     const login = document.getElementById("pantallaLogin");
     const app = document.getElementById("aplicacion");
     const form = document.getElementById("formLogin");
@@ -1384,6 +1384,20 @@
     const lista = document.getElementById("listaCursos");
     const bienvenidaCarito = document.getElementById("bienvenidaCarito");
     const URL_CATALOGO_CURSOS = new URL("cursos.json", document.baseURI);
+    // Respaldo cuando el servidor no expone el catálogo como archivo público.
+    const CATALOGO_RESPALDO = [{
+      id:"consignas-walmart-diamante",
+      curso:"Consignas específicas — Walmart Diamante",
+      nombre:"Consignas específicas — Walmart Diamante",
+      descripcion:"Capacitación sobre responsabilidades, controles, emergencias y protocolos de actuación del servicio Walmart Diamante.",
+      url:"https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/#portada",
+      serviciosPermitidos:["WALMART DIAMANTE","DIAMANTE"],
+      enlace_externo:true,
+      activo:true,
+      orden:60,
+      calificacion_aprobatoria:80,
+      calificacion_maxima_origen:100
+    }];
     let temporizadorCarito;
 
     function escapar(valor){return String(valor??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/\"/g,"&quot;").replace(/'/g,"&#039;")}
@@ -1430,8 +1444,8 @@
         const cursos=Array.isArray(contenido)?contenido:contenido.cursos;
         return Array.isArray(cursos)?cursos.filter(c=>c&&c.activo!==false):[];
       }catch(error){
-        console.warn("No fue posible leer cursos.json; se mostrarán los cursos enviados por el servidor.",error);
-        return [];
+        console.warn("No fue posible leer cursos.json; se usará el catálogo de respaldo junto con los cursos del servidor.",error);
+        return CATALOGO_RESPALDO;
       }
     }
 
