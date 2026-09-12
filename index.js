@@ -161,14 +161,31 @@ const limiteLoginAdmin = rateLimit({
 });
 
 const limiteLoginParticipante = rateLimit({
-  windowMs: 15 * 60 * 1000,
+windowMs: 15 * 60 * 1000,
   limit: 10,
+
+  keyGenerator(req) {
+    const numeroEmpleado = String(
+      req.body?.numero_empleado || "SIN_NUMERO"
+    )
+      .trim()
+      .toUpperCase();
+
+    return crypto
+      .createHash("sha256")
+      .update(`participante:${numeroEmpleado}`)
+      .digest("hex");
+  },
+
   standardHeaders: "draft-8",
   legacyHeaders: false,
+
+  // Los accesos correctos no consumen intentos.
   skipSuccessfulRequests: true,
+
   message: {
     mensaje:
-      "Demasiados intentos de acceso. Espera 15 minutos antes de volver a intentarlo."
+      "Demasiados intentos incorrectos para este número de empleado. Espera 15 minutos antes de volver a intentarlo."
   }
 });
 
