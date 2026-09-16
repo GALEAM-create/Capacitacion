@@ -47,6 +47,15 @@ const NOMBRE_CURSO_RESTRINGIDO =
 const SERVICIO_CURSO_RESTRINGIDO =
   "REUNION";
 
+const CENTRAL_DOCS_SLUG =
+  "consignas-walmart-central-documentos";
+const CENTRAL_DOCS_NOMBRE =
+  "Consignas específicas — Walmart Central de Documentos";
+const CENTRAL_DOCS_SERVICIO =
+  "WALMART CENTRAL DOCS";
+const CENTRAL_DOCS_URL =
+  "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-central-documentos/#portada";
+
 const ARCHIVO_CATALOGO_CURSOS = path.join(
   __dirname,
   "cursos.json"
@@ -228,6 +237,16 @@ function participantePuedeAccederCurso(
   participante,
   curso
 ) {
+  if (
+    curso?.slug === CENTRAL_DOCS_SLUG ||
+    curso?.nombre === CENTRAL_DOCS_NOMBRE
+  ) {
+    return (
+      normalizarNombre(participante?.servicio) ===
+      CENTRAL_DOCS_SERVICIO
+    );
+  }
+
   if(curso?.slug===NET_VET_SLUG||curso?.nombre===NET_VET_NOMBRE)return servicioNetVet(participante?.servicio);
   if (!esCursoUsoSeguroArmas(curso)) {
     return true;
@@ -2405,6 +2424,14 @@ app.get(
 
     if(!cursos.some(c=>c.slug===NET_VET_SLUG||c.nombre===NET_VET_NOMBRE))cursos.push({id:NET_VET_SLUG,slug:NET_VET_SLUG,nombre:NET_VET_NOMBRE,descripcion:"Consignas operativas para Walmart NET y VET.",orden:70});
 
+    if(!cursos.some(c=>c.slug===CENTRAL_DOCS_SLUG||c.nombre===CENTRAL_DOCS_NOMBRE))cursos.push({
+      id:CENTRAL_DOCS_SLUG,
+      slug:CENTRAL_DOCS_SLUG,
+      nombre:CENTRAL_DOCS_NOMBRE,
+      descripcion:"Capacitación sobre responsabilidades, accesos, proveedores, emergencias y protocolos operativos del servicio Walmart Central de Documentos.",
+      orden:80
+    });
+
     const [resultados] =
       await pool.query(
         `SELECT
@@ -2485,7 +2512,7 @@ app.get(
           slug: curso.slug,
           descripcion:
             curso.descripcion,
-          url:curso.slug===NET_VET_SLUG?NET_VET_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
+          url:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -3011,7 +3038,9 @@ app.post(
             Number(
               configuracionCurso
                 ?.calificacion_aprobatoria ||
-              CALIFICACION_APROBATORIA
+              (curso === CENTRAL_DOCS_NOMBRE
+                ? 80
+                : CALIFICACION_APROBATORIA)
             )
         });
 
