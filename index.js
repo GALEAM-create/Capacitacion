@@ -2801,6 +2801,62 @@ app.use(
 );
 
 
+// Endpoint autenticado de Walmart Central Docs.
+app.post(
+  "/api/portal/central-docs/resultados",
+  requerirParticipante,
+  limiteResultados,
+  async (req, res) => {
+    try {
+      if (
+        normalizarNombre(req.participante?.servicio) !==
+        CENTRAL_DOCS_SERVICIO
+      ) {
+        return res.status(403).json({
+          mensaje:
+            "Evaluación disponible únicamente para Walmart Central Docs."
+        });
+      }
+
+      const resultado = await guardarResultado({
+        nombre: req.participante.nombre,
+        numeroEmpleado:
+          req.participante.numero_empleado,
+        servicio: req.participante.servicio,
+        curso: CENTRAL_DOCS_NOMBRE,
+        calificacionRecibida:
+          req.body.calificacion,
+        calificacionMaximaRecibida: 100,
+        totalPreguntasRecibido: 10,
+        erroresRecibidos:
+          req.body.respuestas_incorrectas,
+        modalidadRecibida: "E-LEARNING",
+        calificacionAprobatoria: 80
+      });
+
+      return res.status(201).json({
+        mensaje:
+          "Calificación guardada correctamente.",
+        ...resultado
+      });
+    } catch (error) {
+      console.error(
+        "Error al guardar Walmart Central Docs:",
+        error
+      );
+
+      return res
+        .status(error.codigo || 500)
+        .json({
+          mensaje:
+            error.codigo
+              ? error.message
+              : "No fue posible guardar la calificación."
+        });
+    }
+  }
+);
+
 // Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
 app.post("/api/portal/net-vet/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
