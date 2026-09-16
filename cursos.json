@@ -81,10 +81,7 @@
   "nombre": "Consignas específicas — Walmart Central de Documentos",
   "descripcion": "Capacitación sobre responsabilidades, accesos, proveedores, emergencias y protocolos operativos del servicio Walmart Central de Documentos.",
   "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-central-documentos/#portada",
-  "serviciosPermitidos": [
-    "WALMART CENTRAL DE DOCUMENTOS",
-    "CENTRAL DE DOCUMENTOS"
-  ],
+  "serviciosPermitidos": ["WALMART CENTRAL DOCS"],
   "enlace_externo": true,
   "activo": true,
   "orden": 70,
