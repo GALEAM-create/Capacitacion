@@ -75,4 +75,21 @@
   "calificacion_aprobatoria": 80,
   "calificacion_maxima_origen": 100
 }
+{
+  "id": "consignas-walmart-central-documentos",
+  "curso": "Consignas específicas — Walmart Central de Documentos",
+  "nombre": "Consignas específicas — Walmart Central de Documentos",
+  "descripcion": "Capacitación sobre responsabilidades, accesos, proveedores, emergencias y protocolos operativos del servicio Walmart Central de Documentos.",
+  "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-central-documentos/#portada",
+  "serviciosPermitidos": [
+    "WALMART CENTRAL DE DOCUMENTOS",
+    "CENTRAL DE DOCUMENTOS"
+  ],
+  "enlace_externo": true,
+  "activo": true,
+  "orden": 70,
+  "calificacion_aprobatoria": 80,
+  "calificacion_maxima_origen": 100
+}
+  
 ]
