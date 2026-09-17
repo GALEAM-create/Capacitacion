@@ -1565,6 +1565,129 @@ async function inicializarBase() {
       ]
     );
   }
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS migraciones_datos (
+      clave VARCHAR(150) NOT NULL,
+      fecha_ejecucion TIMESTAMP NOT NULL
+        DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (clave)
+    ) ENGINE=InnoDB
+      DEFAULT CHARSET=utf8mb4
+      COLLATE=utf8mb4_unicode_ci
+  `);
+
+  const conexionRegularizacion =
+    await pool.getConnection();
+
+  try {
+    await conexionRegularizacion.beginTransaction();
+
+    const [migracion] =
+      await conexionRegularizacion.query(
+        `INSERT IGNORE INTO migraciones_datos (clave)
+         VALUES ('regularizacion_presenciales_net_vet_pericentro_2026_09_17')`
+      );
+
+    if (migracion.affectedRows === 1) {
+      const [regularizacion] =
+        await conexionRegularizacion.query(
+          `INSERT INTO resultados_capacitacion
+            (
+              nombre,
+              numero_empleado,
+              servicio,
+              curso,
+              modalidad,
+              calificacion,
+              calificacion_maxima,
+              total_preguntas,
+              respuestas_incorrectas,
+              aprobado,
+              intento
+            )
+           SELECT
+             p.nombre,
+             p.numero_empleado,
+             COALESCE(
+               NULLIF(TRIM(p.servicio), ''),
+               'Sin servicio asignado'
+             ),
+             CASE
+               WHEN UPPER(TRIM(p.servicio)) IN (
+                 'WALMART PERICENTRO',
+                 'PERICENTRO'
+               )
+                 THEN 'Consignas específicas — Walmart Pericentro'
+               ELSE 'Consignas específicas — Walmart NET y VET'
+             END,
+             'PRESENCIAL',
+             100,
+             100,
+             10,
+             JSON_ARRAY(),
+             1,
+             COALESCE(
+               (
+                 SELECT MAX(r2.intento)
+                 FROM resultados_capacitacion r2
+                 WHERE r2.numero_empleado = p.numero_empleado
+                   AND r2.curso =
+                     CASE
+                       WHEN UPPER(TRIM(p.servicio)) IN (
+                         'WALMART PERICENTRO',
+                         'PERICENTRO'
+                       )
+                         THEN 'Consignas específicas — Walmart Pericentro'
+                       ELSE 'Consignas específicas — Walmart NET y VET'
+                     END
+               ),
+               0
+             ) + 1
+           FROM participantes p
+           WHERE p.activo = 1
+             AND UPPER(TRIM(p.servicio)) IN (
+               'WALMART NET',
+               'WALMART VET',
+               'NET',
+               'VET',
+               'WALMART NET Y VET',
+               'WALMART VET Y NET',
+               'WALMART NET/VET',
+               'NET/VET',
+               'WALMART NET VET',
+               'WALMART PERICENTRO',
+               'PERICENTRO'
+             )
+             AND NOT EXISTS (
+               SELECT 1
+               FROM resultados_capacitacion r
+               WHERE r.numero_empleado = p.numero_empleado
+                 AND r.modalidad = 'PRESENCIAL'
+                 AND r.curso =
+                   CASE
+                     WHEN UPPER(TRIM(p.servicio)) IN (
+                       'WALMART PERICENTRO',
+                       'PERICENTRO'
+                     )
+                       THEN 'Consignas específicas — Walmart Pericentro'
+                     ELSE 'Consignas específicas — Walmart NET y VET'
+                   END
+             )`
+        );
+
+      console.log(
+        `Regularización presencial aplicada: ${regularizacion.affectedRows} registros.`
+      );
+    }
+
+    await conexionRegularizacion.commit();
+  } catch (error) {
+    await conexionRegularizacion.rollback();
+    throw error;
+  } finally {
+    conexionRegularizacion.release();
+  }
 }
 
 app.get("/", (req, res) => {
