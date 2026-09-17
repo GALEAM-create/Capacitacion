@@ -1355,6 +1355,23 @@ async function guardarResultado({
 
 
 async function regularizarPresencialesNetVetPericentro() {
+  const [correccionPericentro] = await pool.query(
+    `UPDATE resultados_capacitacion
+     SET modalidad = 'PRESENCIAL'
+     WHERE modalidad <> 'PRESENCIAL'
+       AND (
+         curso = 'Consignas específicas — Walmart Pericentro'
+         OR UPPER(TRIM(servicio)) IN (
+           'WALMART PERICENTRO',
+           'PERICENTRO'
+         )
+       )`
+  );
+
+  console.log(
+    `Resultados de Pericentro corregidos a PRESENCIAL: ${correccionPericentro.affectedRows}.`
+  );
+
   const serviciosNetVet = new Set([
     "WALMART NET",
     "WALMART VET",
