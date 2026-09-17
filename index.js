@@ -1353,6 +1353,102 @@ async function guardarResultado({
   }
 }
 
+
+async function regularizarPresencialesNetVetPericentro() {
+  const serviciosNetVet = new Set([
+    "WALMART NET",
+    "WALMART VET",
+    "NET",
+    "VET",
+    "WALMART NET Y VET",
+    "WALMART VET Y NET",
+    "WALMART NET/VET",
+    "NET/VET",
+    "WALMART NET VET"
+  ]);
+
+  const serviciosPericentro = new Set([
+    "WALMART PERICENTRO",
+    "PERICENTRO"
+  ]);
+
+  const [participantes] = await pool.query(
+    `SELECT
+       nombre,
+       numero_empleado,
+       servicio
+     FROM participantes
+     WHERE activo = 1`
+  );
+
+  let agregados = 0;
+
+  for (const participante of participantes) {
+    const servicioNormalizado =
+      normalizarNombre(participante.servicio);
+
+    const esPericentro =
+      serviciosPericentro.has(servicioNormalizado);
+
+    if (
+      !esPericentro &&
+      !serviciosNetVet.has(servicioNormalizado)
+    ) {
+      continue;
+    }
+
+    const curso = esPericentro
+      ? "Consignas específicas — Walmart Pericentro"
+      : NET_VET_NOMBRE;
+
+    const [existentes] = await pool.query(
+      `SELECT id
+       FROM resultados_capacitacion
+       WHERE numero_empleado = ?
+         AND curso = ?
+         AND modalidad = 'PRESENCIAL'
+       LIMIT 1`,
+      [
+        participante.numero_empleado,
+        curso
+      ]
+    );
+
+    if (existentes.length) {
+      continue;
+    }
+
+    try {
+      await guardarResultado({
+        nombre: participante.nombre,
+        numeroEmpleado:
+          participante.numero_empleado,
+        servicio:
+          participante.servicio ||
+          "Sin servicio asignado",
+        curso,
+        calificacionRecibida: 100,
+        calificacionMaximaRecibida: 100,
+        totalPreguntasRecibido: 10,
+        erroresRecibidos: [],
+        modalidadRecibida: "PRESENCIAL",
+        calificacionAprobatoria: 80
+      });
+
+      agregados += 1;
+    } catch (error) {
+      console.error(
+        `No se pudo regularizar a ${participante.numero_empleado}:`,
+        error
+      );
+    }
+  }
+
+  console.log(
+    `Regularización presencial completada: ${agregados} registros nuevos.`
+  );
+}
+
 async function inicializarBase() {
   const rutaCursoIngenieriaSocial = path.join(
     __dirname,
@@ -3271,6 +3367,14 @@ inicializarBase()
       console.log(
         "Portal protegido disponible en /portal."
       );
+
+      regularizarPresencialesNetVetPericentro()
+        .catch(error => {
+          console.error(
+            "La regularización presencial no pudo completarse:",
+            error
+          );
+        });
     });
   })
   .catch(error => {
