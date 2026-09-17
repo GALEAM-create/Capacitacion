@@ -1354,7 +1354,7 @@ async function guardarResultado({
 }
 
 
-async function regularizarPresencialesNetVetPericentro() {
+async function corregirModalidadesHistoricas() {
   const [correccionPericentro] = await pool.query(
     `UPDATE resultados_capacitacion
      SET modalidad = 'PRESENCIAL'
@@ -1368,101 +1368,17 @@ async function regularizarPresencialesNetVetPericentro() {
        )`
   );
 
-  console.log(
-    `Resultados de Pericentro corregidos a PRESENCIAL: ${correccionPericentro.affectedRows}.`
+  const [correccionOmar] = await pool.query(
+    `UPDATE resultados_capacitacion
+     SET modalidad = 'E-LEARNING'
+     WHERE numero_empleado = '5417'
+       AND curso = ?
+       AND modalidad = 'PRESENCIAL'`,
+    [NET_VET_NOMBRE]
   );
 
-  const serviciosNetVet = new Set([
-    "WALMART NET",
-    "WALMART VET",
-    "NET",
-    "VET",
-    "WALMART NET Y VET",
-    "WALMART VET Y NET",
-    "WALMART NET/VET",
-    "NET/VET",
-    "WALMART NET VET"
-  ]);
-
-  const serviciosPericentro = new Set([
-    "WALMART PERICENTRO",
-    "PERICENTRO"
-  ]);
-
-  const [participantes] = await pool.query(
-    `SELECT
-       nombre,
-       numero_empleado,
-       servicio
-     FROM participantes
-     WHERE activo = 1`
-  );
-
-  let agregados = 0;
-
-  for (const participante of participantes) {
-    const servicioNormalizado =
-      normalizarNombre(participante.servicio);
-
-    const esPericentro =
-      serviciosPericentro.has(servicioNormalizado);
-
-    if (
-      !esPericentro &&
-      !serviciosNetVet.has(servicioNormalizado)
-    ) {
-      continue;
-    }
-
-    const curso = esPericentro
-      ? "Consignas específicas — Walmart Pericentro"
-      : NET_VET_NOMBRE;
-
-    const [existentes] = await pool.query(
-      `SELECT id
-       FROM resultados_capacitacion
-       WHERE numero_empleado = ?
-         AND curso = ?
-         AND modalidad = 'PRESENCIAL'
-       LIMIT 1`,
-      [
-        participante.numero_empleado,
-        curso
-      ]
-    );
-
-    if (existentes.length) {
-      continue;
-    }
-
-    try {
-      await guardarResultado({
-        nombre: participante.nombre,
-        numeroEmpleado:
-          participante.numero_empleado,
-        servicio:
-          participante.servicio ||
-          "Sin servicio asignado",
-        curso,
-        calificacionRecibida: 100,
-        calificacionMaximaRecibida: 100,
-        totalPreguntasRecibido: 10,
-        erroresRecibidos: [],
-        modalidadRecibida: "PRESENCIAL",
-        calificacionAprobatoria: 80
-      });
-
-      agregados += 1;
-    } catch (error) {
-      console.error(
-        `No se pudo regularizar a ${participante.numero_empleado}:`,
-        error
-      );
-    }
-  }
-
   console.log(
-    `Regularización presencial completada: ${agregados} registros nuevos.`
+    `Modalidades corregidas: Pericentro ${correccionPericentro.affectedRows}, Omar 5417 ${correccionOmar.affectedRows}.`
   );
 }
 
@@ -3385,7 +3301,7 @@ inicializarBase()
         "Portal protegido disponible en /portal."
       );
 
-      regularizarPresencialesNetVetPericentro()
+      corregirModalidadesHistoricas()
         .catch(error => {
           console.error(
             "La regularización presencial no pudo completarse:",
