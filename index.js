@@ -26,6 +26,35 @@ function calificarNetVet(respuestas) {
   return {calificacion:(10-errores.length)*10,errores};
 }
 
+
+const DIAMANTE_SLUG = "consignas-walmart-diamante";
+const DIAMANTE_NOMBRE = "Consignas específicas — Walmart Diamante";
+const DIAMANTE_URL = "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-diamante/#portada";
+const DIAMANTE_PREGUNTAS = [
+  {q:"¿En qué consiste un código blanco?",options:["Indica un asalto","Indica que hay un asociado o cliente lesionado o existe una emergencia médica.","Indica que hay una emergencia por incendio en la unidad","Indica que un niño está perdido."],answer:1},
+  {q:"¿Qué debe hacer el guardia si detecta una anomalía o conducta irregular?",options:["Esperar a que termine el turno","Ignorarla si no representa un riesgo inmediato","Reportarla de inmediato a Seguridad Corporativa","Informarla únicamente a sus compañeros"],answer:2},
+  {q:"¿Qué personas tienen prohibido el acceso al corporativo?",options:["Asociados con gafete","Proveedores registrados","Vendedores ambulantes, promotores y personas ajenas a la compañía","Visitantes previamente anunciados"],answer:2},
+  {q:"¿Qué debe hacer un asociado que no cuenta con gafete?",options:["Ingresar sin identificación","Solicitar un gafete provisional con chip contra identificación oficial vigente","Utilizar el gafete de otro asociado","Esperar hasta el siguiente turno"],answer:1},
+  {q:"¿Qué identificación NO es aceptada para proporcionar un gafete provisional?",options:["INE","Licencia de conducir","Pasaporte","Identificación oficial vigente"],answer:2},
+  {q:"Cuando un visitante ingresa al edificio, ¿quién es responsable de acompañarlo durante toda su estancia?",options:["El guardia","Recepción","El asociado que recibe al visitante","El proveedor"],answer:2},
+  {q:"¿Qué debe hacer el guardia si encuentra a un visitante sin acompañante?",options:["Permitirle continuar","Abordarlo y conducirlo de inmediato a recepción","Solicitarle que abandone el edificio","Esperar a que aparezca el asociado"],answer:1},
+  {q:"¿Qué requisito se establece para realizar trabajos de riesgo?",options:["Únicamente presentar una identificación","Contar con EPP y los permisos especiales correspondientes","Realizarlos solamente después de las 18:00 hrs.","No requieren autorización si son trabajos menores"],answer:1},
+  {q:"¿Qué debe hacer el guardia ante una emergencia detectada en el edificio?",options:["Resolverla por cuenta propia","Informar inmediatamente al CMNET y al CAE","Esperar instrucciones del siguiente turno","Únicamente llamar a un compañero"],answer:1},
+  {q:"Durante una visita de una autoridad, ¿cuál es la conducta correcta del elemento de seguridad?",options:["Negarse a proporcionar cualquier información","Impedir el acceso hasta que termine la visita","Mantener una actitud amable e informar inmediatamente al líder de Seguridad Corporativa","Permitir el acceso sin informar a nadie"],answer:2}
+];
+function servicioDiamante(servicio) {
+  const valor=String(servicio||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toUpperCase();
+  return ["WALMART DIAMANTE","DIAMANTE"].includes(valor);
+}
+function calificarDiamante(respuestas) {
+  if(!Array.isArray(respuestas)||respuestas.length!==10||respuestas.some(r=>r!==null&&(!Number.isInteger(r)||r<0||r>3))){
+    const error=new Error("Envía las diez respuestas con opciones de 0 a 3 o null si no se respondió.");error.codigo=400;throw error;
+  }
+  const errores=[];
+  DIAMANTE_PREGUNTAS.forEach((p,i)=>{if(respuestas[i]!==p.answer)errores.push({numero:i+1,pregunta:p.q,respuesta_usuario:respuestas[i]===null?"Sin respuesta":p.options[respuestas[i]],respuesta_correcta:p.options[p.answer]})});
+  return {calificacion:(10-errores.length)*10,errores};
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -248,6 +277,7 @@ function participantePuedeAccederCurso(
   }
 
   if(curso?.slug===NET_VET_SLUG||curso?.nombre===NET_VET_NOMBRE)return servicioNetVet(participante?.servicio);
+  if(curso?.slug===DIAMANTE_SLUG||curso?.nombre===DIAMANTE_NOMBRE)return servicioDiamante(participante?.servicio);
   if (!esCursoUsoSeguroArmas(curso)) {
     return true;
   }
@@ -2455,6 +2485,8 @@ app.get(
 
     if(!cursos.some(c=>c.slug===NET_VET_SLUG||c.nombre===NET_VET_NOMBRE))cursos.push({id:NET_VET_SLUG,slug:NET_VET_SLUG,nombre:NET_VET_NOMBRE,descripcion:"Consignas operativas para Walmart NET y VET.",orden:70});
 
+    if(!cursos.some(c=>c.slug===DIAMANTE_SLUG||c.nombre===DIAMANTE_NOMBRE))cursos.push({id:DIAMANTE_SLUG,slug:DIAMANTE_SLUG,nombre:DIAMANTE_NOMBRE,descripcion:"Capacitación sobre responsabilidades, controles, emergencias y protocolos de actuación del servicio Walmart Diamante.",orden:60});
+
     if(!cursos.some(c=>c.slug===CENTRAL_DOCS_SLUG||c.nombre===CENTRAL_DOCS_NOMBRE))cursos.push({
       id:CENTRAL_DOCS_SLUG,
       slug:CENTRAL_DOCS_SLUG,
@@ -2543,7 +2575,7 @@ app.get(
           slug: curso.slug,
           descripcion:
             curso.descripcion,
-          url:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
+          url:curso.slug===DIAMANTE_SLUG?DIAMANTE_URL:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -2888,6 +2920,18 @@ app.post(
   }
 );
 
+// Endpoint autenticado Walmart Diamante: valida servicio y califica del lado del servidor.
+app.post("/api/portal/diamante/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
+  try{
+    if(!servicioDiamante(req.participante.servicio))return res.status(403).json({mensaje:"Evaluación disponible únicamente para Walmart Diamante."});
+    if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve a ingresar con la cuenta que inició el examen."});
+    const modalidad=normalizarModalidad(req.body.modalidad);
+    const nota=calificarDiamante(req.body.respuestas);
+    const resultado=await guardarResultado({nombre:req.participante.nombre,numeroEmpleado:req.participante.numero_empleado,servicio:req.participante.servicio,curso:DIAMANTE_NOMBRE,calificacionRecibida:nota.calificacion,calificacionMaximaRecibida:100,totalPreguntasRecibido:10,erroresRecibidos:nota.errores,modalidadRecibida:modalidad,calificacionAprobatoria:80});
+    return res.status(201).json({mensaje:"Calificación guardada correctamente.",...resultado});
+  }catch(error){console.error("Error al guardar Walmart Diamante:",error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."})}
+});
+
 // Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
 app.post("/api/portal/net-vet/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
@@ -2913,6 +2957,7 @@ app.post(
       );
 
       if(slug===NET_VET_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación NET y VET."});
+      if(slug===DIAMANTE_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación Walmart Diamante."});
 
       const [filas] =
         await pool.query(
