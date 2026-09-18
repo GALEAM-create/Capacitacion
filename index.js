@@ -56,6 +56,34 @@ function calificarDiamante(respuestas) {
   return {calificacion:(10-errores.length)*10,errores};
 }
 
+const LA_NARANJA_SLUG = "consignas-walmart-la-naranja";
+const LA_NARANJA_NOMBRE = "Consignas específicas — Walmart La Naranja";
+const LA_NARANJA_URL = "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-la-naranja/#portada";
+const LA_NARANJA_PREGUNTAS = [
+  {q:"¿Con cuánto tiempo de anticipación debe presentarse el guardia antes de iniciar su turno?",options:["5 minutos","10 minutos","15 minutos","20 minutos"],answer:1},
+  {q:"¿Qué debe realizarse durante la recepción y entrega del servicio?",options:["Únicamente revisar el uniforme","Chequear novedades, bitácoras y equipo","Revisar solamente las llaves","Esperar instrucciones del siguiente turno"],answer:1},
+  {q:"De lunes a viernes, ¿a qué hora se debe desalarmar la unidad?",options:["05:30 hrs.","06:00 hrs.","06:30 hrs.","07:00 hrs."],answer:1},
+  {q:"¿Qué se debe hacer si CAE o Zona Cero no responden en un lapso de 10 minutos al alarmar o desalarmar?",options:["Retirarse del puesto","Reiniciar el panel","Asentar la incidencia en el libro de novedades","Esperar hasta el siguiente turno"],answer:2},
+  {q:"En caso de activación de una alarma de intrusión en el panel Bosch, ¿cuál es una de las primeras acciones?",options:["Desconectar el panel","Ubicar el número de dispositivo o zona activada","Abandonar inmediatamente la unidad","Apagar todas las cámaras"],answer:1},
+  {q:"¿Qué aplicación debe utilizarse para tomar evidencia fotográfica de incidencias, paneles y recorridos?",options:["WhatsApp","Google Fotos","Timestamp Camera Free","Cámara del celular sin aplicación"],answer:2},
+  {q:"¿Qué gafete corresponde a un proveedor?",options:["Gafete rojo","Gafete azul","Gafete verde","Gafete amarillo"],answer:2},
+  {q:"¿Qué debe hacer el guardia al registrar una unidad de carga o descarga?",options:["Registrar únicamente el nombre del proveedor","Registrar unidad, placas y chofer","Retener las llaves del vehículo","Revisar la mercancía de montaje"],answer:1},
+  {q:"¿Qué debe hacer el guardia ante la detección de una persona tomando fotografías del montaje (Protocolo X1)?",options:["Ignorar la situación","Tomar evidencia, solicitar el borrado de imágenes y trasladar al infractor al área de espera","Permitir las fotografías si son pocas","Retirar personalmente el teléfono del infractor"],answer:1},
+  {q:"¿Qué debe verificarse durante los rondines en las rutas de emergencia?",options:["Que los extintores, hidrantes y salidas estén libres de obstáculos","Que todas las puertas permanezcan abiertas","Que los proveedores estén fuera de la unidad","Que las cámaras estén apagadas"],answer:0}
+];
+function servicioLaNaranja(servicio) {
+  const valor=String(servicio||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toUpperCase();
+  return ["WALMART LA NARANJA","LA NARANJA","WALMART NARANJA"].includes(valor);
+}
+function calificarLaNaranja(respuestas) {
+  if(!Array.isArray(respuestas)||respuestas.length!==10||respuestas.some(r=>r!==null&&(!Number.isInteger(r)||r<0||r>3))){
+    const error=new Error("Envía las diez respuestas con opciones de 0 a 3 o null si no se respondió.");error.codigo=400;throw error;
+  }
+  const errores=[];
+  LA_NARANJA_PREGUNTAS.forEach((p,i)=>{if(respuestas[i]!==p.answer)errores.push({numero:i+1,pregunta:p.q,respuesta_usuario:respuestas[i]===null?"Sin respuesta":p.options[respuestas[i]],respuesta_correcta:p.options[p.answer]})});
+  return {calificacion:(10-errores.length)*10,errores};
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -280,6 +308,7 @@ function participantePuedeAccederCurso(
   if(curso?.slug===NET_VET_SLUG||curso?.nombre===NET_VET_NOMBRE)return servicioNetVet(participante?.servicio);
   if(curso?.slug===FELIX.SLUG||curso?.nombre===FELIX.NOMBRE)return FELIX.servicioPermitido(participante?.servicio);
   if(curso?.slug===DIAMANTE_SLUG||curso?.nombre===DIAMANTE_NOMBRE)return servicioDiamante(participante?.servicio);
+  if(curso?.slug===LA_NARANJA_SLUG||curso?.nombre===LA_NARANJA_NOMBRE)return servicioLaNaranja(participante?.servicio);
   if (!esCursoUsoSeguroArmas(curso)) {
     return true;
   }
@@ -510,7 +539,8 @@ async function obtenerParticipanteDesdeSesion(req) {
     .trim();
   const rutaTokenPermitida = [
     "/api/portal/session",
-    "/api/portal/diamante/resultados"
+    "/api/portal/diamante/resultados",
+    "/api/portal/la-naranja/resultados"
   ].includes(
     String(req.originalUrl || "")
       .split("?")[0]
@@ -2393,9 +2423,27 @@ app.post(
       req.body.curso_slug || ""
     ).trim();
 
-    if (cursoSlug !== DIAMANTE_SLUG) {
+    if (![DIAMANTE_SLUG, LA_NARANJA_SLUG].includes(cursoSlug)) {
       return res.status(400).json({
         mensaje: "La evaluación solicitada no es válida."
+      });
+    }
+
+    if (
+      cursoSlug === DIAMANTE_SLUG &&
+      !servicioDiamante(req.participante?.servicio)
+    ) {
+      return res.status(403).json({
+        mensaje: "Evaluación disponible únicamente para Walmart Diamante."
+      });
+    }
+
+    if (
+      cursoSlug === LA_NARANJA_SLUG &&
+      !servicioLaNaranja(req.participante?.servicio)
+    ) {
+      return res.status(403).json({
+        mensaje: "Evaluación disponible únicamente para Walmart La Naranja."
       });
     }
 
@@ -2582,6 +2630,14 @@ app.get(
       orden:80
     });
 
+    if(!cursos.some(c=>c.slug===LA_NARANJA_SLUG||c.nombre===LA_NARANJA_NOMBRE))cursos.push({
+      id:LA_NARANJA_SLUG,
+      slug:LA_NARANJA_SLUG,
+      nombre:LA_NARANJA_NOMBRE,
+      descripcion:"Capacitación sobre responsabilidades, accesos, alarmas, control vehicular, salidas de mercancía, rondines y protocolos operativos del servicio Walmart La Naranja.",
+      orden:90
+    });
+
     const [resultados] =
       await pool.query(
         `SELECT
@@ -2633,8 +2689,12 @@ app.get(
 
     const respuesta =
       cursosPermitidos.map(curso => {
+        const requiereTokenEvaluacion =
+          [DIAMANTE_SLUG, LA_NARANJA_SLUG]
+            .includes(curso.slug);
+
         const tokenEvaluacion =
-          curso.slug === DIAMANTE_SLUG
+          requiereTokenEvaluacion
             ? crearTokenSesion(
                 "evaluacion",
                 {
@@ -2675,7 +2735,7 @@ app.get(
           slug: curso.slug,
           descripcion:
             curso.descripcion,
-          url:curso.slug===DIAMANTE_SLUG?`${DIAMANTE_URL.replace("#portada", "")}#token=${encodeURIComponent(tokenEvaluacion)}`:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
+          url:curso.slug===DIAMANTE_SLUG?`${DIAMANTE_URL.replace("#portada", "")}#token=${encodeURIComponent(tokenEvaluacion)}`:curso.slug===LA_NARANJA_SLUG?`${LA_NARANJA_URL.replace("#portada", "")}#token=${encodeURIComponent(tokenEvaluacion)}`:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -3047,6 +3107,19 @@ app.post("/api/portal/diamante/resultados",requerirParticipante,limiteResultados
   }catch(error){console.error("Error al guardar Walmart Diamante:",error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."})}
 });
 
+// Evaluación e-learning Walmart La Naranja: el servidor valida sesión, servicio y respuestas.
+app.post("/api/portal/la-naranja/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
+  try{
+    if(req.sesionEvaluacion&&req.sesionEvaluacion.curso_slug!==LA_NARANJA_SLUG)return res.status(403).json({mensaje:"El acceso temporal no corresponde a esta evaluación."});
+    if(!servicioLaNaranja(req.participante.servicio))return res.status(403).json({mensaje:"Evaluación disponible únicamente para Walmart La Naranja."});
+    if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve a ingresar con la cuenta que inició el examen."});
+    const modalidad=normalizarModalidad(req.body.modalidad);
+    const nota=calificarLaNaranja(req.body.respuestas);
+    const resultado=await guardarResultado({nombre:req.participante.nombre,numeroEmpleado:req.participante.numero_empleado,servicio:req.participante.servicio,curso:LA_NARANJA_NOMBRE,calificacionRecibida:nota.calificacion,calificacionMaximaRecibida:100,totalPreguntasRecibido:10,erroresRecibidos:nota.errores,modalidadRecibida:modalidad,calificacionAprobatoria:80});
+    return res.status(201).json({mensaje:"Calificación guardada correctamente.",...resultado});
+  }catch(error){console.error("Error al guardar Walmart La Naranja:",error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."})}
+});
+
 // Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
 app.post("/api/portal/net-vet/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
@@ -3074,6 +3147,7 @@ app.post(
       if(slug===NET_VET_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación NET y VET."});
       if(slug===FELIX.SLUG)return res.status(400).json({mensaje:'Usa el envío de respuestas de la evaluación Félix Cuevas.'});
       if(slug===DIAMANTE_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación Walmart Diamante."});
+      if(slug===LA_NARANJA_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación Walmart La Naranja."});
 
       const [filas] =
         await pool.query(
