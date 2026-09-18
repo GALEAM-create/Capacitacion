@@ -176,7 +176,7 @@ const corsCapacitaciones = cors({
     return callback(null, origenesPermitidos.has(origen));
   },
   methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true,
   maxAge: 86400
 });
@@ -498,11 +498,34 @@ function requerirRolAdministrador(req, res, next) {
 }
 
 async function obtenerParticipanteDesdeSesion(req) {
-  const token = obtenerCookies(req)[COOKIE_PARTICIPANTE];
-  const sesion = verificarTokenSesion(
-    token,
+  const tokenCookie =
+    obtenerCookies(req)[COOKIE_PARTICIPANTE];
+  const autorizacion = String(
+    req.headers.authorization || ""
+  );
+  const tokenPortador = autorizacion
+    .replace(/^Bearer\s+/i, "")
+    .trim();
+  const rutaTokenPermitida = [
+    "/api/portal/session",
+    "/api/portal/diamante/resultados"
+  ].includes(
+    String(req.originalUrl || "")
+      .split("?")[0]
+  );
+
+  const sesionCookie = verificarTokenSesion(
+    tokenCookie,
     "participante"
   );
+  const sesionEvaluacion = verificarTokenSesion(
+    rutaTokenPermitida ? tokenPortador : "",
+    "evaluacion"
+  );
+  const sesion = sesionEvaluacion || sesionCookie;
+
+  req.sesionEvaluacion =
+    sesionEvaluacion || null;
 
   if (
     !sesion ||
@@ -2338,6 +2361,35 @@ app.get(
 );
 
 app.post(
+  "/api/portal/evaluacion-token",
+  requerirParticipante,
+  (req, res) => {
+    const cursoSlug = String(
+      req.body.curso_slug || ""
+    ).trim();
+
+    if (cursoSlug !== DIAMANTE_SLUG) {
+      return res.status(400).json({
+        mensaje: "La evaluación solicitada no es válida."
+      });
+    }
+
+    const token = crearTokenSesion(
+      "evaluacion",
+      {
+        participante_id:
+          req.participante.id,
+        curso_slug: cursoSlug
+      },
+      30
+    );
+
+    res.set("Cache-Control", "no-store");
+    res.json({ token, expira_en_minutos: 30 });
+  }
+);
+
+app.post(
   "/api/portal/login",
   limiteLoginParticipante,
   async (req, res) => {
@@ -2556,6 +2608,19 @@ app.get(
 
     const respuesta =
       cursosPermitidos.map(curso => {
+        const tokenEvaluacion =
+          curso.slug === DIAMANTE_SLUG
+            ? crearTokenSesion(
+                "evaluacion",
+                {
+                  participante_id:
+                    req.participante.id,
+                  curso_slug: curso.slug
+                },
+                30
+              )
+            : null;
+
         const historial =
           porCurso.get(
             curso.nombre.toLowerCase()
@@ -2585,7 +2650,7 @@ app.get(
           slug: curso.slug,
           descripcion:
             curso.descripcion,
-          url:curso.slug===DIAMANTE_SLUG?DIAMANTE_URL:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
+          url:curso.slug===DIAMANTE_SLUG?`${DIAMANTE_URL.replace("#portada", "")}#token=${encodeURIComponent(tokenEvaluacion)}`:curso.slug===NET_VET_SLUG?NET_VET_URL:curso.slug===CENTRAL_DOCS_SLUG?CENTRAL_DOCS_URL:`/curso/${encodeURIComponent(curso.slug)}/`,
           estado: !ultimo
             ? "no_iniciado"
             : Number(
@@ -2933,6 +2998,7 @@ app.post(
 // Endpoint autenticado Walmart Diamante: valida servicio y califica del lado del servidor.
 app.post("/api/portal/diamante/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
+    if(req.sesionEvaluacion&&req.sesionEvaluacion.curso_slug!==DIAMANTE_SLUG)return res.status(403).json({mensaje:"El acceso temporal no corresponde a esta evaluación."});
     if(!servicioDiamante(req.participante.servicio))return res.status(403).json({mensaje:"Evaluación disponible únicamente para Walmart Diamante."});
     if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve a ingresar con la cuenta que inició el examen."});
     const modalidad=normalizarModalidad(req.body.modalidad);
