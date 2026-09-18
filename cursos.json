@@ -17,15 +17,6 @@
     "orden": 20
   },
   {
-    "id": "plantilla-nuevo-curso",
-    "curso": "Nombre exacto que guardará la base de datos",
-    "nombre": "Nombre visible del nuevo curso",
-    "descripcion": "Descripción breve que aparecerá en la tarjeta del portal.",
-    "ruta": "carpeta-del-curso/",
-    "activo": false,
-    "orden": 99
-  },
-  {
     "id": "uso-seguro-armas",
     "curso": "Uso Seguro de Armas de Fuego",
     "nombre": "Uso Seguro de Armas de Fuego",
@@ -110,5 +101,31 @@
     "orden": 80,
     "calificacion_aprobatoria": 80,
     "calificacion_maxima_origen": 100
+  },
+  {
+    "id": "consignas-walmart-la-naranja",
+    "curso": "Consignas específicas — Walmart La Naranja",
+    "nombre": "Consignas específicas — Walmart La Naranja",
+    "descripcion": "Capacitación sobre responsabilidades, accesos, alarmas, control vehicular, salidas de mercancía, rondines y protocolos operativos del servicio Walmart La Naranja.",
+    "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-la-naranja/#portada",
+    "serviciosPermitidos": [
+      "WALMART LA NARANJA",
+      "LA NARANJA",
+      "WALMART NARANJA"
+    ],
+    "enlace_externo": true,
+    "activo": true,
+    "orden": 90,
+    "calificacion_aprobatoria": 80,
+    "calificacion_maxima_origen": 100
+  },
+  {
+    "id": "plantilla-nuevo-curso",
+    "curso": "Nombre exacto que guardará la base de datos",
+    "nombre": "Nombre visible del nuevo curso",
+    "descripcion": "Descripción breve que aparecerá en la tarjeta del portal.",
+    "ruta": "carpeta-del-curso/",
+    "activo": false,
+    "orden": 99
   }
 ]
