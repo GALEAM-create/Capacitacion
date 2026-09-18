@@ -3113,11 +3113,40 @@ app.post("/api/portal/la-naranja/resultados",requerirParticipante,limiteResultad
     if(req.sesionEvaluacion&&req.sesionEvaluacion.curso_slug!==LA_NARANJA_SLUG)return res.status(403).json({mensaje:"El acceso temporal no corresponde a esta evaluación."});
     if(!servicioLaNaranja(req.participante.servicio))return res.status(403).json({mensaje:"Evaluación disponible únicamente para Walmart La Naranja."});
     if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve a ingresar con la cuenta que inició el examen."});
-    const modalidad=normalizarModalidad(req.body.modalidad);
+
+    const envioId=String(req.body.envio_id||"").trim();
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(envioId)){
+      return res.status(400).json({mensaje:"El identificador del intento no es válido."});
+    }
+
     const nota=calificarLaNaranja(req.body.respuestas);
-    const resultado=await guardarResultado({nombre:req.participante.nombre,numeroEmpleado:req.participante.numero_empleado,servicio:req.participante.servicio,curso:LA_NARANJA_NOMBRE,calificacionRecibida:nota.calificacion,calificacionMaximaRecibida:100,totalPreguntasRecibido:10,erroresRecibidos:nota.errores,modalidadRecibida:modalidad,calificacionAprobatoria:80});
+    const huellaEnvio=crypto
+      .createHash("sha256")
+      .update(JSON.stringify(req.body.respuestas))
+      .digest("hex");
+
+    const resultado=await guardarResultado({
+      nombre:req.participante.nombre,
+      numeroEmpleado:req.participante.numero_empleado,
+      servicio:req.participante.servicio,
+      curso:LA_NARANJA_NOMBRE,
+      calificacionRecibida:nota.calificacion,
+      calificacionMaximaRecibida:100,
+      totalPreguntasRecibido:10,
+      erroresRecibidos:nota.errores,
+      modalidadRecibida:"E-LEARNING",
+      calificacionAprobatoria:80,
+      envioId,
+      huellaEnvio
+    });
+
     return res.status(201).json({mensaje:"Calificación guardada correctamente.",...resultado});
-  }catch(error){console.error("Error al guardar Walmart La Naranja:",error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."})}
+  }catch(error){
+    console.error("Error al guardar Walmart La Naranja:",error);
+    return res.status(error.codigo||500).json({
+      mensaje:error.codigo?error.message:"No fue posible guardar la calificación. Intenta nuevamente."
+    });
+  }
 });
 
 // Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
