@@ -1485,8 +1485,8 @@
           ...curso,
           nombre:ficha?.nombre||curso.nombre||"Curso sin nombre",
           descripcion:ficha?.descripcion??curso.descripcion??"",
-          // Diamante recibe del servidor un enlace con la sesión firmada para su evaluación.
-          url:curso.slug==="consignas-walmart-diamante"&&curso.url&&curso.url!=="#"?curso.url:(ficha?.enlace_externo===true?urlCursoCatalogo(ficha):(curso.url||(ficha?urlCursoCatalogo(ficha):"#"))),
+          // Los cursos externos con token deben conservar la URL firmada entregada por el servidor.
+          url:curso.url&&curso.url!=="#"&&String(curso.url).includes("#token=")?curso.url:(ficha?.enlace_externo===true?urlCursoCatalogo(ficha):(curso.url||(ficha?urlCursoCatalogo(ficha):"#"))),
           orden:ordenFicha,
           historial:Array.isArray(curso.historial)?curso.historial:[]
         };
