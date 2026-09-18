@@ -1398,6 +1398,16 @@ async function corregirModalidadesHistoricas() {
        )`
   );
 
+  const [correccionFelixCuevas] = await pool.query(
+    `UPDATE resultados_capacitacion
+     SET modalidad = 'PRESENCIAL'
+     WHERE modalidad <> 'PRESENCIAL'
+       AND (
+         curso = 'Consignas específicas — Walmart Félix Cuevas'
+         OR UPPER(TRIM(servicio)) = 'WALMART FELIX CUEVAS'
+       )`
+  );
+
   const [correccionOmar] = await pool.query(
     `UPDATE resultados_capacitacion
      SET modalidad = 'E-LEARNING'
@@ -1408,7 +1418,7 @@ async function corregirModalidadesHistoricas() {
   );
 
   console.log(
-    `Modalidades corregidas: Pericentro ${correccionPericentro.affectedRows}, Omar 5417 ${correccionOmar.affectedRows}.`
+    `Modalidades corregidas: Pericentro ${correccionPericentro.affectedRows}, Félix Cuevas ${correccionFelixCuevas.affectedRows}, Omar 5417 ${correccionOmar.affectedRows}.`
   );
 }
 
@@ -3166,6 +3176,8 @@ app.post(
           erroresRecibidos:
             req.body
               .respuestas_incorrectas,
+          modalidadRecibida:
+            req.body.modalidad,
           calificacionAprobatoria:
             Number(
               configuracionCurso
