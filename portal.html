@@ -1485,7 +1485,8 @@
           ...curso,
           nombre:ficha?.nombre||curso.nombre||"Curso sin nombre",
           descripcion:ficha?.descripcion??curso.descripcion??"",
-          url:ficha?.enlace_externo===true?urlCursoCatalogo(ficha):(curso.url||(ficha?urlCursoCatalogo(ficha):"#")),
+          // Diamante recibe del servidor un enlace con la sesión firmada para su evaluación.
+          url:curso.slug==="consignas-walmart-diamante"&&curso.url&&curso.url!=="#"?curso.url:(ficha?.enlace_externo===true?urlCursoCatalogo(ficha):(curso.url||(ficha?urlCursoCatalogo(ficha):"#"))),
           orden:ordenFicha,
           historial:Array.isArray(curso.historial)?curso.historial:[]
         };
