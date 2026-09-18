@@ -3189,6 +3189,52 @@ app.post("/api/portal/la-naranja/resultados",requerirParticipante,limiteResultad
   }
 });
 
+// Evaluación PRESENCIAL Walmart La Naranja: usa la sesión activa y califica del lado del servidor.
+app.post("/api/portal/la-naranja-presencial/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
+  try{
+    if(!servicioLaNaranja(req.participante.servicio)){
+      return res.status(403).json({mensaje:"Evaluación presencial disponible únicamente para Walmart La Naranja."});
+    }
+
+    if(String(req.body.numero_empleado_sesion||"")!==String(req.participante.numero_empleado)){
+      return res.status(409).json({mensaje:"Cambió la sesión del participante. Vuelve al portal e inicia nuevamente."});
+    }
+
+    const envioId=String(req.body.envio_id||"").trim();
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(envioId)){
+      return res.status(400).json({mensaje:"El identificador del intento no es válido."});
+    }
+
+    const nota=calificarLaNaranja(req.body.respuestas);
+    const huellaEnvio=crypto
+      .createHash("sha256")
+      .update(JSON.stringify(req.body.respuestas))
+      .digest("hex");
+
+    const resultado=await guardarResultado({
+      nombre:req.participante.nombre,
+      numeroEmpleado:req.participante.numero_empleado,
+      servicio:"WALMART LA NARANJA",
+      curso:LA_NARANJA_NOMBRE,
+      calificacionRecibida:nota.calificacion,
+      calificacionMaximaRecibida:100,
+      totalPreguntasRecibido:10,
+      erroresRecibidos:nota.errores,
+      modalidadRecibida:"PRESENCIAL",
+      calificacionAprobatoria:80,
+      envioId,
+      huellaEnvio
+    });
+
+    return res.status(201).json({mensaje:"Calificación presencial guardada correctamente.",...resultado});
+  }catch(error){
+    console.error("Error al guardar presencial Walmart La Naranja:",error);
+    return res.status(error.codigo||500).json({
+      mensaje:error.codigo?error.message:"No fue posible guardar la calificación presencial. Intenta nuevamente."
+    });
+  }
+});
+
 // Endpoint autenticado: la calificación y los datos personales se resuelven en el servidor.
 app.post("/api/portal/net-vet/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
@@ -3391,6 +3437,7 @@ app.post(
 
       if(curso===FELIX.NOMBRE&&String(req.body.modalidad||'E-LEARNING').trim().toUpperCase()!=='PRESENCIAL')return res.status(401).json({mensaje:'El curso e-learning Félix Cuevas requiere una sesión y el envío de sus respuestas.'});
       if(curso===NET_VET_NOMBRE)return res.status(401).json({mensaje:"NET y VET requiere una sesión y el envío de respuestas desde su evaluación."});
+      if(curso===LA_NARANJA_NOMBRE)return res.status(401).json({mensaje:"Walmart La Naranja requiere una sesión válida y el envío de respuestas desde su evaluación."});
 
       const [configuracionesCurso] =
         await pool.query(
