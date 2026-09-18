@@ -580,7 +580,26 @@ async function obtenerParticipanteDesdeSesion(req) {
     [Number(sesion.participante_id)]
   );
 
-  return filas[0] || null;
+  const participante = filas[0] || null;
+
+  // Normalización inmediata para registros históricos que aún dicen solo "Walmart".
+  // Esto actualiza la BD y también la sesión actual, sin obligar al usuario a cerrar sesión.
+  if (
+    participante &&
+    normalizarNombre(participante.servicio) === "WALMART"
+  ) {
+    await pool.query(
+      `UPDATE participantes
+       SET servicio = 'WALMART LA NARANJA'
+       WHERE id = ?
+         AND UPPER(TRIM(servicio)) = 'WALMART'`,
+      [participante.id]
+    );
+
+    participante.servicio = "WALMART LA NARANJA";
+  }
+
+  return participante;
 }
 
 async function requerirParticipante(req, res, next) {
@@ -2534,12 +2553,20 @@ app.post(
           });
       }
 
+      const servicioPortal =
+        normalizarNombre(participante.servicio) === "WALMART"
+          ? "WALMART LA NARANJA"
+          : participante.servicio;
+
       await pool.query(
         `UPDATE participantes
-         SET ultimo_acceso = NOW()
+         SET ultimo_acceso = NOW(),
+             servicio = ?
          WHERE id = ?`,
-        [participante.id]
+        [servicioPortal, participante.id]
       );
+
+      participante.servicio = servicioPortal;
 
       const token = crearTokenSesion(
         "participante",
