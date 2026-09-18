@@ -73,7 +73,7 @@ const LA_NARANJA_PREGUNTAS = [
 ];
 function servicioLaNaranja(servicio) {
   const valor=String(servicio||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toUpperCase();
-  return ["WALMART LA NARANJA","LA NARANJA","WALMART NARANJA"].includes(valor);
+  return ["WALMART LA NARANJA","LA NARANJA","WALMART NARANJA","WALMART"].includes(valor);
 }
 function calificarLaNaranja(respuestas) {
   if(!Array.isArray(respuestas)||respuestas.length!==10||respuestas.some(r=>r!==null&&(!Number.isInteger(r)||r<0||r>3))){
@@ -1461,6 +1461,19 @@ async function guardarResultado({
 
 
 async function corregirModalidadesHistoricas() {
+  // Todo registro genérico "Walmart" corresponde actualmente a Walmart La Naranja.
+  const [correccionParticipantesWalmart] = await pool.query(
+    `UPDATE participantes
+     SET servicio = 'WALMART LA NARANJA'
+     WHERE UPPER(TRIM(servicio)) = 'WALMART'`
+  );
+
+  const [correccionResultadosWalmart] = await pool.query(
+    `UPDATE resultados_capacitacion
+     SET servicio = 'WALMART LA NARANJA'
+     WHERE UPPER(TRIM(servicio)) = 'WALMART'`
+  );
+
   const [correccionPericentro] = await pool.query(
     `UPDATE resultados_capacitacion
      SET modalidad = 'PRESENCIAL'
@@ -1487,7 +1500,7 @@ async function corregirModalidadesHistoricas() {
   );
 
   console.log(
-    `Modalidades corregidas: Pericentro ${correccionPericentro.affectedRows}, Félix Cuevas ${correccionFelixCuevas.affectedRows}, Omar 5417 ${correccionOmar.affectedRows}.`
+    `Servicios Walmart→La Naranja: participantes ${correccionParticipantesWalmart.affectedRows}, resultados ${correccionResultadosWalmart.affectedRows}. Modalidades corregidas: Pericentro ${correccionPericentro.affectedRows}, Félix Cuevas ${correccionFelixCuevas.affectedRows}, Omar 5417 ${correccionOmar.affectedRows}.`
   );
 }
 
