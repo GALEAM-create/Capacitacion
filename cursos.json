@@ -44,7 +44,9 @@
     "descripcion": "Capacitación breve sobre el uso seguro de extintores ante fuegos incipientes.",
     "ruta": "uso-correcto-extintor/",
     "archivo_html": "index.html",
-    "serviciosPermitidos": ["REUNION"],
+    "serviciosPermitidos": [
+      "REUNION"
+    ],
     "activo": true,
     "orden": 40,
     "calificacion_aprobatoria": 70,
@@ -62,31 +64,51 @@
     "calificacion_aprobatoria": 70,
     "calificacion_maxima_origen": 100
   },
-{
-  "id": "consignas-walmart-diamante",
-  "curso": "Consignas específicas — Walmart Diamante",
-  "nombre": "Consignas específicas — Walmart Diamante",
-  "descripcion": "Capacitación sobre responsabilidades, controles, emergencias y protocolos de actuación del servicio Walmart Diamante.",
-  "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-diamante/#portada",
-  "serviciosPermitidos": ["WALMART DIAMANTE", "DIAMANTE"],
-  "enlace_externo": true,
-  "activo": true,
-  "orden": 60,
-  "calificacion_aprobatoria": 80,
-  "calificacion_maxima_origen": 100
-},
-{
-  "id": "consignas-walmart-central-documentos",
-  "curso": "Consignas específicas — Walmart Central de Documentos",
-  "nombre": "Consignas específicas — Walmart Central de Documentos",
-  "descripcion": "Capacitación sobre responsabilidades, accesos, proveedores, emergencias y protocolos operativos del servicio Walmart Central de Documentos.",
-  "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-central-documentos/#portada",
-  "serviciosPermitidos": ["WALMART CENTRAL DOCS"],
-  "enlace_externo": true,
-  "activo": true,
-  "orden": 70,
-  "calificacion_aprobatoria": 80,
-  "calificacion_maxima_origen": 100
-}
-  
+  {
+    "id": "consignas-walmart-diamante",
+    "curso": "Consignas específicas — Walmart Diamante",
+    "nombre": "Consignas específicas — Walmart Diamante",
+    "descripcion": "Capacitación sobre responsabilidades, controles, emergencias y protocolos de actuación del servicio Walmart Diamante.",
+    "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-diamante/#portada",
+    "serviciosPermitidos": [
+      "WALMART DIAMANTE",
+      "DIAMANTE"
+    ],
+    "enlace_externo": true,
+    "activo": true,
+    "orden": 60,
+    "calificacion_aprobatoria": 80,
+    "calificacion_maxima_origen": 100
+  },
+  {
+    "id": "consignas-walmart-central-documentos",
+    "curso": "Consignas específicas — Walmart Central de Documentos",
+    "nombre": "Consignas específicas — Walmart Central de Documentos",
+    "descripcion": "Capacitación sobre responsabilidades, accesos, proveedores, emergencias y protocolos operativos del servicio Walmart Central de Documentos.",
+    "url": "https://galeam-create.github.io/portal-capacitacion-presencial/capacitacion-normal/walmart-central-documentos/#portada",
+    "serviciosPermitidos": [
+      "WALMART CENTRAL DOCS"
+    ],
+    "enlace_externo": true,
+    "activo": true,
+    "orden": 70,
+    "calificacion_aprobatoria": 80,
+    "calificacion_maxima_origen": 100
+  },
+  {
+    "id": "consignas-walmart-felix-cuevas",
+    "nombre": "Consignas específicas — Walmart Félix Cuevas",
+    "curso": "Consignas específicas — Walmart Félix Cuevas",
+    "descripcion": "Curso y evaluación sobre accesos, rondines, proveedores, emergencias y responsabilidades del servicio Félix Cuevas.",
+    "ruta": "walmart-felix-cuevas/",
+    "archivo_html": "index.html",
+    "serviciosPermitidos": [
+      "WALMART FELIX CUEVAS",
+      "FELIX CUEVAS"
+    ],
+    "activo": true,
+    "orden": 80,
+    "calificacion_aprobatoria": 80,
+    "calificacion_maxima_origen": 100
+  }
 ]

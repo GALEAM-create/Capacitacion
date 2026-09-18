@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const FELIX = require("./felix-evaluation");
 const fs = require("fs");
 const path = require("path");
 const bcrypt = require("bcryptjs");
@@ -277,6 +278,7 @@ function participantePuedeAccederCurso(
   }
 
   if(curso?.slug===NET_VET_SLUG||curso?.nombre===NET_VET_NOMBRE)return servicioNetVet(participante?.servicio);
+  if(curso?.slug===FELIX.SLUG||curso?.nombre===FELIX.NOMBRE)return FELIX.servicioPermitido(participante?.servicio);
   if(curso?.slug===DIAMANTE_SLUG||curso?.nombre===DIAMANTE_NOMBRE)return servicioDiamante(participante?.servicio);
   if (!esCursoUsoSeguroArmas(curso)) {
     return true;
@@ -558,6 +560,7 @@ async function requerirParticipante(req, res, next) {
 
     if (!participante) {
       limpiarCookie(res, COOKIE_PARTICIPANTE);
+      if(req.baseUrl === "/curso" && ["GET", "HEAD"].includes(req.method))return res.redirect(302, "/portal");
 
       return res.status(401).json({
         mensaje:
@@ -1216,6 +1219,8 @@ async function guardarResultado({
   totalPreguntasRecibido,
   erroresRecibidos,
   modalidadRecibida = "E-LEARNING",
+  envioId = null,
+  huellaEnvio = null,
   calificacionAprobatoria =
     CALIFICACION_APROBATORIA
 }) {
@@ -1308,6 +1313,20 @@ async function guardarResultado({
     await conexion.beginTransaction();
     transaccionIniciada = true;
 
+    // Bajo el mismo bloqueo y transacción que la calificación: reintentar no duplica intentos.
+    if (envioId) {
+      const [envios] = await conexion.query('SELECT numero_empleado, curso, huella, resultado FROM envios_elearning WHERE envio_id = ?', [envioId]);
+      if (envios.length) {
+        const anterior = envios[0];
+        if (String(anterior.numero_empleado) !== String(numeroEmpleado) || anterior.curso !== curso || anterior.huella !== huellaEnvio) {
+          const error = new Error('El identificador de envío ya corresponde a otro resultado.'); error.codigo = 409; throw error;
+        }
+        const guardado = typeof anterior.resultado === 'string' ? JSON.parse(anterior.resultado) : anterior.resultado;
+        await conexion.commit(); transaccionIniciada = false;
+        return guardado;
+      }
+    }
+
     const [filasPrevias] =
       await conexion.query(
         `SELECT
@@ -1361,6 +1380,10 @@ async function guardarResultado({
           intento
         ]
       );
+
+    if (envioId) {
+      await conexion.query('INSERT INTO envios_elearning (envio_id, numero_empleado, curso, huella, resultado) VALUES (?, ?, ?, ?, ?)', [envioId, numeroEmpleado, curso, huellaEnvio, JSON.stringify({id:resultado.insertId,intento,calificacion,aprobado,modalidad})]);
+    }
 
     await conexion.commit();
     transaccionIniciada = false;
@@ -1421,15 +1444,8 @@ async function corregirModalidadesHistoricas() {
        )`
   );
 
-  const [correccionFelixCuevas] = await pool.query(
-    `UPDATE resultados_capacitacion
-     SET modalidad = 'PRESENCIAL'
-     WHERE modalidad <> 'PRESENCIAL'
-       AND (
-         curso = 'Consignas específicas — Walmart Félix Cuevas'
-         OR UPPER(TRIM(servicio)) = 'WALMART FELIX CUEVAS'
-       )`
-  );
+  // Félix Cuevas ya tiene ambas modalidades. No reclasificar por servicio al arrancar.
+  const correccionFelixCuevas = { affectedRows: 0 };
 
   const [correccionOmar] = await pool.query(
     `UPDATE resultados_capacitacion
@@ -1600,6 +1616,15 @@ async function inicializarBase() {
       "."
     ]
   );
+
+  await pool.query(`CREATE TABLE IF NOT EXISTS envios_elearning (
+    envio_id VARCHAR(64) NOT NULL PRIMARY KEY,
+    numero_empleado VARCHAR(50) NOT NULL,
+    curso VARCHAR(150) NOT NULL,
+    huella CHAR(64) NOT NULL,
+    resultado JSON NOT NULL,
+    creado TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci`);
 
   await sincronizarCursosDesdeRepositorio();
 
@@ -2995,6 +3020,20 @@ app.post(
   }
 );
 
+// Evaluación e-learning Félix Cuevas: misma sesión y origen que el portal.
+app.post('/api/portal/felix-cuevas/resultados', requerirParticipante, limiteResultados, async (req,res)=>{
+  try {
+    if(!FELIX.servicioPermitido(req.participante.servicio))return res.status(403).json({mensaje:'Evaluación disponible únicamente para Walmart Félix Cuevas.'});
+    if(String(req.body.numero_empleado_sesion||'')!==String(req.participante.numero_empleado))return res.status(409).json({mensaje:'Cambió la cuenta del participante. Ingresa con la cuenta que inició el examen.'});
+    const envioId=String(req.body.envio_id||'');
+    if(!/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(envioId))return res.status(400).json({mensaje:'El identificador del intento no es válido.'});
+    const nota=FELIX.calificar(req.body.respuestas);
+    const huellaEnvio=crypto.createHash('sha256').update(JSON.stringify(req.body.respuestas)).digest('hex');
+    const resultado=await guardarResultado({nombre:req.participante.nombre,numeroEmpleado:req.participante.numero_empleado,servicio:req.participante.servicio,curso:FELIX.NOMBRE,calificacionRecibida:nota.calificacion,calificacionMaximaRecibida:100,totalPreguntasRecibido:10,erroresRecibidos:nota.errores,modalidadRecibida:'E-LEARNING',calificacionAprobatoria:80,envioId,huellaEnvio});
+    return res.status(201).json({mensaje:'Calificación guardada correctamente.',...resultado});
+  }catch(error){console.error('Error al guardar Félix Cuevas:',error);return res.status(error.codigo||500).json({mensaje:error.codigo?error.message:'No fue posible guardar. Conservamos tus respuestas para reintentar.'})}
+});
+
 // Endpoint autenticado Walmart Diamante: valida servicio y califica del lado del servidor.
 app.post("/api/portal/diamante/resultados",requerirParticipante,limiteResultados,async(req,res)=>{
   try{
@@ -3033,6 +3072,7 @@ app.post(
       );
 
       if(slug===NET_VET_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación NET y VET."});
+      if(slug===FELIX.SLUG)return res.status(400).json({mensaje:'Usa el envío de respuestas de la evaluación Félix Cuevas.'});
       if(slug===DIAMANTE_SLUG)return res.status(400).json({mensaje:"Usa el envío de respuestas de la evaluación Walmart Diamante."});
 
       const [filas] =
@@ -3206,6 +3246,7 @@ app.post(
         150
       );
 
+      if(curso===FELIX.NOMBRE&&String(req.body.modalidad||'E-LEARNING').trim().toUpperCase()!=='PRESENCIAL')return res.status(401).json({mensaje:'El curso e-learning Félix Cuevas requiere una sesión y el envío de sus respuestas.'});
       if(curso===NET_VET_NOMBRE)return res.status(401).json({mensaje:"NET y VET requiere una sesión y el envío de respuestas desde su evaluación."});
 
       const [configuracionesCurso] =
@@ -3441,3 +3482,4 @@ inicializarBase()
 
     process.exit(1);
   });
+

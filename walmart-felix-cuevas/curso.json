@@ -1,0 +1,16 @@
+{
+  "id": "consignas-walmart-felix-cuevas",
+  "nombre": "Consignas específicas — Walmart Félix Cuevas",
+  "curso": "Consignas específicas — Walmart Félix Cuevas",
+  "descripcion": "Curso y evaluación sobre accesos, rondines, proveedores, emergencias y responsabilidades del servicio Félix Cuevas.",
+  "ruta": "walmart-felix-cuevas/",
+  "archivo_html": "index.html",
+  "serviciosPermitidos": [
+    "WALMART FELIX CUEVAS",
+    "FELIX CUEVAS"
+  ],
+  "activo": true,
+  "orden": 80,
+  "calificacion_aprobatoria": 80,
+  "calificacion_maxima_origen": 100
+}
